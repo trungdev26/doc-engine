@@ -538,13 +538,13 @@
   display: none;
 }
 .is-focus-mode .app-header {
-  padding-inline: max(24px, calc((100vw - 1080px) / 2));
+  padding-inline: max(24px, calc((100vw - 1440px) / 2));
 }
 .is-focus-mode .app-content {
-  padding-inline: max(24px, calc((100vw - 1160px) / 2));
+  padding-inline: max(24px, calc((100vw - 1488px) / 2));
 }
 .is-focus-mode .reading-surface {
-  max-width: 1080px;
+  max-width: 1440px;
 }
 
 .back-to-top {

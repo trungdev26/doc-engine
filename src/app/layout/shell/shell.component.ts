@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { MENU_SECTIONS, MenuItem } from './menu.config';
@@ -30,7 +30,7 @@ const SIDEBAR_MAX_WIDTH = 360;
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss'],
 })
-export class ShellComponent implements OnInit {
+export class ShellComponent implements OnInit, OnDestroy {
   readonly menuSections = MENU_SECTIONS;
   readonly navigationItems = this.flattenNavigation();
   readonly sidebarMinWidth = SIDEBAR_MIN_WIDTH;
@@ -56,6 +56,8 @@ export class ShellComponent implements OnInit {
   private isResizingSidebar = false;
   private resizeStartX = 0;
   private resizeStartWidth = SIDEBAR_DEFAULT_WIDTH;
+  private readonly resizeSidebarListener = (event: PointerEvent) => this.resizeSidebar(event);
+  private readonly stopSidebarResizeListener = () => this.stopSidebarResize();
 
   @ViewChild('appContent', { read: ElementRef })
   private appContent!: ElementRef<HTMLElement>;
@@ -77,6 +79,10 @@ export class ShellComponent implements OnInit {
       this.readingProgress = 0;
       requestAnimationFrame(() => this.appContent?.nativeElement.scrollTo({ top: 0 }));
     });
+  }
+
+  ngOnDestroy(): void {
+    this.stopSidebarResize();
   }
 
   get searchResults(): NavigationItem[] {
@@ -157,7 +163,6 @@ export class ShellComponent implements OnInit {
     }
   }
 
-  @HostListener('document:pointermove', ['$event'])
   resizeSidebar(event: PointerEvent): void {
     if (!this.isResizingSidebar) {
       return;
@@ -168,14 +173,15 @@ export class ShellComponent implements OnInit {
     );
   }
 
-  @HostListener('document:pointerup')
-  @HostListener('document:pointercancel')
   stopSidebarResize(): void {
     if (!this.isResizingSidebar) {
       return;
     }
 
     this.isResizingSidebar = false;
+    document.removeEventListener('pointermove', this.resizeSidebarListener);
+    document.removeEventListener('pointerup', this.stopSidebarResizeListener);
+    document.removeEventListener('pointercancel', this.stopSidebarResizeListener);
     document.body.classList.remove('is-resizing-sidebar');
     this.persistSidebarWidth();
   }
@@ -189,6 +195,9 @@ export class ShellComponent implements OnInit {
     this.isResizingSidebar = true;
     this.resizeStartX = event.clientX;
     this.resizeStartWidth = this.sidebarWidth;
+    document.addEventListener('pointermove', this.resizeSidebarListener);
+    document.addEventListener('pointerup', this.stopSidebarResizeListener);
+    document.addEventListener('pointercancel', this.stopSidebarResizeListener);
     document.body.classList.add('is-resizing-sidebar');
   }
 

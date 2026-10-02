@@ -697,9 +697,19 @@ const routes: Routes = [
       {
         path: 'demo',
         component: TransactionDemoComponent,
-        data: { demoLabs: ['boundary', 'lost-update'] },
+        data: { demoLabs: ['boundary'] },
       },
     ],
+  },
+  {
+    path: 'database/acid/theory',
+    component: MarkdownDocComponent,
+    data: { docSrc: 'assets/docs/database/acid/theory.md' },
+  },
+  {
+    path: 'database/isolation-levels/theory',
+    component: MarkdownDocComponent,
+    data: { docSrc: 'assets/docs/database/isolation-levels/theory.md' },
   },
   {
     path: 'database/locking-deadlock',
@@ -727,7 +737,7 @@ const routes: Routes = [
       {
         path: 'demo',
         component: TransactionDemoComponent,
-        data: { demoLabs: ['outbox'] },
+        data: { demoLabs: ['lost-update', 'outbox'] },
       },
     ],
   },

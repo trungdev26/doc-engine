@@ -1,223 +1,218 @@
 # Concurrency Control Patterns
 
-Transaction trả lời câu hỏi: "Những thay đổi nào phải cùng commit?"
+**Concurrency control pattern** là cách phối hợp câu SQL, constraint, transaction, version, lock, queue và idempotency để tạo một kết quả xác định khi nhiều operation cùng tác động dữ liệu.
 
-Locking & Deadlock trả lời câu hỏi: "Database điều phối đọc/ghi đồng thời như thế nào?"
+Một pattern luôn bắt đầu từ **business invariant**: điều kiện nghiệp vụ phải đúng trước và sau mỗi thay đổi đã commit, chẳng hạn tồn kho không âm hoặc một email không được trùng trong cùng tenant. **Failure window** là khoảng giữa các operation mà tại đó lỗi, timeout hoặc một request cạnh tranh có thể khiến invariant bị vi phạm hay khiến caller không biết operation đã thành công chưa.
 
-Bài này trả lời câu hỏi thực dụng hơn:
+Các bài trước đã thiết lập ba lớp nền tảng:
 
-```text
-Khi nhiều request cùng đụng vào một dữ liệu, mình nên chọn pattern nào?
-```
+- [Transaction](/database/transactions/theory) xác định những write phải cùng commit hoặc rollback.
+- [Transaction Isolation](/database/isolation-levels/theory) xác định interleaving nào có thể làm kết quả sai.
+- [Locking, Blocking và Deadlock](/database/locking-deadlock/theory) giải thích engine giữ và chờ resource tranh chấp như thế nào.
 
-Concurrency control không phải là một kỹ thuật duy nhất. Nó là cách phối hợp transaction, constraint, câu SQL, lock, version, retry và idempotency để bảo vệ invariant nghiệp vụ khi production có nhiều request thật.
+Application vẫn phải chọn cách xử lý cho từng failure window. Một business key không được trùng cần cơ chế khác với form bị sửa đồng thời. Một product nóng có contention cao cần cách tiếp cận khác với một hồ sơ hiếm khi conflict.
 
----
-
-## 1. Tư duy chọn pattern
-
-Đừng bắt đầu bằng câu hỏi "có cần lock không?"
-
-Hãy bắt đầu bằng 4 câu hỏi:
-
-1. Invariant nào không được phá?
-2. Nhiều request có thể cùng tác động vào cùng key/dòng/khoảng dữ liệu không?
-3. Khi conflict xảy ra, nên chờ, fail nhanh, retry hay báo user tải lại?
-4. Operation có thể retry an toàn không?
-
-Ví dụ:
-
-| Invariant | Rủi ro đồng thời | Pattern thường dùng |
-|---|---|---|
-| Email user không trùng | Hai request cùng tạo user | Unique constraint |
-| Một request thanh toán không charge hai lần | Client retry sau timeout | Idempotency key + unique constraint |
-| Tồn kho không âm | Nhiều đơn cùng trừ kho | Atomic update có điều kiện hoặc pessimistic lock |
-| Không ghi đè thay đổi của người khác | Hai người cùng sửa form | Optimistic concurrency |
-| Không booking trùng slot | Hai request cùng đặt cùng khoảng thời gian | Constraint/atomic insert/serializable/range lock |
-| Một job chỉ được một worker xử lý | Nhiều worker cùng claim job | Atomic claim hoặc `SKIP LOCKED` |
-| Event không mất sau commit | App crash giữa DB và queue | Outbox + consumer idempotent |
-
----
-
-## 2. Bảng chọn nhanh
-
-| Tình huống | Ưu tiên chọn | Vì sao |
-|---|---|---|
-| Chống duplicate theo business key | Unique constraint | Database là nơi chắc nhất để chặn trùng khi request chạy song song |
-| Client/API có thể retry | Idempotency key | Retry không được tạo thêm dữ liệu hoặc side effect mới |
-| Cập nhật số lượng/số dư/quota | Atomic update có điều kiện | Giảm cửa sổ race của read-check-write |
-| User mở form lâu rồi submit | Optimistic concurrency | Không giữ lock trong lúc user suy nghĩ/nhập liệu |
-| Conflict hiếm, UX chấp nhận báo lỗi | Optimistic concurrency | Scale tốt hơn lock trước |
-| Conflict cao, dữ liệu rất nóng | Pessimistic lock hoặc queue theo key | Chấp nhận chờ để tránh nhiều conflict/retry |
-| Cần check điều kiện trên một khoảng | Constraint nếu có, nếu không thì isolation/lock phù hợp | `SELECT rồi INSERT` thường không đủ an toàn |
-| Nhiều worker lấy việc | Atomic claim | Không để hai worker cùng xử lý một job |
-| Deadlock/serialization failure | Retry có backoff | Chỉ retry khi operation idempotent |
-| Side effect sau commit | Outbox/inbox | Không publish trực tiếp trong transaction |
-
-Nguyên tắc ngắn:
+Bài này trả lời một câu hỏi trung tâm:
 
 ```text
-Constraint bảo vệ invariant.
-Atomic update bảo vệ phép ghi đơn giản.
-Optimistic concurrency bảo vệ form/edit flow.
-Pessimistic lock bảo vệ vùng tranh chấp nóng.
-Idempotency bảo vệ retry.
-Outbox bảo vệ side effect sau commit.
+Với failure window hiện tại, nên chặn, chờ, phát hiện conflict, tuần tự hóa hay deduplicate ở đâu?
 ```
 
 ---
 
-## 3. Bảng đổi pattern: không dùng X thì dùng Y
+## 1. Concurrency control inputs
 
-Một pattern tốt trong case này có thể là lựa chọn tệ trong case khác. Khi review thiết kế, nên hỏi thêm:
+Không bắt đầu bằng câu hỏi “có cần lock không?”. Lock chỉ là một cơ chế trong nhiều lựa chọn.
 
-```text
-Nếu không dùng pattern này, mình đang chuyển rủi ro sang đâu?
-```
+### 1.1. Business invariant
 
-| Đang định dùng | Nhược điểm chính | Khi không nên dùng | Thay bằng |
-|---|---|---|---|
-| Unique constraint | Chỉ chặn được invariant biểu diễn được bằng key/index | Rule là khoảng thời gian chồng lấn phức tạp hoặc cần workflow phê duyệt | Exclusion constraint, atomic state transition, hoặc transaction isolation phù hợp |
-| Idempotency key | Tốn bảng lưu key/result, phải xử lý trạng thái đang chạy | Operation không retry hoặc chỉ là read request | Không cần idempotency; dùng cache/log/correlation id nếu chỉ cần trace |
-| Atomic update | Khó diễn đạt logic nhiều bước, không phù hợp khi phải gọi service ngoài | Cần đọc nhiều bảng, tính rule phức tạp, hoặc conflict rất cao | Transaction ngắn + pessimistic lock, hoặc queue theo key nóng |
-| Optimistic concurrency | User có thể gặp conflict và phải reload/merge | Conflict xảy ra liên tục hoặc mỗi conflict rất đắt | Pessimistic lock, atomic state transition, hoặc queue tuần tự |
-| Pessimistic lock | Giữ lock, gây blocking, dễ deadlock nếu dùng rộng | User nhập form lâu, gọi API ngoài, batch lớn | Optimistic concurrency, atomic update, hoặc outbox/job sau commit |
-| Queue theo key | Không realtime tuyệt đối, tăng độ phức tạp vận hành | Cần trả kết quả đồng bộ ngay và throughput thấp | Atomic update hoặc transaction local ngắn |
-| Atomic claim | Cần timeout/recover job kẹt, handler phải idempotent | Chỉ có một worker hoặc job không quan trọng nếu chạy trùng | Worker đơn giản, scheduled job tuần tự, hoặc unique processing key |
-| Outbox/inbox | Có độ trễ, at-least-once, cần worker/monitoring | Không có side effect ngoài DB hoặc event mất không ảnh hưởng | Gọi trực tiếp sau commit nếu nghiệp vụ nhẹ và chấp nhận mất event |
+Mỗi pattern phải gắn với một điều kiện kiểm chứng được:
 
-Không có pattern nào miễn phí. Senior không chọn pattern vì nó "ngầu", mà vì chi phí của nó nhỏ hơn rủi ro nghiệp vụ nếu không dùng.
+| Điều kiện dữ liệu | Failure window |
+|---|---|
+| Email không trùng trong tenant | Hai request cùng kiểm tra rồi insert |
+| Stock không nhỏ hơn `0` | Nhiều request cùng trừ một số lượng |
+| Không ghi đè phiên bản người khác | Hai người cùng sửa một hồ sơ |
+| Một payment request không charge hai lần | Client retry sau timeout |
+| Một job chỉ có một owner tại một thời điểm | Nhiều worker cùng đọc trạng thái `Pending` |
+| `OrderCreated` không mất sau commit | Process dừng giữa database và broker |
+
+Nếu rule chưa được viết thành điều kiện có thể quan sát, việc chọn pattern chỉ dựa trên cảm giác.
+
+### 1.2. Conflict location
+
+Xung đột có thể nằm ở những nơi khác nhau:
+
+| Vị trí | Ví dụ |
+|---|---|
+| Một business key | Email, mã đơn, idempotency key |
+| Một row | Stock, balance, trạng thái đơn |
+| Một phiên bản row | Hồ sơ chỉnh sửa lâu trên UI |
+| Một khoảng dữ liệu | Booking chồng thời gian |
+| Một hot key | Voucher flash sale, product cuối |
+| Ranh giới database–broker | Commit thành công nhưng publish thất bại |
+
+Vị trí xung đột quyết định database có thể dùng constraint hoặc một câu atomic write, hay application cần phối hợp nhiều bước.
+
+### 1.3. Conflict rate và caller behavior
+
+**Conflict rate** là tần suất hai hoặc nhiều operation cạnh tranh cùng resource hoặc cùng invariant trong một khoảng tải xác định. Tần suất này quyết định application nên phát hiện conflict sau khi nó xảy ra hay chủ động tuần tự hóa operation trước khi ghi.
+
+| Câu hỏi | Ý nghĩa thiết kế |
+|---|---|
+| Conflict hiếm hay thường xuyên? | Optimistic conflict phù hợp hơn khi conflict hiếm |
+| Caller có thể reload hoặc merge không? | Form edit có thể báo version conflict |
+| Caller cần kết quả đồng bộ không? | Queue có thể không phù hợp với response tức thời |
+| Operation có retry an toàn không? | Deadlock, timeout và duplicate delivery cần idempotency |
+| Có thể biểu diễn rule trong một statement không? | Atomic update thường đơn giản hơn lock nhiều bước |
+
+Sau khi xác định rule, vị trí và conflict rate, chọn cơ chế nhỏ nhất bảo vệ đúng failure window.
 
 ---
 
-## 4. Pattern 1: Unique constraint
+## 2. Unique Constraint
 
-Unique constraint là pattern concurrency đơn giản nhưng cực mạnh.
+**Unique constraint** là rule ở schema buộc một giá trị hoặc tổ hợp giá trị chỉ xuất hiện một lần trong phạm vi được khai báo. Hai request có thể cùng vượt qua lần kiểm tra “chưa tồn tại”, nhưng constraint vẫn phân xử tại thời điểm ghi: một request thành công và request còn lại nhận unique violation.
 
-Sai:
+### 2.1. Check-then-insert race
 
 ```sql
 SELECT COUNT(*)
 FROM Users
-WHERE Email = @email;
+WHERE TenantId = @tenantId
+  AND Email = @email;
 
--- Nếu chưa có thì insert
-INSERT INTO Users(Email)
-VALUES (@email);
+-- Nếu chưa có thì insert.
+INSERT INTO Users(TenantId, Email)
+VALUES (@tenantId, @email);
 ```
 
-Hai request chạy cùng lúc có thể đều thấy email chưa tồn tại rồi cùng insert.
-
-Đúng hơn:
-
-```sql
-CREATE UNIQUE INDEX UX_Users_Email
-ON Users(Email);
-```
-
-Khi insert:
+Interleaving nguy hiểm:
 
 ```text
-Insert thành công -> tạo user.
-Unique violation -> trả lỗi email đã tồn tại hoặc đọc lại user cũ nếu nghiệp vụ cho phép.
+A SELECT → chưa có
+B SELECT → chưa có
+A INSERT
+B INSERT
 ```
 
-Điểm quan trọng:
+Application check cải thiện thông báo lỗi trong luồng không conflict. Nó không bảo vệ khoảng thời gian giữa check và insert.
 
-- Check trước insert chỉ giúp UX tốt hơn, không thay thế constraint.
-- Constraint phải bám theo business invariant thật.
-- App phải xử lý lỗi unique violation như một nhánh nghiệp vụ có kiểm soát.
+### 2.2. Constraint arbitration
 
-Nhược điểm:
+```sql
+CREATE UNIQUE INDEX UX_Users_Tenant_Email
+ON Users(TenantId, Email);
+```
 
-- Chỉ bảo vệ được rule biểu diễn được bằng key/index.
-- Có thể làm insert fail ở runtime, nên app phải map lỗi database sang lỗi nghiệp vụ dễ hiểu.
-- Unique index trên bảng ghi rất nóng có thể trở thành điểm contention.
-- Với soft delete/multi-tenant, phải thiết kế key cẩn thận, ví dụ `(TenantId, Email)` hoặc filtered unique index.
+```text
+A INSERT → thành công
+B INSERT → unique violation
+```
 
-Khi không dùng unique constraint thì dùng gì?
+Database quyết định một request thắng. Application map unique violation sang conflict nghiệp vụ phù hợp.
 
-| Case | Không nên chỉ dùng unique constraint | Thay bằng |
-|---|---|---|
-| Booking theo khoảng thời gian tự do | Unique `(RoomId, StartTime)` không chặn được overlap `09:00-10:00` và `09:30-10:30` | Exclusion constraint nếu DB hỗ trợ, hoặc serializable/range lock |
-| Rule cần người duyệt trùng dữ liệu | Database không biết trường hợp nào được phép trùng tạm thời | Workflow trạng thái + review queue |
-| Dữ liệu trùng được merge sau | Chặn cứng có thể làm mất UX nhập liệu | Cho tạo draft + job phát hiện duplicate + merge flow |
+### 2.3. Unique Constraint scope
+
+Phù hợp với rule có thể biểu diễn bằng key hoặc index:
+
+- Email trong tenant.
+- Mã đơn hàng.
+- Idempotency key.
+- Một slot rời rạc `(RoomId, SlotStart)`.
+- Processed message ID.
+
+Không đủ cho khoảng thời gian chồng lấn tự do:
+
+```text
+09:00–10:00
+09:30–10:30
+```
+
+Hai interval khác key nhưng vẫn overlap. Có thể cần exclusion constraint, mô hình slot, `Serializable` hoặc resource claim phù hợp.
+
+Unique constraint bảo vệ duplicate theo key. Retry cùng một logical command còn cần trả lại đúng kết quả cũ, không chỉ từ chối lần gọi thứ hai.
 
 ---
 
-## 5. Pattern 2: Idempotency key
+## 3. Idempotency Key
 
-Idempotency dùng khi cùng một command có thể được gửi lại.
+**Idempotency** là thuộc tính cho phép cùng một logical operation được gửi lại mà không tạo thêm business effect. **Idempotency key** là identifier ổn định do caller cung cấp để server nhận ra các lần gửi thuộc cùng operation và trả lại kết quả đã lưu thay vì thực thi lại.
 
-Ví dụ:
+### 3.1. Ambiguous response
 
 ```text
-Client gửi request tạo payment.
-Server xử lý xong nhưng response timeout.
-Client retry.
+Client gửi CreatePayment
+→ server commit payment
+→ response bị mất
+→ client timeout và retry
 ```
 
-Nếu không có idempotency, retry có thể charge tiền lần hai.
+Không có idempotency, retry có thể tạo payment hoặc charge lần hai.
 
-Thiết kế thường dùng:
+### 3.2. Idempotency record
+
+Một idempotency record cần nhiều hơn unique key:
+
+| Field | Vai trò |
+|---|---|
+| `IdempotencyKey` | Nhận diện logical request |
+| `RequestHash` | Phát hiện cùng key nhưng payload khác |
+| `Status` | Processing, completed hoặc failed theo policy |
+| `ResourceId` | Entity đã tạo |
+| `Response` | Kết quả có thể trả lại khi retry |
+| `ExpiresAt` | Chính sách lưu key nếu có |
+
+Constraint bảo vệ key:
 
 ```sql
-CREATE UNIQUE INDEX UX_Payments_IdempotencyKey
-ON Payments(IdempotencyKey);
+CREATE UNIQUE INDEX UX_RequestDeduplications_Key
+ON RequestDeduplications(IdempotencyKey);
 ```
 
-Flow:
+### 3.3. Request replay flow
 
 ```text
-1. Client gửi IdempotencyKey.
-2. Server kiểm tra key đã xử lý chưa.
-3. Nếu đã xử lý, trả lại kết quả cũ.
-4. Nếu đang xử lý, trả trạng thái đang xử lý hoặc chờ tùy thiết kế.
-5. Nếu chưa có, xử lý request mới trong transaction.
+Request mới với key K
+→ claim K trong transaction
+→ xử lý command
+→ lưu ResourceId và response
+→ COMMIT
+
+Retry cùng K và cùng RequestHash
+→ đọc kết quả cũ
+→ không chạy business effect lần hai
+
+Cùng K nhưng RequestHash khác
+→ từ chối tái sử dụng key sai
 ```
 
-Idempotency key nên đi cùng:
+Nếu request đầu đang `Processing`, API cần policy rõ: trả trạng thái đang xử lý, chờ, hoặc fail nhanh.
 
-- Unique constraint
-- Lưu trạng thái xử lý
-- Lưu response/result đủ để trả lại
-- TTL hoặc chính sách lưu trữ nếu dữ liệu lớn
-- Log/correlation id để debug retry
+### 3.4. Idempotency và transaction boundary
 
-Nhược điểm:
+Idempotency ngăn logical request chạy lặp. Nó không bảo đảm các write trong một attempt cùng commit. Record idempotency và business write phải có boundary phù hợp.
 
-- Phải lưu key, trạng thái và có thể cả response/result.
-- Nếu key scope sai, có thể chặn nhầm request hợp lệ hoặc không chặn được duplicate.
-- Nếu request đầu tiên đang xử lý lâu, request retry cần chính sách rõ: chờ, trả `Processing`, hay fail nhanh.
-- Không thay thế transaction. Nó chỉ giúp gọi lại an toàn hơn.
-
-Khi không dùng idempotency key thì dùng gì?
-
-| Case | Vì sao không cần/không đủ | Thay bằng |
-|---|---|---|
-| GET/search/list | Request không đổi state | Cache, correlation id, rate limit nếu cần |
-| Command không được retry bởi client/worker | Key làm phức tạp không cần thiết | Log business id + transaction bình thường |
-| Message consumer có thể nhận trùng | Idempotency key ở API không bảo vệ consumer | Inbox table hoặc processed-message unique key |
-| External provider tự có idempotency | Tự làm thêm có thể trùng trách nhiệm | Dùng provider idempotency key + lưu mapping nội bộ |
+Operation đọc thuần không cần idempotency key. Message consumer nhận duplicate thường dùng Inbox hoặc processed-message key thay vì API idempotency record.
 
 ---
 
-## 6. Pattern 3: Atomic update có điều kiện
+## 4. Atomic Conditional Update
 
-Atomic update phù hợp với các phép ghi kiểu trừ kho, trừ quota, chuyển trạng thái.
+Khi rule có thể biểu diễn trong một câu write, atomic conditional update loại bỏ khoảng trống giữa read, check và update.
 
-Sai:
+### 4.1. Read–Modify–Write race
 
 ```text
-Read StockQuantity
-Check còn đủ
-Tính số mới trong memory
-Update StockQuantity = số mới
+A đọc Stock = 10
+B đọc Stock = 10
+A tính 8 và ghi 8
+B tính 7 và ghi 7
 ```
 
-Dễ lost update khi hai request cùng đọc một giá trị cũ.
+Update của A bị mất.
 
-Tốt hơn:
+### 4.2. Predicate trong write
 
 ```sql
 UPDATE Products
@@ -226,104 +221,116 @@ WHERE Id = @productId
   AND StockQuantity >= @quantity;
 ```
 
-Sau đó check affected rows:
+Database đánh giá điều kiện tại write path:
 
 ```text
-1 row affected -> trừ kho thành công.
-0 row affected -> không đủ tồn hoặc product không còn hợp lệ.
+A atomic update: 10 → 8
+B atomic update: 8 → 5
 ```
 
-Ưu điểm:
+Nếu B cần mua `9` sau khi A đã trừ:
 
-- Check và update xảy ra trong cùng một câu lệnh.
-- Database tự đảm bảo atomic ở mức statement.
-- Giảm cửa sổ race condition.
-- Dễ kết hợp với transaction để ghi lịch sử kho.
+```text
+Stock hiện tại = 8
+8 >= 9 là false
+→ affected rows = 0
+→ không update
+```
 
-Nhược điểm:
+### 4.3. Affected Rows là contract
 
-- Chỉ hợp với rule có thể đưa vào `WHERE` hoặc biểu thức update gọn.
-- Logic phức tạp nhiều bảng có thể làm câu SQL khó đọc, khó test.
-- Nếu update nhiều dòng không theo thứ tự nhất quán, vẫn có thể deadlock.
-- Không giải quyết side effect ngoài database.
+| Affected rows | Kết quả |
+|---:|---|
+| `1` | Điều kiện đạt và update thành công |
+| `0` | Row không tồn tại hoặc state không còn hợp lệ |
 
-Khi không dùng atomic update thì dùng gì?
+Application không được xem `0 row` là thành công im lặng.
 
-| Case | Atomic update chưa đủ | Thay bằng |
-|---|---|---|
-| Trừ kho cần kiểm tra nhiều bảng giá, khuyến mãi, hạn mức | Một câu `UPDATE` trở nên quá phức tạp | Transaction ngắn + lock đúng dòng cần đọc |
-| Một product quá nóng, hàng nghìn request cùng trừ | Database row trở thành điểm nghẽn | Queue theo ProductId hoặc reservation service |
-| Cần gọi payment trước khi giữ hàng | Không nên giữ transaction trong lúc gọi provider | Saga/reservation timeout + outbox |
+### 4.4. Atomic state transition
+
+Cùng pattern áp dụng cho trạng thái:
+
+```sql
+UPDATE Orders
+SET Status = 'Approved',
+    ApprovedBy = @userId,
+    ApprovedAt = CURRENT_TIMESTAMP
+WHERE Id = @orderId
+  AND Status = 'Draft';
+```
+
+Chỉ một request thắng transition `Draft → Approved`.
+
+### 4.5. Giới hạn
+
+Atomic update phù hợp khi rule nằm gọn trong `WHERE` và expression update. Nếu quyết định cần nhiều row, nhiều bảng hoặc logic phức tạp, application có thể cần transaction cùng optimistic/pessimistic control.
+
+Một hot row vẫn có thể trở thành throughput bottleneck dù câu write đúng. Khi contention rất cao, queue theo key có thể phù hợp hơn.
 
 ---
 
-## 7. Pattern 4: Optimistic concurrency
+## 5. Optimistic Concurrency
 
-Optimistic concurrency phù hợp khi conflict không quá thường xuyên và không muốn giữ lock lâu.
+Optimistic concurrency cho nhiều caller đọc mà không giữ lock dài. Conflict được phát hiện khi ghi bằng version đã đọc trước đó.
 
-Ví dụ form sửa thông tin bệnh nhân, đơn hàng, cấu hình:
+### 5.1. Long-lived edit
 
 ```text
-User A mở form lúc Version = 5.
-User B cũng mở form lúc Version = 5.
-User A lưu trước, Version thành 6.
-User B lưu sau với expected Version = 5.
-Hệ thống phát hiện dữ liệu đã bị đổi.
+A mở Patient version 5
+B mở Patient version 5
+A lưu → version 6
+B lưu với expected version 5
 ```
 
-SQL ý tưởng:
+Nếu B update không kiểm tra version, thay đổi của A có thể bị ghi đè.
+
+### 5.2. Version check
 
 ```sql
 UPDATE Patients
 SET FullName = @fullName,
     PhoneNumber = @phoneNumber,
-    RowVersion = RowVersion + 1
+    Version = Version + 1
 WHERE Id = @id
-  AND RowVersion = @expectedVersion;
+  AND Version = @expectedVersion;
 ```
 
-Check affected rows:
+| Affected rows | Ý nghĩa |
+|---:|---|
+| `1` | Row vẫn ở version caller đã đọc |
+| `0` | Row đã đổi hoặc không tồn tại |
 
-```text
-1 row affected -> lưu thành công.
-0 row affected -> dữ liệu đã bị người khác sửa, cần reload/merge/báo user.
-```
+Version phải tăng atomically trong database.
 
-Nên dùng khi:
+### 5.3. Conflict handling
 
-- User có thể giữ form lâu.
-- Conflict không quá dày.
-- UX chấp nhận báo "dữ liệu đã thay đổi".
-- Không muốn lock database trong lúc user nhập liệu.
+Khi conflict xảy ra, application phải chọn contract:
 
-Không nên dùng một mình khi:
+- Reload và yêu cầu nhập lại.
+- Hiển thị diff để merge.
+- Cho ghi đè có quyền và audit rõ.
+- Retry tự động nếu operation thuần và không làm mất ý định người dùng.
 
-- Conflict rất cao.
-- Mỗi conflict gây thiệt hại lớn.
-- Operation cần tuần tự hóa mạnh, ví dụ rút tiền hoặc claim tài nguyên khan hiếm.
+Không retry form update mù bằng cách đọc version mới rồi áp payload cũ. Payload có thể ghi đè thay đổi mà caller chưa nhìn thấy.
 
-Nhược điểm:
+### 5.4. Applicability
 
-- Conflict bị phát hiện muộn, thường là lúc user bấm lưu.
-- Cần UX xử lý conflict: reload, merge, hoặc cho user chọn ghi đè có kiểm soát.
-- Nếu conflict cao, nhiều request sẽ fail/retry làm user khó chịu.
-- Nếu quên gửi/kiểm tra version ở một API update, pattern bị thủng.
+- Conflict tương đối hiếm.
+- User giữ form lâu.
+- Không muốn giữ database lock trong lúc user thao tác.
+- UX có thể hiển thị conflict.
 
-Khi không dùng optimistic concurrency thì dùng gì?
-
-| Case | Vì sao không hợp | Thay bằng |
-|---|---|---|
-| Rút tiền/chuyển tiền | Conflict không nên để user retry thủ công | Transaction chặt + atomic update/lock theo tài khoản |
-| Claim voucher số lượng ít lúc flash sale | Conflict rất cao, nhiều request fail | Queue theo voucher/campaign hoặc atomic update thật gọn |
-| Admin muốn khóa hồ sơ để xử lý độc quyền | UX cần quyền giữ hồ sơ tạm thời | Application-level lease/lock có timeout |
+Khi conflict xảy ra liên tục hoặc mỗi conflict rất đắt, phát hiện muộn tạo nhiều công việc bỏ đi. Pessimistic locking hoặc tuần tự hóa theo key có thể phù hợp hơn.
 
 ---
 
-## 8. Pattern 5: Pessimistic lock
+## 6. Pessimistic Locking
 
-Pessimistic lock khóa trước khi xử lý, giả định khả năng tranh chấp cao.
+Pessimistic locking giữ quyền cập nhật trước khi transaction hoàn tất nhiều bước đọc và ghi.
 
-Ví dụ PostgreSQL:
+### 6.1. Locking flow
+
+PostgreSQL:
 
 ```sql
 BEGIN;
@@ -333,127 +340,108 @@ FROM Products
 WHERE Id = @productId
 FOR UPDATE;
 
+-- Đọc thêm dữ liệu và quyết định trong transaction ngắn.
+
 UPDATE Products
 SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId
-  AND StockQuantity >= @quantity;
+WHERE Id = @productId;
 
 COMMIT;
 ```
 
-Ví dụ SQL Server:
+SQL Server có thể dùng `UPDLOCK` có chủ đích:
 
 ```sql
 BEGIN TRANSACTION;
 
 SELECT StockQuantity
-FROM Products WITH (UPDLOCK, ROWLOCK)
+FROM Products WITH (UPDLOCK)
 WHERE Id = @productId;
 
 UPDATE Products
 SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId
-  AND StockQuantity >= @quantity;
+WHERE Id = @productId;
 
 COMMIT;
 ```
 
-Dùng khi:
+Lock internals, compatibility và deadlock nằm trong [Locking, Blocking và Deadlock](/database/locking-deadlock/theory).
+
+### 6.2. Applicability
 
 - Conflict cao.
-- Không muốn nhiều request cùng xử lý rồi fail/retry.
-- Cần bảo vệ một đoạn logic phải đọc rồi ghi.
+- Quyết định cần nhiều statement trong transaction ngắn.
+- Không muốn nhiều caller làm công việc rồi conflict ở cuối.
+- Chi phí chờ thấp hơn chi phí retry.
 
-Cẩn thận:
+### 6.3. Locking costs
 
-- Transaction phải ngắn.
-- Query phải có index đúng.
-- Không gọi API ngoài khi đang giữ lock.
-- Luôn update nhiều dòng theo thứ tự nhất quán.
+- Caller khác phải chờ.
+- Transaction dài làm blocking kéo dài.
+- Thứ tự resource không nhất quán tạo deadlock.
+- Query thiếu index làm lock footprint rộng.
 
-Nhược điểm:
+Không giữ pessimistic lock trong lúc user nhập form, gọi payment, gửi email hoặc upload file.
 
-- Làm request khác phải chờ.
-- Transaction dài sẽ kéo theo blocking, timeout, deadlock.
-- Dễ bị lạm dụng thành "khóa cho chắc" và làm giảm throughput.
-- Hành vi lock khác nhau giữa SQL Server, PostgreSQL, MySQL/InnoDB.
+### 6.4. Atomic Update trước Pessimistic Lock
 
-Khi không dùng pessimistic lock thì dùng gì?
-
-| Case | Vì sao không hợp | Thay bằng |
-|---|---|---|
-| User mở form nhập 10 phút | Không thể giữ DB lock trong lúc user nhập | Optimistic concurrency bằng RowVersion |
-| Gửi email/payment/upload file | Side effect chậm và không rollback được | Commit DB trước + outbox/job |
-| Batch update hàng triệu dòng | Lock lớn, log phình, rollback lâu | Chia batch nhỏ + checkpoint + index đúng |
-| Conflict thấp | Lock trước làm tốn chi phí không cần thiết | Atomic update hoặc optimistic concurrency |
+Nếu rule có thể biểu diễn bằng một conditional update, ưu tiên statement atomic. Pessimistic lock chỉ cần khi decision không thể nằm gọn trong write path.
 
 ---
 
-## 9. Pattern 6: Queue theo key nóng
+## 7. Hot-key Serialization
 
-Không phải mọi vấn đề concurrency đều nên giải bằng lock database.
+**Queue theo hot key** là cách đưa các command tác động cùng một key vào cùng luồng xử lý tuần tự, trong khi command của key khác vẫn có thể chạy song song. Một row cực nóng vốn đã tuần tự hóa writer tại database; khi hàng nghìn request cùng tranh chấp một product hoặc voucher, blocking và retry có thể làm database thành điểm nghẽn.
 
-Nếu một key quá nóng, ví dụ một mã khuyến mãi flash sale hoặc một sản phẩm hot, có thể dùng queue theo key:
+### 7.1. Keyed serialization
 
 ```text
-Request vào -> ghi command/job.
-Worker xử lý tuần tự theo ProductId hoặc PromotionId.
-Mỗi key nóng chỉ có một luồng ghi chính.
+Request
+→ ghi command
+→ partition theo ProductId hoặc CampaignId
+→ một worker logic xử lý tuần tự mỗi key
 ```
+
+Các key khác vẫn chạy song song. Chỉ key nóng được tuần tự hóa.
+
+### 7.2. Trade-offs
 
 Ưu điểm:
 
-- Giảm contention trực tiếp lên database.
-- Dễ kiểm soát throughput.
-- Dễ retry theo job.
+- Giảm writer contention trực tiếp.
+- Kiểm soát throughput theo key.
+- Retry theo command.
 
-Đổi lại:
+Chi phí:
 
-- Kết quả có thể không còn realtime tuyệt đối.
-- Cần trạng thái pending/processing/done.
-- Cần idempotency cho command.
-- Cần monitoring queue lag.
+- Kết quả chuyển sang trạng thái pending.
+- Cần queue, worker, retry và monitoring lag.
+- Handler phải idempotent.
+- Partition key sai có thể làm mất ordering cần thiết hoặc tạo hotspot mới.
 
-Pattern này hợp với:
-
-- Flash sale
-- Claim voucher
-- Cập nhật điểm/quota rất nóng
-- Workflow có thể xử lý async
-
-Nhược điểm:
-
-- Kết quả thường là eventual consistency.
-- Cần vận hành queue, worker, retry, dead-letter, monitoring lag.
-- Nếu partition key chọn sai, vẫn nghẽn hoặc xử lý sai thứ tự.
-- Debug khó hơn request/response đồng bộ.
-
-Khi không dùng queue theo key thì dùng gì?
-
-| Case | Vì sao không hợp | Thay bằng |
-|---|---|---|
-| User cần biết kết quả ngay | Queue làm UX thành pending | Atomic update đồng bộ |
-| Throughput thấp, conflict thấp | Queue làm kiến trúc nặng hơn vấn đề | Transaction local đơn giản |
-| Cần transaction mạnh trong một DB | Queue tách flow thành nhiều bước | Transaction ngắn + constraint/lock |
+Không dùng queue khi throughput thấp, conflict hiếm và caller cần response đồng bộ ngay. Atomic update thường đơn giản hơn.
 
 ---
 
-## 10. Pattern 7: Atomic claim cho worker
+## 8. Worker Job Claiming
 
-Khi nhiều worker cùng lấy job, không được làm kiểu:
+**Atomic claim** là một write chỉ chuyển job từ trạng thái có thể nhận sang trạng thái đã có owner khi điều kiện nhận việc vẫn còn đúng. Nhiều worker có thể cùng tìm thấy job `Pending`, nhưng affected-row result chỉ cho phép worker thắng claim tiếp tục xử lý.
+
+### 8.1. Claim race
 
 ```sql
-SELECT *
+SELECT Id
 FROM Jobs
 WHERE Status = 'Pending'
+ORDER BY CreatedAt
 LIMIT 1;
 
--- Sau đó mới update Processing
+-- Sau đó mới UPDATE Processing.
 ```
 
-Hai worker có thể cùng đọc một job.
+A và B có thể cùng đọc một job trước khi ai update.
 
-Tốt hơn là claim bằng update có điều kiện:
+### 8.2. Conditional claim
 
 ```sql
 UPDATE Jobs
@@ -464,14 +452,14 @@ WHERE Id = @jobId
   AND Status = 'Pending';
 ```
 
-Check affected rows:
-
 ```text
-1 row affected -> worker claim được job.
-0 row affected -> job đã bị worker khác lấy.
+1 row → worker claim thành công
+0 row → worker khác đã claim hoặc job không còn Pending
 ```
 
-Với PostgreSQL có thể dùng pattern `FOR UPDATE SKIP LOCKED` cho worker pool:
+### 8.3. SKIP LOCKED
+
+Một số engine hỗ trợ worker pool bỏ qua row đang bị lock. PostgreSQL:
 
 ```sql
 SELECT Id
@@ -482,57 +470,49 @@ FOR UPDATE SKIP LOCKED
 LIMIT 10;
 ```
 
-Dù dùng cách nào, worker vẫn cần:
+Pattern vẫn cần transaction ngắn để claim, index cho predicate/order và handler idempotent.
 
-- Retry có giới hạn
-- Timeout cho job bị kẹt ở Processing
-- Idempotent handler
-- Log job id/correlation id
+### 8.4. Abandoned job recovery
 
-Nhược điểm:
+Worker có thể chết sau khi chuyển `Processing`. Cần lease hoặc timeout:
 
-- Job có thể kẹt ở `Processing` nếu worker chết sau khi claim.
-- Cần cơ chế lease/timeout để đưa job về `Pending`.
-- Handler vẫn phải idempotent vì worker có thể chạy lại sau timeout.
-- Nếu query lấy job thiếu index, worker pool có thể scan và lock rộng.
+```text
+Processing quá deadline
+→ xác minh owner/heartbeat
+→ trả job về Pending hoặc tạo retry attempt
+```
 
-Khi không dùng atomic claim thì dùng gì?
-
-| Case | Vì sao không cần/không hợp | Thay bằng |
-|---|---|---|
-| Chỉ có một worker duy nhất | Không có cạnh tranh claim job | Scheduled worker tuần tự đơn giản |
-| Broker đã có cơ chế ack/visibility timeout | Tự claim trong DB có thể trùng trách nhiệm | Dùng semantics của broker + idempotent consumer |
-| Job phải giữ thứ tự nghiêm theo key | Claim tự do có thể làm đảo thứ tự | Queue partition theo key |
+Timeout recovery có thể làm job chạy lại khi worker cũ vẫn sống chậm. Business effect phải chống duplicate.
 
 ---
 
-## 11. Pattern 8: Outbox/inbox
+## 9. Transactional Outbox và Inbox
 
-Outbox giải quyết vấn đề DB commit và side effect ngoài database không atomic với nhau.
+**Transactional Outbox** là pattern lưu business write và bản ghi mô tả message cần phát trong cùng một database transaction. Một relay độc lập đọc bản ghi đó và publish sang broker, vì vậy publish có thể retry mà không làm mất intent sau commit.
 
-Sai:
+**Inbox** là bản ghi ở phía consumer dùng `MessageId` để nhận ra message đã xử lý. Nó ngăn một message được giao lại tạo business effect lần hai.
 
-```text
-Begin transaction
-Insert Order
-Publish OrderCreated vào queue
-Commit fail
-```
+Hai pattern cần phối hợp vì database commit và message broker không dùng chung local transaction.
 
-Consumer nhận event nhưng order không tồn tại.
+### 9.1. Dual-write failure windows
 
-Sai theo hướng ngược:
+Publish trước commit:
 
 ```text
-Begin transaction
-Insert Order
-Commit
-Publish OrderCreated fail
+Publish OrderCreated
+→ database rollback
+→ consumer nhận event cho Order không tồn tại
 ```
 
-Order tồn tại nhưng event mất.
+Commit trước publish:
 
-Tốt hơn:
+```text
+COMMIT Order
+→ process dừng
+→ OrderCreated bị mất
+```
+
+### 9.2. Outbox write
 
 ```sql
 BEGIN TRANSACTION;
@@ -540,405 +520,231 @@ BEGIN TRANSACTION;
 INSERT INTO Orders(Id, CustomerId, Status)
 VALUES (@orderId, @customerId, 'Created');
 
-INSERT INTO OutboxMessages(Id, Type, Payload, CreatedAt)
-VALUES (@messageId, 'OrderCreated', @payload, CURRENT_TIMESTAMP);
+INSERT INTO OutboxMessages(Id, Type, AggregateId, Payload, CreatedAt)
+VALUES (
+  @messageId,
+  'OrderCreated',
+  @orderId,
+  @payload,
+  CURRENT_TIMESTAMP
+);
 
 COMMIT;
 ```
 
-Worker đọc outbox sau commit và publish ra ngoài.
+Order và intent cùng durable.
 
-Điểm quan trọng:
-
-- Outbox thường là at-least-once delivery.
-- Consumer phải idempotent.
-- Inbox giúp consumer chống xử lý trùng message.
-- Cần retry/backoff và monitoring message bị kẹt.
-
-Nhược điểm:
-
-- Event không đi ngay lập tức, có độ trễ từ worker.
-- Consumer có thể nhận trùng vì thường là at-least-once.
-- Cần thêm bảng outbox/inbox, cleanup, retry, dashboard vận hành.
-- Nếu payload/schema event thiết kế kém, lỗi sẽ lan sang consumer.
-
-Khi không dùng outbox/inbox thì dùng gì?
-
-| Case | Vì sao không cần/không hợp | Thay bằng |
-|---|---|---|
-| Không có side effect ngoài DB | Outbox là thừa | Transaction DB bình thường |
-| Event chỉ để analytics không quan trọng | Mất event chấp nhận được | Publish best-effort sau commit + log |
-| Cần response realtime từ service ngoài | Outbox async không trả kết quả ngay | Saga/request-reply có timeout, hoặc gọi ngoài trước transaction tùy nghiệp vụ |
-| Hạ tầng DB/broker hỗ trợ transaction chung thật sự | Có thể không cần outbox | Cân nhắc distributed transaction, nhưng phải tính chi phí vận hành |
-
----
-
-## 12. Case thực tế 1: Tạo đơn hàng và trừ kho
-
-Yêu cầu:
-
-- Tạo order
-- Tạo order items
-- Trừ tồn kho
-- Không cho tồn âm
-- Client có thể retry khi timeout
-- Phát event `OrderCreated`
-
-Thiết kế đề xuất:
+### 9.3. Relay
 
 ```text
-1. Client gửi IdempotencyKey.
-2. Begin transaction.
-3. Insert Order với IdempotencyKey unique.
-4. Insert OrderItems.
-5. Sort ProductId tăng dần trước khi trừ kho.
-6. Trừ kho bằng atomic update có điều kiện.
-7. Nếu product nào affected rows = 0 thì rollback.
-8. Insert StockTransactions.
-9. Insert OutboxMessage(OrderCreated).
-10. Commit.
-11. Worker publish event sau commit.
+Đọc OutboxMessage chưa processed
+→ publish
+→ đánh dấu processed
+→ retry khi outcome chưa rõ
 ```
 
-SQL ý tưởng:
+Publish thành công rồi crash trước khi đánh dấu tạo duplicate. Outbox cung cấp at-least-once recovery, không exactly-once end-to-end.
+
+### 9.4. Inbox và idempotent consumer
+
+Consumer lưu `MessageId` cùng business write:
 
 ```sql
 BEGIN TRANSACTION;
 
-INSERT INTO Orders(Id, CustomerId, Status, IdempotencyKey)
-VALUES (@orderId, @customerId, 'Created', @idempotencyKey);
+INSERT INTO InboxMessages(MessageId, ProcessedAt)
+VALUES (@messageId, CURRENT_TIMESTAMP);
 
-INSERT INTO OrderItems(OrderId, ProductId, Quantity, Price)
-VALUES (@orderId, @productId, @quantity, @price);
-
-UPDATE Products
-SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId
-  AND StockQuantity >= @quantity;
-
--- Nếu affected rows = 0: rollback và báo không đủ tồn
-
-INSERT INTO StockTransactions(ProductId, Quantity, RefId)
-VALUES (@productId, -@quantity, @orderId);
-
-INSERT INTO OutboxMessages(Id, Type, Payload)
-VALUES (@messageId, 'OrderCreated', @payload);
+-- Unique MessageId.
+-- Business update.
 
 COMMIT;
 ```
 
-Pattern đang dùng:
+Duplicate message không áp dụng effect lần hai.
 
-- Idempotency key chống retry tạo trùng order.
-- Unique constraint trên `Orders.IdempotencyKey`.
-- Atomic update chống oversell.
-- Sort ProductId để giảm deadlock khi order có nhiều sản phẩm.
-- Outbox để event không mất.
+### 9.5. Applicability
 
-Vì sao không chọn pattern khác?
-
-| Không chọn | Lý do |
-|---|---|
-| Chỉ dùng transaction | Transaction không tự chống oversell nếu code read-check-write sai |
-| Chỉ dùng pessimistic lock | Có thể đúng nhưng dễ giữ lock lâu hơn; atomic update đủ gọn cho trừ kho |
-| Publish event trực tiếp | Event có thể đi ra ngoài dù transaction rollback hoặc bị mất sau commit |
-| Retry mù | Timeout retry có thể tạo trùng order nếu không có idempotency key |
+Không có side effect ngoài database thì Outbox là thừa. Event best-effort không quan trọng có thể publish sau commit với log nếu chấp nhận mất. Yêu cầu cần response đồng bộ từ service ngoài có thể cần workflow hoặc Saga khác, không nên ép Outbox thành request–response.
 
 ---
 
-## 13. Case thực tế 2: Hai người cùng sửa một hồ sơ
+## 10. Pattern selection matrix
 
-Yêu cầu:
+| Failure window | Pattern ưu tiên | Kết quả conflict |
+|---|---|---|
+| Hai request insert cùng business key | Unique constraint | Một insert thắng, một unique conflict |
+| Client retry command | Idempotency key | Trả lại kết quả cũ hoặc trạng thái đang xử lý |
+| Trừ số lượng hoặc đổi trạng thái một row | Atomic conditional update | `affected rows = 0` khi state không còn hợp lệ |
+| Form edit dài, conflict hiếm | Optimistic version | Báo version conflict khi ghi |
+| Multi-step decision ngắn, conflict cao | Pessimistic lock | Caller khác chờ |
+| Một key quá nóng | Queue theo key | Command xử lý tuần tự/pending |
+| Nhiều worker lấy job | Atomic claim / `SKIP LOCKED` | Một worker có ownership |
+| Commit database và publish event | Outbox/Inbox | At-least-once, consumer deduplicate |
 
-- User A và User B có thể cùng mở màn hình edit.
-- Không được để người lưu sau âm thầm ghi đè người lưu trước.
-- Không muốn giữ lock trong lúc user đang nhập liệu.
-
-Thiết kế đề xuất:
-
-```text
-1. API detail trả thêm RowVersion.
-2. UI giữ RowVersion cùng form.
-3. Khi submit, gửi expected RowVersion.
-4. Backend update với điều kiện RowVersion = expected.
-5. Nếu affected rows = 0, báo dữ liệu đã thay đổi.
-6. UI cho user reload, so sánh hoặc nhập lại tùy nghiệp vụ.
-```
-
-SQL:
-
-```sql
-UPDATE MedicalRecords
-SET Diagnosis = @diagnosis,
-    Note = @note,
-    RowVersion = RowVersion + 1
-WHERE Id = @id
-  AND RowVersion = @expectedVersion;
-```
-
-Pattern đang dùng:
-
-- Optimistic concurrency.
-- Affected rows làm tín hiệu conflict.
-- Không giữ lock dài.
-
-Điểm UX cần rõ:
+### 10.1. Selection priority
 
 ```text
-Dữ liệu đã được cập nhật bởi người khác. Vui lòng tải lại trước khi lưu tiếp.
+Constraint có giải được không?
+→ Atomic statement có giải được không?
+→ Optimistic conflict có chấp nhận được không?
+→ Cần pessimistic lock ngắn không?
+→ Key quá nóng có cần queue không?
+→ Có side effect ngoài database cần Outbox không?
 ```
 
-Vì sao không chọn pattern khác?
-
-| Không chọn | Lý do |
-|---|---|
-| Pessimistic lock DB | Không thể giữ lock trong lúc user mở form lâu |
-| Last write wins | Người lưu sau âm thầm ghi đè người lưu trước |
-| Queue async | User cần biết lưu thành công/thất bại ngay |
+Không chọn pattern vì nó “mạnh” hơn. Chọn cơ chế nhỏ nhất bảo vệ đúng failure window và có contract conflict rõ.
 
 ---
 
-## 14. Case thực tế 3: Booking phòng khám không trùng giờ
+## 11. Case study: tạo đơn và trừ kho
 
-Yêu cầu:
+Use case kết hợp nhiều pattern nhưng mỗi pattern bảo vệ một failure window riêng.
 
-- Một phòng không được có hai lịch hẹn chồng thời gian.
-- Hai request có thể đặt cùng slot gần như đồng thời.
-
-Sai:
+### 11.1. Business invariants
 
 ```text
-SELECT lịch trùng.
-Nếu không có thì INSERT booking.
+Client retry không tạo trùng Order
+Stock không nhỏ hơn 0
+Order, items và stock movement cùng commit
+OrderCreated không mất sau commit
+Nhiều product được cập nhật theo thứ tự nhất quán
 ```
 
-Nếu hai transaction cùng SELECT trước khi ai INSERT, cả hai đều nghĩ slot trống.
+### 11.2. Execution flow
 
-Hướng xử lý tùy database:
+```text
+IdempotencyKey
+→ BEGIN
+→ claim key bằng unique constraint
+→ Insert Order và OrderItems
+→ sort ProductId
+→ atomic conditional update từng Stock row
+→ Insert StockTransactions
+→ Insert OutboxMessage
+→ COMMIT
+→ relay publish
+```
 
-1. Nếu có constraint phù hợp, ưu tiên constraint.
-2. Nếu slot là block rời rạc, dùng unique constraint trên `(RoomId, SlotStart)`.
-3. Nếu là khoảng thời gian tự do, cân nhắc exclusion constraint trong PostgreSQL.
-4. Nếu DB không hỗ trợ constraint phù hợp, dùng transaction isolation/lock range có kiểm soát.
+### 11.3. Responsibility mapping
 
-Ví dụ slot rời rạc:
+| Pattern | Failure window được bảo vệ |
+|---|---|
+| Idempotency key | Client retry sau timeout |
+| Unique constraint | Hai request claim cùng key |
+| Atomic update | Hai request cùng trừ kho |
+| Sort ProductId | Giảm lock-order deadlock |
+| Transaction | Các write local cùng commit |
+| Outbox | Process dừng sau database commit |
+| Inbox | Consumer nhận duplicate message |
+
+Không có một pattern duy nhất thay thế toàn bộ nhóm.
+
+---
+
+## 12. Case study: chỉnh sửa hồ sơ đồng thời
+
+Hai người có thể giữ form trong nhiều phút. Không thể giữ database lock trong suốt thời gian đó.
+
+### 12.1. Optimistic concurrency flow
+
+```text
+A đọc Version = 5
+B đọc Version = 5
+A lưu thành Version = 6
+B lưu expected Version = 5
+→ affected rows = 0
+```
+
+API trả conflict cùng version mới. UI quyết định reload hoặc merge.
+
+### 12.2. Explicit conflict handling
+
+Update không điều kiện làm người lưu sau ghi đè người lưu trước. Nếu nghiệp vụ thật sự chọn Last Write Wins, quyết định đó phải có chủ đích và audit được, không phải hậu quả của việc quên version check.
+
+---
+
+## 13. Case study: booking overlap
+
+Booking slot rời rạc có thể dùng unique constraint:
 
 ```sql
 CREATE UNIQUE INDEX UX_Bookings_Room_Slot
 ON Bookings(RoomId, SlotStart);
 ```
 
-Flow:
+Interval tự do không được bảo vệ chỉ bằng unique start time. Lựa chọn phụ thuộc engine và model:
 
-```text
-Insert booking.
-Nếu unique violation -> slot đã có người đặt.
-```
+- Exclusion constraint.
+- Slot normalization.
+- Serializable.
+- Explicit range/resource lock.
 
-Pattern đang dùng:
-
-- Constraint bảo vệ invariant.
-- Không tin vào check trước insert.
-- App xử lý duplicate như conflict nghiệp vụ.
-
-Vì sao không chọn pattern khác?
-
-| Không chọn | Lý do |
-|---|---|
-| Chỉ `SELECT` kiểm tra rồi `INSERT` | Hai request có thể cùng thấy slot trống |
-| Optimistic concurrency trên từng booking row | Booking row chưa tồn tại nên không có version để so |
-| Queue toàn hệ thống | Quá nặng nếu chỉ cần chống trùng theo phòng/slot |
+Optimistic version trên booking row không bảo vệ row chưa tồn tại.
 
 ---
 
-## 15. Case thực tế 4: Nhiều worker gửi thông báo
+## 14. Concurrency control anti-patterns
 
-Yêu cầu:
+### 14.1. Serializable cho mọi use case
 
-- Nhiều worker cùng xử lý notification.
-- Một notification không được gửi hai lần.
-- Nếu worker chết giữa chừng, job phải được xử lý lại.
+Serializable mạnh nhưng có thể tăng blocking hoặc serialization failure. Không bật toàn hệ thống để thay unique constraint hoặc atomic update cục bộ.
 
-Thiết kế đề xuất:
+### 14.2. Pessimistic Lock trong External Call
 
-```text
-1. Worker claim job Pending bằng atomic update.
-2. Chuyển job sang Processing với WorkerId và StartedAt.
-3. Commit claim.
-4. Gửi notification.
-5. Mark Sent nếu thành công.
-6. Nếu lỗi, tăng RetryCount và chuyển Failed/Pending tùy policy.
-7. Job Processing quá timeout được đưa về Pending.
-```
+Giữ lock khi gọi payment, email hoặc upload kéo dài transaction và tăng deadlock window. Commit local state rồi dùng workflow phù hợp cho side effect.
 
-Claim:
+### 14.3. Retry không Idempotent
 
-```sql
-UPDATE Notifications
-SET Status = 'Processing',
-    WorkerId = @workerId,
-    StartedAt = CURRENT_TIMESTAMP
-WHERE Id = @notificationId
-  AND Status = 'Pending';
-```
+Retry command tạo dữ liệu mà không có key hoặc unique protection có thể nhân đôi effect. Chỉ retry lỗi đã phân loại, giới hạn attempt và có backoff.
 
-Pattern đang dùng:
+### 14.4. Distributed Lock quá sớm
 
-- Atomic claim chống hai worker lấy cùng job.
-- Timeout để recover job bị kẹt.
-- Idempotency ở provider hoặc business key để chống gửi trùng khi retry.
+Trước Redis/ZooKeeper/etcd lock, kiểm tra database constraint, atomic update, optimistic version hoặc queue theo key. Distributed lock thêm lease, fencing, partition và recovery problem.
 
-Vì sao không chọn pattern khác?
+### 14.5. Atomic Update quá phức tạp
 
-| Không chọn | Lý do |
-|---|---|
-| `SELECT Pending` rồi update sau | Hai worker có thể đọc cùng một job |
-| Lock job trong suốt lúc gửi notification | Gửi external chậm, giữ transaction lâu |
-| Không retry | Worker chết giữa chừng làm mất thông báo |
+Nhồi nhiều business rule và nhiều bảng vào một câu SQL khó đọc có thể làm test và maintenance kém. Khi decision thật sự nhiều bước, dùng transaction ngắn cùng concurrency control phù hợp.
 
 ---
 
-## 16. Case thực tế 5: Duyệt phiếu chỉ một lần
-
-Yêu cầu:
-
-- Phiếu chỉ được duyệt từ `Draft` sang `Approved`.
-- Hai người bấm duyệt cùng lúc thì chỉ một request thắng.
-- Không cần lock form từ trước.
-
-SQL:
-
-```sql
-UPDATE Requests
-SET Status = 'Approved',
-    ApprovedBy = @userId,
-    ApprovedAt = CURRENT_TIMESTAMP
-WHERE Id = @requestId
-  AND Status = 'Draft';
-```
-
-Check affected rows:
+## 15. Checklist chọn Pattern
 
 ```text
-1 row affected -> duyệt thành công.
-0 row affected -> phiếu không còn ở trạng thái Draft.
+[ ] Điều kiện dữ liệu cần giữ là gì?
+[ ] Conflict nằm trên key, row, version, range hay external boundary?
+[ ] Conflict xảy ra hiếm hay thường xuyên?
+[ ] Caller có thể chờ, reload, merge hoặc nhận trạng thái pending không?
+[ ] Constraint có giải được không?
+[ ] Atomic statement có giải được không?
+[ ] Affected rows = 0 có contract rõ không?
+[ ] Optimistic version có phù hợp UX không?
+[ ] Pessimistic lock có giữ transaction đủ ngắn không?
+[ ] Hot key có cần queue không?
+[ ] Retry có idempotent không?
+[ ] Side effect có cần Outbox/Inbox không?
+[ ] Có concurrency test kiểm tra trạng thái cuối không?
 ```
-
-Pattern đang dùng:
-
-- Optimistic concurrency theo business state.
-- Atomic state transition.
-- Không cần đọc trước rồi mới quyết định.
-
-Điểm cần thêm:
-
-- Permission check trước khi update.
-- Audit log trong cùng transaction.
-- Nếu có event sau duyệt, dùng outbox.
-
-Vì sao không chọn pattern khác?
-
-| Không chọn | Lý do |
-|---|---|
-| Lock form từ lúc mở màn hình | User có thể mở lâu rồi không làm gì |
-| Read status rồi update không điều kiện | Hai request có thể cùng đọc `Draft` rồi cùng update |
-| Serializable toàn hệ thống | Quá đắt cho một state transition có thể giải bằng `WHERE Status = 'Draft'` |
 
 ---
 
-## 17. Khi nào pattern bị dùng sai?
+## 16. Tóm tắt
 
-### 16.1. Lạm dụng Serializable
-
-Serializable mạnh nhưng đắt.
-
-Không nên bật toàn hệ thống chỉ vì một vài use case cần chống race. Hãy khoanh vùng đoạn nghiệp vụ cần mạnh, đo hiệu năng và chuẩn bị retry serialization failure.
-
-### 16.2. Lạm dụng distributed lock
-
-Distributed lock nghe hấp dẫn nhưng dễ tạo hệ thống khó vận hành.
-
-Trước khi dùng Redis lock/ZooKeeper/etcd lock, hãy hỏi:
-
-- Có giải được bằng database constraint không?
-- Có giải được bằng atomic update không?
-- Có thể queue theo key không?
-- Nếu process giữ lock chết thì lease/timeout thế nào?
-- Clock drift/network partition ảnh hưởng ra sao?
-
-### 16.3. Retry không idempotent
-
-Retry một command tạo dữ liệu mà không có idempotency key có thể làm lỗi nặng hơn.
-
-Retry chỉ nên dùng khi:
-
-- Exception đúng loại transient.
-- Operation idempotent.
-- Có giới hạn số lần retry.
-- Có backoff/jitter.
-- Có log để thấy retry đang tăng bất thường.
-
-### 16.4. Lock trong lúc gọi hệ thống ngoài
-
-Không giữ transaction database trong lúc:
-
-- Gọi payment gateway
-- Gửi email/SMS
-- Upload file
-- Gọi service khác
-- Chờ user input
-
-Hãy commit dữ liệu cần thiết trước, rồi xử lý side effect qua outbox/job sau commit.
-
----
-
-## 18. Checklist thiết kế concurrency
-
-Khi review một use case ghi dữ liệu, hỏi:
-
-1. Invariant chính là gì?
-2. Invariant đó đã được bảo vệ ở database chưa?
-3. Có request retry không?
-4. Có idempotency key không?
-5. Có read-check-write nào dễ lost update không?
-6. Có thể đổi sang atomic update không?
-7. Có cần RowVersion/optimistic concurrency không?
-8. Có cần lock trước không?
-9. Transaction có đủ ngắn không?
-10. Có side effect ngoài database trong transaction không?
-11. Có unique constraint cho business key không?
-12. Có check affected rows không?
-13. Update nhiều dòng có thứ tự nhất quán không?
-14. Có retry deadlock/serialization đúng cách không?
-15. Có test hai request chạy song song không?
-16. Pattern đang chọn có nhược điểm gì?
-17. Nếu không dùng pattern này thì dùng pattern nào và mất gì?
-
----
-
-## 19. Câu tổng kết
-
-Concurrency control tốt không phải là "thêm lock cho chắc".
-
-Nó là chọn đúng mức bảo vệ cho từng invariant:
+Concurrency Control Patterns trả lời câu hỏi:
 
 ```text
-Trùng dữ liệu -> constraint.
-Retry -> idempotency.
-Ghi số lượng -> atomic update.
-Edit form -> optimistic concurrency.
-Tài nguyên nóng -> pessimistic lock hoặc queue theo key.
-Side effect -> outbox/inbox.
-Deadlock transient -> retry có kiểm soát.
+Với failure window này, application nên chọn cơ chế nào?
 ```
-
-Senior backend không chỉ hỏi "code có transaction chưa", mà hỏi sâu hơn:
 
 ```text
-Nếu 100 request cùng bấm trong một giây, invariant nào vẫn đứng vững?
-Nếu request timeout rồi retry, dữ liệu có bị nhân đôi không?
-Nếu worker chết giữa chừng, job có bị mất hoặc xử lý trùng không?
-Nếu dữ liệu tăng 10 lần, lock còn đủ ngắn không?
+Duplicate key      → Unique constraint
+Request retry      → Idempotency key
+Counter/state      → Atomic conditional update
+Long-lived edit    → Optimistic concurrency
+Hot multi-step row → Pessimistic lock
+Hot key            → Queue theo key
+Worker ownership   → Atomic claim
+DB + message       → Outbox/Inbox
 ```
 
-Đó là điểm concurrency control chuyển từ kiến thức database thành năng lực thiết kế production.
+Pattern là lớp quyết định của application. [MySQL InnoDB Concurrency Internals](/database/mysql-innodb-concurrency/theory) tiếp tục bằng cách áp dụng các quyết định này lên behavior cụ thể của InnoDB.

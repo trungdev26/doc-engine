@@ -15,6 +15,9 @@
 - Tài liệu viết bằng tiếng Việt; giữ identifier, SQL keyword, API và thuật ngữ kỹ thuật chuẩn ở dạng canonical.
 - Không đặt tên riêng cho cách tổ chức hoặc quá trình dẫn dắt nội dung.
 - Trình tự giải thích: vấn đề, định nghĩa, thành phần, hành vi, cú pháp, ví dụ, failure, debugging, giới hạn và tóm tắt.
+- Không rút lý thuyết thành định nghĩa một dòng, checklist hoặc các kết luận thiếu phần giải thích nguyên nhân.
+- Mỗi khái niệm cốt lõi phải nêu: định nghĩa, vấn đề nó giải quyết, cơ chế, phạm vi bảo đảm, giới hạn và ví dụ có trạng thái quan sát được.
+- Section dài phải tách thành heading con theo thành phần, giai đoạn thực thi, failure mode hoặc giới hạn; không chia nhỏ chỉ để làm đoạn văn ngắn hơn.
 - Không dùng code block thay cho định nghĩa; mọi code block phải có giải thích input, trạng thái và kết quả.
 - Nội dung database-neutral không chọn một engine làm mặc định; khác biệt engine nằm trong ghi chú riêng.
 - Identifier field, property, column, alias và parameter trong ví dụ dùng `camelCase`; domain identifier tiếng Việt không dấu.
@@ -62,9 +65,9 @@ Trong group Database, đổi title và children thành đúng thứ tự:
 ```text
 05. Transaction và Concurrency Control
 Lý thuyết
-  01. Transaction Fundamentals
-  02. ACID Properties
-  03. Isolation Levels và Anomalies
+  01. Transaction
+  02. ACID
+  03. Transaction Isolation
   04. Locking, Blocking và Deadlock
   05. Concurrency Control Patterns
   06. MySQL InnoDB Concurrency Internals
@@ -84,7 +87,7 @@ Giữ nguyên các link route đã có. Sắp xếp demo theo dependency:
 Run:
 
 ```powershell
-rg -n "Transaction Fundamentals|ACID Properties|Isolation Levels và Anomalies|Locking, Blocking và Deadlock|Concurrency Control Patterns|MySQL InnoDB Concurrency Internals" src/app/layout/shell/menu.config.ts
+rg -n "01. Transaction|02. ACID|Transaction Isolation|Locking, Blocking và Deadlock|Concurrency Control Patterns|MySQL InnoDB Concurrency Internals" src/app/layout/shell/menu.config.ts
 ```
 
 Expected: mỗi nhãn xuất hiện đúng một lần trong group theory.
@@ -104,7 +107,7 @@ Expected: diff chỉ đổi title, label, thứ tự và bổ sung hai link theo
 
 ---
 
-### Task 2: Refactor Transaction Fundamentals
+### Task 2: Refactor Transaction
 
 **Files:**
 - Modify: `src/assets/docs/database/transactions/theory.md`
@@ -125,7 +128,7 @@ Expected: xác định phần thuộc transaction và phần đang lấn sang AC
 
 - [ ] **Step 2: Viết lại title và phần mở đầu**
 
-Dùng title `# Transaction Fundamentals`. Phần mở đầu phải:
+Dùng title `# Transaction`. Phần mở đầu phải:
 
 - nêu một kết quả nghiệp vụ cần nhiều write;
 - định nghĩa transaction bằng ngôn ngữ thông thường;
@@ -137,15 +140,14 @@ Dùng title `# Transaction Fundamentals`. Phần mở đầu phải:
 Giữ nội dung cần thiết dưới các heading chính theo thứ tự:
 
 ```text
-1. Transaction và trạng thái dữ liệu
+1. Transaction semantics
 2. Transaction boundary
 3. Transaction lifecycle
 4. Transaction trong application
 5. Commit outcome và retry
 6. Transaction dài và batch
-7. Transaction Boundary Demo
-8. Checklist
-9. Tóm tắt
+7. Checklist
+8. Tóm tắt
 ```
 
 Đưa auto-commit và explicit transaction vào phần đầu sau `COMMIT`/`ROLLBACK`. Giữ savepoint, nested transaction, connection ownership và ambiguous outcome. Rút business condition, constraint và idempotency thành đoạn giới hạn kèm link sang ACID hoặc Concurrency Control Patterns.
@@ -170,7 +172,7 @@ Expected: transaction có thể đọc độc lập; không còn phần giải t
 
 ---
 
-### Task 3: Refactor ACID Properties
+### Task 3: Refactor ACID
 
 **Files:**
 - Modify: `src/assets/docs/database/acid/theory.md`
@@ -191,7 +193,7 @@ Expected: bốn thuộc tính có section riêng; mọi thuật ngữ storage n�
 
 - [ ] **Step 2: Viết phần mở đầu và định nghĩa ACID**
 
-Dùng title `# ACID Properties`. Giải thích ACID là bốn nhóm bảo đảm của transaction ngay lần xuất hiện đầu tiên. Nêu rõ ACID không có nghĩa là mọi business rule tự động đúng hoặc mọi transaction chạy tuần tự.
+Dùng title `# ACID`. Giải thích ACID là bốn nhóm bảo đảm của transaction ngay lần xuất hiện đầu tiên. Nêu rõ ACID không có nghĩa là mọi business rule tự động đúng hoặc mọi transaction chạy tuần tự.
 
 - [ ] **Step 3: Chuẩn hóa bốn section thuộc tính**
 
@@ -225,7 +227,7 @@ Expected: người đọc hiểu từng bảo đảm và giới hạn trước k
 
 ---
 
-### Task 4: Refactor Isolation Levels và Anomalies
+### Task 4: Refactor Transaction Isolation
 
 **Files:**
 - Modify: `src/assets/docs/database/isolation-levels/theory.md`
@@ -246,7 +248,7 @@ Expected: có danh sách chính xác các đoạn cần giữ database-neutral h
 
 - [ ] **Step 2: Chuẩn hóa phần mở đầu và schedule**
 
-Giữ title `# Isolation Levels và Anomalies`. Định nghĩa `schedule` là thứ tự xen kẽ các operation của nhiều transaction trước khi dùng các tên anomaly. So sánh serial schedule với concurrent schedule bằng một timeline nhỏ.
+Giữ title `# Transaction Isolation`. Định nghĩa thứ tự thực thi là thứ tự xen kẽ các operation của nhiều transaction trước khi dùng các tên concurrency anomaly. So sánh thực thi tuần tự với thực thi xen kẽ bằng một timeline nhỏ.
 
 - [ ] **Step 3: Dạy anomaly trước isolation level**
 
@@ -266,9 +268,9 @@ Mỗi anomaly phải có initial state, operation của A/B, final observation, 
 
 Sau anomalies mới trình bày `READ UNCOMMITTED`, `READ COMMITTED`, `REPEATABLE READ`, `SERIALIZABLE`, rồi MVCC và lock-based read. Bảng so sánh phải ghi rõ SQL standard không mô tả hết behavior của từng engine; khác biệt engine đặt trong note riêng.
 
-- [ ] **Step 5: Đồng bộ phần demo và bài kế tiếp**
+- [ ] **Step 5: Đồng bộ bài kế tiếp**
 
-Phần demo liên kết `/database/isolation-anomalies/demo`, mô tả đúng các scenario demo thực sự có. Kết bài chuyển sang `/database/locking-deadlock/theory` bằng câu hỏi engine phối hợp resource tranh chấp ra sao.
+Không thêm section hoặc route demo vào bài. Kết bài chuyển sang `/database/locking-deadlock/theory` bằng câu hỏi engine phối hợp resource tranh chấp ra sao.
 
 - [ ] **Step 6: Review và commit**
 
@@ -324,9 +326,8 @@ Dùng thứ tự heading chính:
 8. Lock duration và batch workload
 9. Chẩn đoán blocking và deadlock
 10. Retry deadlock
-11. Deadlock Demo
-12. Checklist
-13. Tóm tắt
+11. Checklist
+12. Tóm tắt
 ```
 
 Định nghĩa resource trước shared/exclusive lock; định nghĩa blocking trước deadlock; dựng wait-for graph trước victim selection.
@@ -335,7 +336,7 @@ Dùng thứ tự heading chính:
 
 Đặt `Update Lock` và lock escalation trong note SQL Server. Range protection chỉ giải thích predicate/range ở mức chung; record/gap/next-key lock chuyển thành link tới `/database/mysql-innodb-concurrency/theory`.
 
-- [ ] **Step 5: Review demo link, prose và commit**
+- [ ] **Step 5: Review prose và commit**
 
 Run:
 
@@ -400,9 +401,9 @@ Liên kết về bài trước thay cho việc định nghĩa lại transaction,
 
 Ma trận phải ánh xạ invariant/failure vào cơ chế ưu tiên, gồm ít nhất duplicate key, conditional state transition, stale edit, hot contention, competing worker và database-message dual write. Sau ma trận mới dùng các case study tạo đơn, chỉnh sửa hồ sơ và booking để tổng hợp.
 
-- [ ] **Step 5: Giới hạn demo về đúng trách nhiệm**
+- [ ] **Step 5: Giữ case study độc lập với demo UI**
 
-Phần `/database/concurrency-control-patterns/demo` phải nói rõ route hiện có chứa Lost Update và Outbox. Navigation chỉ gọi demo này là `Transactional Outbox`; trong nội dung, Lost Update là phần đối chiếu giúp giải thích atomic conditional update, không biến demo thành catalogue pattern.
+Giữ Lost Update và Outbox dưới dạng case thực tế phục vụ lý thuyết. Không thêm section `Demo`, `Lab`, route UI hoặc hướng dẫn thao tác vào bài.
 
 - [ ] **Step 6: Review và commit**
 
@@ -589,7 +590,7 @@ Expected: không có kết quả. Nếu terminal tự hiển thị sai nhưng `r
 Run:
 
 ```powershell
-rg -n -o "/database/[a-z0-9-]+/(theory|demo)" src/assets/docs/database/transactions/theory.md src/assets/docs/database/acid/theory.md src/assets/docs/database/isolation-levels/theory.md src/assets/docs/database/locking-deadlock/theory.md src/assets/docs/database/concurrency-control-patterns/theory.md src/assets/docs/database/mysql-innodb-concurrency/theory.md
+rg -n -o "/database/[a-z0-9-]+/theory" src/assets/docs/database/transactions/theory.md src/assets/docs/database/acid/theory.md src/assets/docs/database/isolation-levels/theory.md src/assets/docs/database/locking-deadlock/theory.md src/assets/docs/database/concurrency-control-patterns/theory.md src/assets/docs/database/mysql-innodb-concurrency/theory.md
 rg -n "path: 'database/(transactions|acid|isolation-levels|locking-deadlock|concurrency-control-patterns|mysql-innodb-concurrency|isolation-anomalies)'" src/app/app-routing.module.ts
 ```
 
@@ -606,7 +607,23 @@ Thuật ngữ là prerequisite đã được giới thiệu và có link trực 
 
 Expected: không cần đọc ngược bài sau để hiểu bài trước.
 
-- [ ] **Step 5: Chạy kiểm tra whitespace và production build**
+- [ ] **Step 5: Review độ sâu của định nghĩa và cấu trúc đọc**
+
+Với từng khái niệm cốt lõi, lập kiểm tra trực tiếp trên section sở hữu nó:
+
+```text
+Định nghĩa cho biết khái niệm là gì.
+Phần cơ chế giải thích database hoặc application thực hiện điều đó ra sao.
+Phạm vi nêu rõ điều được bảo đảm và điều không được bảo đảm.
+Ví dụ cho thấy initial state, operation và kết quả quan sát được.
+Failure mode giải thích điều gì xảy ra khi dùng sai hoặc khi cơ chế không bao phủ.
+```
+
+Nếu một section có từ hai cơ chế độc lập, từ hai failure mode cần phân tích riêng hoặc một chuỗi thực thi nhiều giai đoạn, tách section bằng heading con có thuật ngữ kỹ thuật cụ thể. Không thay phần giải thích bằng checklist; checklist chỉ được dùng sau khi lý thuyết đã hoàn chỉnh.
+
+Expected: người đọc có thể giải thích nguyên nhân và cơ chế, không chỉ nhớ tên hoặc kết luận.
+
+- [ ] **Step 6: Chạy kiểm tra whitespace và production build**
 
 Run:
 
@@ -617,7 +634,7 @@ npm run build
 
 Expected: `git diff --check` không báo lỗi mới; Angular production build exit code 0.
 
-- [ ] **Step 6: Kiểm tra worktree và commit phần sửa xác minh nếu có**
+- [ ] **Step 7: Kiểm tra worktree và commit phần sửa xác minh nếu có**
 
 Run:
 

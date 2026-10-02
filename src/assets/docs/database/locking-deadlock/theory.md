@@ -1,131 +1,120 @@
-# Locking & Deadlock trong Database
+# Locking, Blocking và Deadlock
 
-Locking là cơ chế database dùng để bảo vệ dữ liệu khi nhiều transaction cùng đọc/ghi một lúc.
+**Locking** là cơ chế cấp quyền tạm thời trên resource dữ liệu. **Blocking** xảy ra khi một transaction phải chờ quyền đang do transaction khác giữ. **Deadlock** là trạng thái các transaction chờ nhau theo một chu trình nên không transaction nào có thể tự tiếp tục.
 
-Deadlock là một trong những lỗi concurrency khó chịu nhất: hệ thống đang chạy bình thường, nhưng dưới tải cao lại có request thỉnh thoảng fail vì các transaction chờ nhau theo vòng tròn.
+Bài [Transaction Isolation](/database/isolation-levels/theory) mô tả transaction đồng thời được phép quan sát lẫn nhau đến mức nào. Database engine phải hiện thực contract đó bằng lock, row version hoặc conflict detection.
 
-Nếu Index giúp query đọc nhanh hơn, Execution Plan giúp hiểu database chạy query thế nào, Transaction giúp giữ consistency, thì Locking & Deadlock giúp mình hiểu chuyện gì xảy ra khi nhiều người cùng thao tác dữ liệu production.
+Bài này tập trung vào phần lock-based coordination: transaction nào được giữ resource, transaction nào phải chờ, và vì sao hai wait hợp lệ riêng lẻ có thể tạo thành deadlock.
 
----
-
-## 1. Vì sao backend developer cần học locking?
-
-Nhiều lỗi production không nằm ở cú pháp SQL.
-
-Ví dụ:
+Tình huống xuyên suốt là hai transaction cùng cập nhật hai đơn hàng:
 
 ```text
-API chạy nhanh ở dev.
-Lên production thỉnh thoảng timeout.
-Query có index rồi nhưng vẫn chậm.
-Đơn hàng đôi lúc tạo lỗi deadlock.
-Batch job chạy làm màn hình user bị đứng.
-Report cuối ngày làm hệ thống ghi chậm hẳn.
+Transaction A cần Order #1 và Order #2
+Transaction B cũng cần Order #1 và Order #2
 ```
 
-Các vấn đề này thường liên quan đến:
-
-- Lock bị giữ quá lâu
-- Transaction quá rộng
-- Query update/delete scan nhiều dòng
-- Deadlock do thứ tự ghi không nhất quán
-- Isolation level không phù hợp
-- Batch job tranh chấp với request online
-- Retry sai làm tải database tăng thêm
-
-Senior backend không chỉ biết viết transaction. Senior phải biết transaction đó giữ lock gì, giữ bao lâu, ảnh hưởng request khác thế nào.
+Khi cả hai lấy resource theo cùng thứ tự, một transaction có thể chờ rồi tiếp tục. Khi thứ tự ngược nhau, wait-for graph có thể tạo chu trình mà không transaction nào tự tiến lên được.
 
 ---
 
-## 2. Lock là gì?
+## 1. Lock Resources
 
-Lock là cách database đặt "quyền tạm thời" lên dữ liệu để tránh các transaction phá nhau.
+**Lock** là trạng thái database engine dùng để cấp quyền tạm thời trên một **lock resource**. Resource là đơn vị được bảo vệ, chẳng hạn row, index key, khoảng key, page hoặc table; loại resource thực tế phụ thuộc engine và access path của câu lệnh.
 
-Ví dụ một transaction đang update tài khoản:
+Hai transaction cùng ghi một resource không thể hoàn tất đồng thời mà không có điểm phân xử. Engine dùng lock để bảo đảm mỗi write được áp dụng trên một trạng thái xác định.
+
+### 1.1. Write–write conflict trên cùng row
+
+Transaction A cập nhật tồn kho và chưa commit:
 
 ```sql
 BEGIN TRANSACTION;
 
-UPDATE Accounts
-SET Balance = Balance - 1000000
-WHERE Id = 1;
+UPDATE Products
+SET StockQuantity = StockQuantity - 2
+WHERE Id = 42;
 
--- Chưa commit
+-- Chưa COMMIT.
 ```
 
-Trong lúc transaction này chưa commit, database phải quyết định transaction khác có được đọc/ghi dòng `Accounts.Id = 1` không.
+Transaction B thực hiện một update khác trên cùng row:
 
-Quyết định đó phụ thuộc vào:
+```sql
+UPDATE Products
+SET StockQuantity = StockQuantity - 3
+WHERE Id = 42;
+```
 
-- Database engine
-- Isolation level
-- Lock mode
-- Index được dùng
-- Câu SQL
-- Transaction đã mở bao lâu
-- MVCC/snapshot có bật không
-
----
-
-## 3. Lock bảo vệ điều gì?
-
-Lock bảo vệ các tình huống như:
-
-- Hai transaction cùng sửa một dòng
-- Một transaction đọc dữ liệu đang được sửa
-- Một transaction kiểm tra điều kiện rồi transaction khác insert dòng mới làm điều kiện sai
-- Update nhiều dòng nhưng transaction khác chen vào giữa
-- Constraint/index cần được giữ nhất quán
-
-Ví dụ tồn kho:
+B không thể ghi xuyên qua thay đổi chưa hoàn tất của A. Nó thường phải chờ A commit hoặc rollback.
 
 ```text
-Stock = 1
-User A đặt 1 sản phẩm
-User B đặt 1 sản phẩm cùng lúc
+A giữ quyền ghi Product 42
+→ B yêu cầu quyền ghi Product 42
+→ B chờ
+→ A COMMIT
+→ B tiếp tục trên trạng thái mới
 ```
 
-Nếu không có cơ chế concurrency đúng, cả hai request có thể cùng nghĩ còn hàng.
+### 1.2. Lock lifecycle
 
-Lock không phải thứ xấu. Lock là cơ chế cần thiết. Vấn đề là lock bị giữ quá rộng, quá lâu, hoặc theo thứ tự gây deadlock.
+Lock có lifecycle gắn với statement hoặc transaction:
+
+```text
+Transaction yêu cầu lock
+→ engine kiểm tra compatibility
+→ lock được cấp hoặc transaction phải chờ
+→ transaction dùng resource
+→ lock được giải phóng theo isolation và transaction lifecycle
+```
+
+Lock không phải lỗi. Nó là cơ chế ngăn hai write phá nhau. Vấn đề xuất hiện khi phạm vi lock rộng, thời gian giữ dài hoặc wait tạo chu trình.
 
 ---
 
-## 4. Shared Lock và Exclusive Lock
+## 2. Lock compatibility
 
-Hai loại lock nền tảng:
+Reader và writer cần quyền khác nhau. Hai mode nền tảng là Shared và Exclusive.
 
-| Lock | Ý nghĩa | Thường dùng khi |
+### 2.1. Shared Lock
+
+**Shared Lock** cho phép nhiều transaction cùng đọc một resource khi không có writer không tương thích.
+
+```text
+A giữ Shared Lock trên row 42
+B yêu cầu Shared Lock trên row 42
+→ có thể cùng đọc
+```
+
+Shared Lock không có nghĩa reader luôn chặn writer tới cuối transaction. Thời gian giữ lock phụ thuộc isolation level và engine.
+
+### 2.2. Exclusive Lock
+
+**Exclusive Lock** bảo vệ thao tác ghi. Transaction khác không thể lấy một lock không tương thích trên cùng resource cho tới khi lock được giải phóng.
+
+```text
+A giữ Exclusive Lock trên row 42
+B yêu cầu Exclusive Lock trên row 42
+→ B chờ
+```
+
+Trong lock-based read, reader cần Shared Lock cũng có thể phải chờ Exclusive Lock của writer.
+
+Trong MVCC read, reader thường có thể đọc một row version đã commit mà không lấy Shared Lock xung đột với writer. Writer–writer conflict vẫn phải được điều phối.
+
+### 2.3. Lock compatibility matrix
+
+| Lock đang giữ | Lock yêu cầu | Kết quả phổ biến |
 |---|---|---|
-| Shared lock | Cho phép đọc, nhiều transaction có thể cùng giữ | SELECT trong một số isolation |
-| Exclusive lock | Độc quyền ghi, chặn ghi khác và có thể chặn đọc | INSERT/UPDATE/DELETE |
+| Shared | Shared | Tương thích |
+| Shared | Exclusive | Không tương thích |
+| Exclusive | Shared | Không tương thích trong lock-based read |
+| Exclusive | Exclusive | Không tương thích |
 
-Ý tưởng:
+Bảng chỉ mô tả mô hình nền tảng. Engine còn có intent lock, update lock, schema lock, key-range lock và nhiều mode nội bộ khác.
 
-```text
-Nhiều người có thể cùng đọc một cuốn sách.
-Nhưng khi một người đang sửa nội dung, người khác không nên sửa cùng lúc.
-```
+### 2.4. Update Lock trong SQL Server
 
-Trong lock-based read:
-
-```text
-SELECT có thể lấy shared lock.
-UPDATE lấy exclusive lock.
-Shared lock và exclusive lock thường không tương thích.
-```
-
-Trong database dùng MVCC/snapshot, reader có thể đọc version cũ mà không chặn writer trong nhiều trường hợp. Nhưng writer vẫn phải điều phối với writer.
-
----
-
-## 5. Update Lock
-
-Update lock thường gặp trong SQL Server.
-
-Nó giúp giảm deadlock khi một transaction đọc dữ liệu với ý định sẽ update sau đó.
-
-Ví dụ:
+SQL Server có **Update Lock** để đánh dấu một read có ý định chuyển sang write:
 
 ```sql
 BEGIN TRANSACTION;
@@ -141,167 +130,186 @@ WHERE Id = @productId;
 COMMIT;
 ```
 
-Ý tưởng:
+Update Lock giúp tránh trường hợp nhiều transaction cùng giữ Shared Lock rồi cùng cố nâng lên Exclusive Lock trên một resource.
 
-```text
-Tôi đang đọc dòng này và có ý định update.
-Đừng để transaction khác cũng đọc với ý định update cùng lúc rồi cả hai chờ nhau.
-```
+> **Cảnh báo:** `UPDLOCK` là SQL Server-specific. Lock hint thay đổi concurrency behavior và có thể tăng blocking. Chỉ dùng khi failure window đã được chứng minh và execution plan cùng lock observation xác nhận phạm vi phù hợp.
 
-Không nên dùng lock hint theo thói quen. Chỉ dùng khi hiểu rõ vấn đề contention và đã đo/verify.
+Lock mode mới chỉ mô tả quyền. Phạm vi resource engine thực sự khóa còn phụ thuộc query và index.
 
 ---
 
-## 6. Row lock, Page lock, Table lock
+## 3. Access path và lock footprint
 
-Lock có thể nằm ở nhiều cấp:
+Câu nói “database khóa row” thường quá đơn giản. Engine khóa những resource mà access path chạm tới, thường gắn với index record hoặc page vật lý.
 
-| Cấp lock | Ý nghĩa |
+### 3.1. Lock granularity
+
+| Resource | Phạm vi |
 |---|---|
-| Row lock | Khóa từng dòng |
-| Page lock | Khóa một page dữ liệu/index |
-| Table lock | Khóa cả bảng |
-| Range lock | Khóa một khoảng giá trị |
+| Row hoặc key | Một row hay index key cụ thể |
+| Page | Một page dữ liệu hoặc index |
+| Table | Toàn bộ table |
+| Range hoặc gap | Một khoảng key, kể cả vị trí chưa có row |
+| Schema/metadata | Cấu trúc table hoặc object database |
 
-Row lock nghe có vẻ tốt nhất, nhưng không phải lúc nào database cũng chỉ dùng row lock.
+Tên và semantics chính xác phụ thuộc engine.
 
-Database có thể chọn page/table lock nếu:
+### 3.2. Point lookup và range scan
 
-- Query đụng quá nhiều dòng
-- Thiếu index nên scan rộng
-- Lock quá nhiều gây overhead
-- Engine quyết định escalation
-- Câu lệnh dùng hint/table lock
+Unique lookup có access path hẹp:
 
-Điểm quan trọng:
+```sql
+UPDATE Orders
+SET Status = 'Expired'
+WHERE Id = @orderId;
+```
+
+Nếu `Id` là key được index, engine có thể định vị resource trực tiếp.
+
+Range update có phạm vi lớn hơn:
+
+```sql
+UPDATE Orders
+SET Status = 'Expired'
+WHERE Status = 'Pending'
+  AND ExpiredAt < @now;
+```
+
+Nếu thiếu index phù hợp, engine phải scan nhiều row hoặc index entry trước khi biết row nào cần update.
+
+### 3.3. Index và lock footprint
+
+Index không chỉ giảm CPU hoặc I/O. Nó còn rút ngắn thời gian và phạm vi query chạm resource.
 
 ```text
-Thiếu index không chỉ làm query chậm.
-Thiếu index còn có thể làm lock rộng hơn và lâu hơn.
+Thiếu access path
+→ scan nhiều page/key
+→ giữ hoặc yêu cầu nhiều lock hơn
+→ transaction kéo dài
+→ blocking window lớn hơn
 ```
+
+Index gợi ý cần được kiểm chứng bằng execution plan:
+
+```sql
+CREATE INDEX IX_Orders_Status_ExpiredAt
+ON Orders(Status, ExpiredAt);
+```
+
+Mỗi index bổ sung cũng tăng write amplification. Mục tiêu là access path phù hợp, không phải thêm index theo mọi điều kiện từng xuất hiện.
+
+### 3.4. Foreign key và lock footprint
+
+Khi xóa parent, database phải kiểm tra row tham chiếu ở bảng child:
+
+```sql
+DELETE FROM Customers
+WHERE Id = @customerId;
+```
+
+Nếu `Orders(CustomerId)` thiếu index, engine có thể scan nhiều child row để xác minh Foreign Key. Transaction giữ lock lâu hơn và ảnh hưởng nhiều request hơn.
+
+Index trên Foreign Key thường quan trọng với delete/update parent và join thường xuyên.
+
+### 3.5. Lock escalation
+
+Một số engine, đặc biệt SQL Server, có thể thay nhiều lock nhỏ bằng lock lớn hơn để giảm overhead quản lý lock.
+
+```text
+Nhiều row/key lock
+→ lock memory tăng
+→ engine chọn table lock
+→ nhiều transaction không liên quan cũng bị chặn
+```
+
+Escalation không phải hành vi chung giống nhau ở mọi engine. Cần quan sát engine cụ thể thay vì suy từ số row update.
+
+Resource và mode đã xác định transaction nào phải chờ. Chờ một chiều là blocking, chưa phải deadlock.
 
 ---
 
-## 7. Lock compatibility
+## 4. Lock Waits và Blocking
 
-Không phải lock nào cũng chặn nhau.
+**Blocking** xảy ra khi transaction chưa thể lấy lock vì transaction khác đang giữ lock không tương thích.
 
-Ý tưởng đơn giản:
-
-| Transaction A | Transaction B | Có thể chạy cùng không? |
-|---|---|---|
-| Read | Read | Thường có |
-| Read | Write | Tùy isolation/MVCC |
-| Write | Write cùng dòng | Không |
-| Write dòng khác | Write dòng khác | Có thể, nếu lock đủ hẹp |
-
-Khi đọc plan/debug production, cần hỏi:
+### 4.1. One-way blocking
 
 ```text
-Query này đang chờ lock gì?
-Ai đang giữ lock?
-Lock nằm trên row, page, table hay range?
-Vì sao lock giữ lâu?
+Transaction A giữ Exclusive Lock trên Order #1
+Transaction B cần Exclusive Lock trên Order #1
+→ B chờ A
 ```
 
----
+A vẫn có thể tiếp tục tới commit. Khi A giải phóng lock, B được đánh thức và thử tiếp tục.
 
-## 8. Blocking là gì?
+Blocking là hành vi bình thường khi nhiều transaction tranh chấp cùng resource.
 
-Blocking xảy ra khi một transaction phải chờ transaction khác nhả lock.
+### 4.2. Blocking chains
 
-Ví dụ:
+Một blocker có thể tạo chuỗi chờ:
 
 ```text
-Transaction A update Order 100 và chưa commit.
-Transaction B muốn update Order 100.
-B phải chờ A commit hoặc rollback.
+A giữ lock Product 42
+B chờ A, đồng thời giữ lock Order 100
+C chờ B trên Order 100
+D chờ C trên resource khác
 ```
 
-Blocking không luôn là lỗi. Nó là hành vi bình thường.
+Request đầu chuỗi có thể đang chờ API ngoài hoặc bị bỏ quên trong transaction. Các waiter phía sau chỉ biểu hiện timeout, nhưng nguyên nhân nằm ở root blocker.
 
-Blocking trở thành vấn đề khi:
+### 4.3. Lock timeout
 
-- Chờ quá lâu
-- Gây timeout
-- Nhiều request xếp hàng
-- Một transaction chặn hàng loạt transaction khác
-- User thấy hệ thống đứng
-
-Câu nhớ:
+Lock timeout xảy ra khi waiter chờ quá thời hạn cấu hình:
 
 ```text
-Blocking là chờ theo một chiều.
-Deadlock là chờ theo vòng tròn.
-```
-
----
-
-## 9. Deadlock là gì?
-
-Deadlock xảy ra khi các transaction chờ nhau theo vòng tròn, không ai có thể tiếp tục.
-
-Ví dụ:
-
-```text
-Transaction A khóa Product 1.
-Transaction B khóa Product 2.
-A muốn khóa Product 2 nên chờ B.
-B muốn khóa Product 1 nên chờ A.
-```
-
-Vòng chờ:
-
-```text
-A chờ B
 B chờ A
+→ A chưa giải phóng lock trước deadline
+→ B nhận timeout
 ```
 
-Database thường phát hiện deadlock và chọn một transaction làm victim để rollback.
+Timeout không chứng minh deadlock. Có thể chỉ tồn tại một cạnh chờ.
 
-Vì vậy deadlock thường xuất hiện ở application như một exception:
+Tăng timeout kéo dài thời gian user chờ nhưng không sửa blocker. Cần xác định:
+
+- Ai giữ resource?
+- Transaction mở bao lâu?
+- Blocker đang chạy hay đang idle?
+- Query có scan rộng không?
+- Transaction có chờ network không?
+
+### 4.4. Long-running transaction
 
 ```text
-Deadlock victim
-Transaction was deadlocked
-Serialization/deadlock failure
+BEGIN
+→ UPDATE Order
+→ gọi payment API 3 giây
+→ gửi email
+→ COMMIT
 ```
+
+Lock từ `UPDATE Order` có thể tồn tại trong toàn bộ thời gian chờ. Side effect ngoài database phải được tách khỏi transaction boundary như đã giải thích ở bài [Transaction](/database/transactions/theory).
+
+Blocking có thể tự kết thúc khi blocker commit. Deadlock khác ở chỗ mọi transaction trong chu trình đều đang chờ nhau và không transaction nào tự tiến lên được.
 
 ---
 
-## 10. Blocking vs Deadlock
+## 5. Deadlock và wait-for graph
 
-| Vấn đề | Bản chất | Kết quả |
-|---|---|---|
-| Blocking | Transaction B chờ A | Có thể tiếp tục khi A xong |
-| Timeout | Chờ quá lâu | App/database hủy request |
-| Deadlock | A chờ B, B chờ A | Database rollback một transaction |
+**Deadlock** là chu trình chờ giữa các transaction. Mỗi transaction giữ ít nhất một resource mà transaction khác cần, đồng thời chờ resource do transaction khác giữ.
 
-Không nên gọi mọi timeout là deadlock.
-
-Khi debug:
-
-```text
-Deadlock có victim và deadlock graph/log.
-Blocking có blocker và waiter.
-Timeout có thể do blocking, query chậm, network hoặc app timeout.
-```
-
----
-
-## 11. Ví dụ deadlock đơn giản
+### 5.1. Circular lock acquisition
 
 Transaction A:
 
 ```sql
 BEGIN TRANSACTION;
 
-UPDATE Products
-SET StockQuantity = StockQuantity - 1
+UPDATE Orders
+SET Status = 'Processing'
 WHERE Id = 1;
 
-UPDATE Products
-SET StockQuantity = StockQuantity - 1
+UPDATE Orders
+SET Status = 'Processing'
 WHERE Id = 2;
 
 COMMIT;
@@ -312,970 +320,365 @@ Transaction B:
 ```sql
 BEGIN TRANSACTION;
 
-UPDATE Products
-SET StockQuantity = StockQuantity - 1
+UPDATE Orders
+SET Status = 'Cancelled'
 WHERE Id = 2;
 
-UPDATE Products
-SET StockQuantity = StockQuantity - 1
+UPDATE Orders
+SET Status = 'Cancelled'
 WHERE Id = 1;
 
 COMMIT;
 ```
 
-Nếu A khóa `Id = 1`, B khóa `Id = 2`, rồi cả hai muốn khóa dòng còn lại, deadlock có thể xảy ra.
-
-Cách giảm:
+Interleaving nguy hiểm:
 
 ```text
-Luôn update product theo cùng thứ tự, ví dụ sort ProductId tăng dần trước khi xử lý.
+A khóa Order #1
+B khóa Order #2
+A yêu cầu Order #2 → chờ B
+B yêu cầu Order #1 → chờ A
 ```
+
+### 5.2. Wait-for graph
+
+```mermaid
+flowchart LR
+    A[Transaction A] -->|chờ Order #2| B[Transaction B]
+    B -->|chờ Order #1| A
+```
+
+Chu trình `A → B → A` chứng minh deadlock. Chỉ có `B → A` thì đó là blocking một chiều.
+
+### 5.3. Deadlock detection và victim selection
+
+Database engine theo dõi wait hoặc chạy deadlock detection. Khi phát hiện chu trình, engine chọn một transaction làm **victim**:
+
+```text
+Phát hiện cycle
+→ chọn victim theo cost/policy của engine
+→ rollback victim
+→ giải phóng lock
+→ transaction còn lại tiếp tục
+```
+
+Victim nhận exception. Operation đã rollback hoàn toàn và có thể được retry nếu retry an toàn.
+
+Deadlock không có nghĩa database bị treo vĩnh viễn. Engine chủ động phá chu trình bằng cách abort một transaction.
 
 ---
 
-## 12. Vì sao thứ tự lock quan trọng?
+## 6. Lock ordering
 
-Deadlock thường xuất hiện khi các transaction lấy cùng nhóm tài nguyên nhưng theo thứ tự khác nhau.
+Deadlock ở mục 5 xuất hiện vì A và B lấy cùng tập resource theo thứ tự khác nhau. Một thứ tự toàn cục loại bỏ cạnh chờ ngược chiều trong tình huống này.
 
-Không ổn:
-
-```text
-Request A: update Order -> update Stock
-Request B: update Stock -> update Order
-```
-
-Ổn hơn:
+### 6.1. Inconsistent lock ordering
 
 ```text
-Mọi flow đều update Order trước, Stock sau.
+Flow A: Order #1 → Order #2
+Flow B: Order #2 → Order #1
 ```
 
-Hoặc với nhiều dòng:
+Mỗi flow hợp lệ khi chạy riêng. Khi chạy đồng thời, chúng có thể giữ lock chéo nhau.
+
+### 6.2. Consistent lock ordering
 
 ```text
-Luôn sort theo Id trước khi update.
+Mọi flow: sort OrderId tăng dần
+→ Order #1
+→ Order #2
 ```
 
-Đây là kỹ thuật đơn giản nhưng rất hiệu quả.
+Interleaving mới:
 
-Senior review code không chỉ xem câu SQL đúng không, mà xem các flow khác nhau có lấy lock theo thứ tự nhất quán không.
+```text
+A khóa Order #1
+B chờ Order #1, chưa giữ Order #2
+A khóa Order #2
+A COMMIT
+B tiếp tục Order #1 rồi Order #2
+```
+
+B vẫn bị blocking, nhưng không tạo chu trình vì nó chưa giữ resource mà A đang cần.
+
+### 6.3. Cross-table lock ordering
+
+Lock ordering không chỉ áp dụng cho row trong cùng table:
+
+```text
+Mọi use case
+→ Orders trước
+→ Products sau
+→ StockTransactions cuối
+```
+
+Nếu flow khác cập nhật `Products → Orders`, deadlock vẫn có thể xuất hiện giữa table.
+
+Thứ tự phải được review ở cấp use case, không chỉ trong một repository method.
+
+### 6.4. Remaining deadlock risks
+
+Deadlock còn có thể liên quan:
+
+- Index key và table row.
+- Foreign Key validation.
+- Range lock.
+- Trigger.
+- Lock conversion.
+- Parallel execution plan.
+
+Ordering giảm một nhóm deadlock phổ biến, không phải bằng chứng hệ thống không còn deadlock. Application vẫn cần retry có kiểm soát.
 
 ---
 
-## 13. Transaction dài giữ lock lâu
+## 7. Range protection
 
-Transaction càng dài, lock càng giữ lâu.
+Isolation bài trước đã mô tả Phantom. Lock-based engine có thể bảo vệ predicate bằng lock trên khoảng key, không chỉ row hiện có.
 
-Ví dụ xấu:
+### 7.1. Predicate protection cho row chưa tồn tại
 
-```text
-Begin transaction
-Đọc dữ liệu
-Gọi API thanh toán
-Upload file
-Gửi email
-Update database
-Commit
-```
-
-Trong lúc chờ API/file/email, lock có thể vẫn bị giữ.
-
-Nguyên tắc:
-
-```text
-Chuẩn bị dữ liệu trước.
-Mở transaction muộn.
-Ghi nhanh.
-Commit sớm.
-Side effect ngoài database xử lý bằng outbox/event/retry sau commit.
-```
-
----
-
-## 14. Thiếu index gây lock lâu
-
-Ví dụ:
+Booking query:
 
 ```sql
-UPDATE Orders
-SET Status = 'Expired'
-WHERE Status = 'Pending'
-  AND ExpiredAt < @now;
-```
-
-Nếu thiếu index theo `(Status, ExpiredAt)`, database có thể scan nhiều dòng.
-
-Hậu quả:
-
-- Đọc nhiều page
-- Giữ lock lâu
-- Có thể lock rộng
-- Chặn transaction khác
-- Dễ timeout/deadlock hơn
-
-Index gợi ý:
-
-```sql
-CREATE INDEX IX_Orders_Status_ExpiredAt
-ON Orders(Status, ExpiredAt);
-```
-
-Tư duy quan trọng:
-
-```text
-Index cho UPDATE/DELETE quan trọng không kém index cho SELECT.
-```
-
----
-
-## 15. Lock escalation
-
-Lock escalation là khi database nâng nhiều lock nhỏ thành lock lớn hơn, ví dụ từ nhiều row lock lên table lock.
-
-Lý do:
-
-- Quá nhiều lock nhỏ gây overhead
-- Query đụng quá nhiều dòng
-- Engine quyết định lock lớn hiệu quả hơn
-
-Hậu quả:
-
-- Một transaction có thể chặn nhiều request hơn dự kiến
-- Batch job update lớn có thể làm cả bảng bị ảnh hưởng
-
-Cách giảm:
-
-- Batch nhỏ hơn
-- Index đúng để giảm số dòng đụng tới
-- Chạy job ngoài giờ cao điểm
-- Thiết kế archive/partition
-- Theo dõi lock escalation trong monitoring
-
----
-
-## 16. Range lock và phantom
-
-Range lock khóa một khoảng giá trị, không chỉ khóa dòng đã tồn tại.
-
-Ví dụ nghiệp vụ:
-
-```text
-Không cho tạo 2 booking trùng slot.
-```
-
-Transaction A kiểm tra:
-
-```sql
-SELECT *
+SELECT Id
 FROM Bookings
 WHERE RoomId = @roomId
   AND StartTime < @endTime
   AND EndTime > @startTime;
 ```
 
-Nếu không có cơ chế đúng, transaction B có thể insert booking trùng ngay sau khi A kiểm tra.
+Nếu không có booking trùng, query trả `0 row`. Transaction khác vẫn có thể insert một row mới vào khoảng đó.
 
-Serializable hoặc lock range có thể chặn phantom trong một số database.
+Range/predicate protection đại diện cho quyền trên tập giá trị phù hợp điều kiện, kể cả vị trí chưa có row.
 
-Nhưng thường cần thêm:
+### 7.2. Access path và protected range
 
-- Unique/exclusion constraint nếu database hỗ trợ
-- Thiết kế slot rõ ràng
-- Atomic insert/update
-- Transaction isolation phù hợp
+Range lock thường gắn với index range engine scan. Thiếu index có thể làm phạm vi bảo vệ rộng hơn dự kiến.
 
-Không nên chỉ `SELECT kiểm tra rồi INSERT` mà không có constraint/lock bảo vệ.
+```text
+Có composite index phù hợp
+→ seek vào range hẹp
+→ lock footprint hẹp hơn
+
+Thiếu index
+→ scan range lớn hoặc toàn index
+→ nhiều key/gap bị ảnh hưởng
+```
+
+Chi tiết record, gap và next-key lock của MySQL nằm trong [MySQL InnoDB Concurrency Internals](/database/mysql-innodb-concurrency/theory).
+
+### 7.3. Constraint-based protection
+
+Nếu booking dùng slot rời rạc, unique constraint trên `(RoomId, SlotStart)` tạo điểm phân xử đơn giản hơn manual range lock.
+
+Lock mạnh chỉ nên dùng khi rule không thể biểu diễn bằng constraint hoặc atomic state transition phù hợp.
 
 ---
 
-## 17. Isolation level ảnh hưởng lock thế nào?
+## 8. Lock Duration và Batch Workloads
 
-Isolation level càng mạnh thường càng bảo vệ tốt hơn nhưng chi phí concurrency cao hơn.
+Deadlock probability tăng khi transaction giữ nhiều resource trong thời gian dài. Batch job là nguồn contention phổ biến vì chạm nhiều row trong một transaction.
 
-| Isolation | Hành vi thường gặp |
+### 8.1. Large batch update
+
+```sql
+UPDATE Orders
+SET Status = 'Expired'
+WHERE Status = 'Pending'
+  AND ExpiredAt < @now;
+```
+
+Nếu câu lệnh update hàng triệu row:
+
+- Lock hoặc version footprint lớn.
+- Transaction log tăng mạnh.
+- Request online chờ lâu hơn.
+- Rollback kéo dài khi lỗi.
+- Deadlock window rộng hơn.
+
+### 8.2. Batch sizing
+
+```text
+Đọc 1.000 OrderId theo thứ tự ổn định
+→ BEGIN
+→ update batch
+→ COMMIT
+→ lưu checkpoint
+→ lặp tiếp
+```
+
+Batch nhỏ giảm thời gian giữ resource mỗi transaction. Đổi lại, toàn job không còn atomic. Job cần checkpoint, idempotency và cách resume.
+
+### 8.3. Long-running report và snapshot
+
+Report lớn có thể không giữ Shared Lock dài trong MVCC engine, nhưng vẫn giữ snapshot cũ và gây pressure lên version cleanup. Trong lock-based read, report còn có thể chặn writer.
+
+Các hướng phù hợp có thể gồm:
+
+- Read replica.
+- Report async.
+- Bảng tổng hợp hoặc materialized view.
+- Giới hạn khoảng thời gian.
+- Tách OLTP khỏi analytics khi workload đủ lớn.
+
+---
+
+## 9. Blocking và Deadlock Diagnostics
+
+Exception chỉ cho biết transaction hiện tại là victim. Root cause cần deadlock graph hoặc engine log mô tả toàn bộ chu trình.
+
+### 9.1. Deadlock graph contents
+
+| Dữ liệu | Câu hỏi trả lời |
 |---|---|
-| Read Uncommitted | Có thể dirty read, ít chặn hơn nhưng nguy hiểm |
-| Read Committed | Tránh dirty read, default phổ biến |
-| Repeatable Read | Giữ ổn định dòng đã đọc, lock/snapshot tùy DB |
-| Serializable | Mạnh nhất, có thể lock range/chặn phantom |
+| Process/transaction ID | Những transaction nào tham gia? |
+| SQL và execution plan | Câu lệnh nào đang chạy? |
+| Resource | Row, key, page, table hay range nào tranh chấp? |
+| Held mode | Transaction đang giữ lock gì? |
+| Requested mode | Transaction đang chờ lock gì? |
+| Victim | Transaction nào bị rollback? |
+| Wait edge | Thứ tự chờ tạo chu trình ra sao? |
 
-Lưu ý:
-
-```text
-Cùng tên isolation nhưng hành vi thực tế khác nhau giữa SQL Server, PostgreSQL, MySQL/InnoDB.
-```
-
-Khi debug lock, phải biết database đang dùng isolation nào và mode snapshot/MVCC có bật không.
-
----
-
-## 18. Read Committed và blocking
-
-Read Committed thường không cho đọc dữ liệu chưa commit.
-
-Trong lock-based read, nếu một dòng đang bị transaction khác update, SELECT có thể phải chờ.
-
-Trong snapshot-based read committed, SELECT có thể đọc version đã commit gần nhất mà không chờ writer.
-
-Vì vậy cùng là Read Committed nhưng:
+### 9.2. Deadlock graph analysis
 
 ```text
-SQL Server default lock-based có thể khác SQL Server bật RCSI.
-PostgreSQL đọc theo MVCC snapshot.
-MySQL/InnoDB có hành vi riêng theo consistent read/current read.
+1. Xác định victim và các transaction còn lại
+2. Liệt kê resource mỗi transaction đang giữ
+3. Liệt kê resource mỗi transaction đang chờ
+4. Vẽ thứ tự acquisition
+5. Đối chiếu SQL, plan và index
+6. Tìm flow lấy resource theo thứ tự ngược
+7. Đo transaction duration và row/page đã chạm
 ```
 
-Đừng học isolation level chỉ bằng bảng lý thuyết. Khi làm production, phải hiểu engine cụ thể.
+Không chỉ nhìn câu SQL cuối đang chờ. Transaction có thể đã lấy lock từ một câu SQL trước đó trong cùng boundary.
+
+### 9.3. Blocking diagnostics
+
+Với blocking, cần tìm **root blocker** thay vì deadlock cycle:
+
+- Session nào đứng đầu chain?
+- Nó đang chạy hay idle trong transaction?
+- Transaction mở từ khi nào?
+- Có external call trong boundary không?
+- Waiter có timeout vì blocker hay vì query của chính nó chậm?
 
 ---
 
-## 19. MVCC và Snapshot
+## 10. Deadlock Recovery
 
-MVCC cho phép database lưu nhiều version của dữ liệu.
+Deadlock victim đã rollback nên thường có thể retry. Retry là recovery, không thay thế việc giảm chu trình chờ lặp lại.
 
-Ý tưởng:
+### 10.1. Transaction-level retry
+
+Dữ liệu đọc trong attempt cũ có thể không còn đúng:
 
 ```text
-Writer tạo version mới.
-Reader có thể đọc version cũ phù hợp snapshot.
-Reader ít chặn writer hơn.
+Deadlock victim
+→ transaction rollback
+→ backoff
+→ BEGIN mới
+→ đọc lại state
+→ chạy lại toàn bộ operation
+→ COMMIT
 ```
 
-Ưu điểm:
+Không chỉ retry câu SQL cuối cùng.
 
-- Giảm read/write blocking
-- Query đọc ổn định hơn
-- Tăng concurrency cho workload đọc nhiều
+### 10.2. Safe retry conditions
 
-Nhược điểm:
+- Exception được phân loại đúng là deadlock/transient conflict.
+- Operation idempotent hoặc có idempotency key.
+- Side effect ngoài database không bị lặp không kiểm soát.
+- Có giới hạn attempt.
+- Có backoff và jitter.
+- Có metric cho deadlock rate và retry outcome.
 
-- Writer vẫn tranh chấp với writer
-- Long transaction giữ version cũ lâu
-- Version store/WAL/vacuum có thể bị áp lực
-- Snapshot quá cũ có thể gây lỗi tùy DB
-- Không tự giải quyết mọi lost update/business race
+### 10.3. Recovery và prevention
 
-Câu nhớ:
+Deadlock xảy ra hiếm dưới interleaving ngẫu nhiên có thể là chi phí chấp nhận được. Deadlock lặp lại với cùng graph thường cho thấy:
+
+- Lock order không nhất quán.
+- Transaction quá dài.
+- Query scan rộng vì thiếu index.
+- Batch quá lớn.
+- Lock hint quá mạnh.
+
+Retry giúp request phục hồi. Thiết kế và query tuning mới giảm tần suất deadlock.
+
+---
+
+## 11. Checklist Locking và Deadlock
+
+### 11.1. Blocking
 
 ```text
-MVCC giảm nhiều blocking giữa đọc và ghi, nhưng không xóa bỏ vấn đề concurrency.
+[ ] Waiter đang chờ resource nào?
+[ ] Ai đang giữ resource đó?
+[ ] Root blocker mở transaction bao lâu?
+[ ] Blocker có đang idle hoặc chờ network không?
+[ ] Query có access path đủ hẹp không?
+[ ] Batch/report nào đang chạy cùng thời điểm?
+[ ] Timeout đang che root cause nào?
 ```
 
----
-
-## 20. Pessimistic locking
-
-Pessimistic locking giả định sẽ có tranh chấp, nên khóa trước.
-
-PostgreSQL:
-
-```sql
-BEGIN;
-
-SELECT StockQuantity
-FROM Products
-WHERE Id = $1
-FOR UPDATE;
-
-UPDATE Products
-SET StockQuantity = StockQuantity - $2
-WHERE Id = $1;
-
-COMMIT;
-```
-
-SQL Server:
-
-```sql
-BEGIN TRANSACTION;
-
-SELECT StockQuantity
-FROM Products WITH (UPDLOCK, ROWLOCK)
-WHERE Id = @productId;
-
-UPDATE Products
-SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId;
-
-COMMIT;
-```
-
-Phù hợp khi:
-
-- Tranh chấp cao
-- Dữ liệu nhạy cảm
-- Muốn tránh conflict sau khi user đã đi xa trong flow
-
-Nhược điểm:
-
-- Giữ lock
-- Có blocking
-- Cần transaction ngắn
-
----
-
-## 21. Optimistic concurrency
-
-Optimistic concurrency giả định conflict hiếm. Không khóa trước, nhưng khi ghi thì kiểm tra version.
-
-Ví dụ:
-
-```sql
-UPDATE Products
-SET Name = @name,
-    Price = @price,
-    RowVersion = RowVersion + 1
-WHERE Id = @id
-  AND RowVersion = @expectedVersion;
-```
-
-Nếu affected rows = 0:
+### 11.2. Deadlock
 
 ```text
-Dữ liệu đã bị thay đổi bởi người khác.
-Không được ghi đè im lặng.
+[ ] Đã lấy deadlock graph hoặc engine log chưa?
+[ ] Các transaction giữ và chờ resource nào?
+[ ] Lock order có ngược nhau không?
+[ ] Query có scan rộng vì thiếu index không?
+[ ] Transaction có quá dài không?
+[ ] Batch nhiều row có sort key nhất quán không?
+[ ] Retry có chạy lại toàn transaction không?
+[ ] Operation có idempotent không?
 ```
 
-Phù hợp khi:
-
-- Form edit dữ liệu master
-- Conflict thấp
-- User có thể refresh/merge
-- Không muốn giữ lock trong lúc user nhập liệu
-
-Không phù hợp nếu tranh chấp rất cao và retry liên tục gây trải nghiệm tệ.
-
----
-
-## 22. Atomic update giúp giảm race
-
-Sai:
+### 11.3. Thiết kế
 
 ```text
-SELECT StockQuantity
-Check trong app
-UPDATE StockQuantity = giá trị mới
+[ ] Có thể dùng atomic statement thay cho read rồi lock không?
+[ ] Constraint có thể bảo vệ rule thay cho lock mạnh không?
+[ ] Các flow có cùng resource ordering không?
+[ ] Transaction đã mở muộn và commit sớm chưa?
+[ ] Có external side effect trong transaction không?
+[ ] Foreign Key và write predicate có index phù hợp không?
+[ ] Lock hint có bằng chứng và test concurrency không?
 ```
 
-Dễ lost update.
+---
 
-Tốt hơn:
+## 12. Tóm tắt
 
-```sql
-UPDATE Products
-SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId
-  AND StockQuantity >= @quantity;
-```
-
-Sau đó kiểm tra affected rows:
+Locking trả lời câu hỏi:
 
 ```text
-1 row affected: trừ kho thành công
-0 row affected: không đủ tồn hoặc product không tồn tại
+Engine điều phối resource tranh chấp giữa transaction như thế nào?
 ```
-
-Điểm hay:
-
-- Check và update nằm trong cùng câu lệnh
-- Database xử lý atomic
-- Giảm cửa sổ race condition
-
-Nếu cần ghi lịch sử kho, bọc update + insert history trong cùng transaction.
-
----
-
-## 23. Deadlock graph đọc gì?
-
-Deadlock graph/log thường cho biết:
-
-- Transaction/process nào tham gia
-- Câu SQL nào đang chạy
-- Lock resource là gì
-- Ai giữ lock
-- Ai đang chờ lock
-- Victim là transaction nào
-- Mode lock đang giữ/chờ
-
-Khi đọc deadlock graph, hỏi:
 
 ```text
-Hai transaction lấy tài nguyên nào?
-Thứ tự lấy lock có ngược nhau không?
-Câu SQL nào scan rộng?
-Index nào thiếu?
-Transaction nào giữ lock lâu?
-Có flow nào update cùng bảng nhưng thứ tự khác không?
+Lock request
+→ compatibility check
+→ cấp lock hoặc chờ
+→ giữ tới mốc theo statement/transaction
+→ giải phóng khi commit/rollback
 ```
-
-Đừng chỉ retry deadlock rồi bỏ qua. Retry giúp request qua được, nhưng deadlock lặp lại nhiều là tín hiệu thiết kế cần xem lại.
-
----
-
-## 24. Cách giảm deadlock
-
-Các cách thực dụng:
-
-1. Giữ transaction ngắn.
-2. Không gọi API ngoài trong transaction.
-3. Luôn update bảng/dòng theo cùng thứ tự.
-4. Sort danh sách Id trước khi update nhiều dòng.
-5. Thêm index cho điều kiện update/delete.
-6. Tránh scan lớn trong transaction.
-7. Chia batch lớn thành batch nhỏ.
-8. Dùng isolation level vừa đủ.
-9. Dùng lock hint có chủ đích khi cần.
-10. Retry deadlock với idempotency và backoff.
-
-Ví dụ:
 
 ```text
-Nếu nhiều request cùng update ProductIds [3, 1, 2],
-hãy sort thành [1, 2, 3] trước khi update.
+Blocking = chờ một chiều
+Deadlock = chờ theo chu trình
+Timeout  = chờ vượt deadline
 ```
 
----
-
-## 25. Retry deadlock đúng cách
-
-Deadlock victim thường có thể retry, nhưng không được retry mù.
-
-Retry chỉ ổn khi:
-
-- Operation idempotent hoặc có idempotency key
-- Exception đúng loại transient/deadlock
-- Có giới hạn số lần retry
-- Có backoff/jitter
-- Không lặp lại side effect ngoài database
-- Có log để theo dõi tần suất
-
-Sai:
-
-```text
-Catch mọi exception rồi retry 5 lần.
-```
-
-Đúng hơn:
-
-```text
-Chỉ retry lỗi deadlock/serialization/transient đã phân loại.
-Retry tối đa 2-3 lần.
-Backoff tăng dần.
-Nếu vẫn fail thì trả lỗi có kiểm soát.
-```
-
-Nếu retry một request tạo đơn hàng mà không có idempotency key, có thể tạo trùng đơn.
-
----
-
-## 26. Side effect ngoài database và lock
-
-Không nên làm side effect ngoài database khi transaction đang mở:
-
-- Gọi payment gateway
-- Gửi email
-- Publish message trực tiếp
-- Upload file
-- Gọi service khác
-
-Vì:
-
-- Làm transaction dài
-- Giữ lock lâu
-- Side effect không rollback được
-- Timeout bên ngoài kéo database vào trạng thái chờ
-
-Pattern tốt hơn:
-
-```text
-Trong transaction:
-  Ghi dữ liệu nghiệp vụ
-  Ghi OutboxMessage
-Commit
-
-Sau commit:
-  Worker publish message/gửi email/gọi service ngoài
-```
-
----
-
-## 27. Batch job và lock
-
-Batch job là nguồn gây lock production rất phổ biến.
-
-Ví dụ:
-
-```sql
-UPDATE Orders
-SET Status = 'Expired'
-WHERE Status = 'Pending'
-  AND ExpiredAt < @now;
-```
-
-Nếu câu này update 2 triệu dòng trong một transaction:
-
-- Lock giữ lâu
-- Log tăng mạnh
-- Replication lag
-- Request online bị chặn
-- Rollback cực lâu nếu lỗi
-
-Hướng tốt hơn:
-
-- Batch theo `TOP/LIMIT`
-- Có index phù hợp
-- Commit từng batch
-- Chạy ngoài giờ cao điểm
-- Có checkpoint/resume
-- Theo dõi số dòng mỗi batch
-
-Ví dụ ý tưởng:
-
-```text
-Mỗi lần update 1.000 dòng.
-Commit.
-Nghỉ ngắn.
-Lặp tiếp.
-```
-
----
-
-## 28. Report/export và lock
-
-Report lớn có thể gây áp lực concurrency:
-
-- Đọc nhiều dữ liệu
-- Giữ snapshot lâu
-- Tốn IO/CPU
-- Làm version store phình trong MVCC
-- Có thể block nếu isolation/engine dùng lock-based read
-
-Hướng xử lý:
-
-- Read replica
-- Report async
-- Bảng tổng hợp
-- Materialized view
-- Giới hạn khoảng thời gian
-- Export theo batch
-- Tách OLTP và analytics khi hệ thống lớn
-
-Không nên để report nặng chạy trực tiếp trên bảng giao dịch nóng nếu dữ liệu đã lớn.
-
----
-
-## 29. Lock timeout
-
-Lock timeout xảy ra khi transaction chờ lock quá lâu.
-
-Nó khác deadlock:
-
-```text
-Deadlock: chờ vòng tròn, database rollback victim.
-Lock timeout: chờ một lock quá lâu nên timeout.
-```
-
-Khi gặp lock timeout:
-
-- Tìm blocker
-- Xem blocker đang chạy câu SQL nào
-- Xem transaction mở bao lâu
-- Xem query waiter có index không
-- Xem có batch/report nào đang chạy không
-- Xem timeout config ở app/database
-
-Tăng timeout chỉ là giải pháp cuối, không phải chữa nguyên nhân.
-
----
-
-## 30. Connection pool và transaction bị bỏ quên
-
-Một lỗi nguy hiểm:
-
-```text
-Mở transaction
-Exception xảy ra
-Không rollback/commit đúng
-Connection quay lại pool trong trạng thái xấu hoặc giữ lock lâu
-```
-
-Framework thường giúp xử lý, nhưng code vẫn phải cẩn thận.
-
-Nguyên tắc:
-
-- Dùng `using`/scope transaction đúng cách
-- Rollback khi exception
-- Không swallow exception rồi bỏ transaction
-- Không để transaction sống qua nhiều layer mơ hồ
-- Log transaction boundary ở nghiệp vụ quan trọng
-
----
-
-## 31. Transaction trong ORM và lock
-
-ORM không làm biến mất lock.
-
-Ví dụ:
-
-```text
-Load entity
-Modify object
-SaveChanges
-```
-
-Khi `SaveChanges`, ORM sinh SQL và database vẫn lấy lock như thường.
-
-Cần chú ý:
-
-- ORM có thể update nhiều cột hơn cần thiết
-- Lazy loading gây N+1 và kéo dài request
-- SaveChanges nhiều lần có thể tạo nhiều transaction nhỏ
-- Transaction scope quá rộng có thể giữ lock qua nhiều thao tác
-- Query generated SQL có thể không SARGable
-
-Senior BE cần xem SQL thật ORM sinh ra khi debug performance/concurrency.
-
----
-
-## 32. Lock và foreign key
-
-Foreign key cũng ảnh hưởng locking.
-
-Ví dụ xóa parent:
-
-```sql
-DELETE FROM Customers
-WHERE Id = @customerId;
-```
-
-Database phải kiểm tra bảng con như `Orders` có dòng tham chiếu không.
-
-Nếu bảng con thiếu index trên FK:
-
-```sql
-Orders(CustomerId)
-```
-
-Database có thể scan bảng con để kiểm tra, gây chậm và lock rộng.
-
-Nguyên tắc:
-
-```text
-Các foreign key quan trọng thường nên có index ở bảng con.
-```
-
-Đặc biệt với delete/update parent hoặc join thường xuyên.
-
----
-
-## 33. Unique constraint và concurrency
-
-Không nên chống trùng chỉ bằng check trước insert:
-
-```sql
-SELECT COUNT(*)
-FROM Users
-WHERE Email = @email;
-
-INSERT INTO Users(Email)
-VALUES (@email);
-```
-
-Hai request cùng lúc có thể đều thấy chưa tồn tại rồi cùng insert.
-
-Đúng hơn:
-
-```sql
-CREATE UNIQUE INDEX UX_Users_Email
-ON Users(Email);
-```
-
-Sau đó insert và xử lý lỗi unique violation.
-
-Unique constraint vừa bảo vệ dữ liệu, vừa là công cụ concurrency cực quan trọng.
-
----
-
-## 34. Queue worker và lock
-
-Nhiều worker cùng lấy job cần thiết kế locking đúng.
-
-Ý tưởng phổ biến:
-
-```text
-Worker lấy một batch job Pending.
-Đánh dấu Processing.
-Commit.
-Xử lý job.
-Đánh dấu Done/Failed.
-```
-
-Nếu nhiều worker cùng đọc một job Pending mà không lock/claim atomic, job có thể bị xử lý trùng.
-
-Một số DB hỗ trợ pattern như:
-
-- `FOR UPDATE SKIP LOCKED` trong PostgreSQL
-- Lock hints trong SQL Server
-- Atomic update với status condition
-
-Ví dụ ý tưởng:
-
-```sql
-UPDATE Jobs
-SET Status = 'Processing',
-    WorkerId = @workerId
-WHERE Id = @jobId
-  AND Status = 'Pending';
-```
-
-Check affected rows để biết claim job thành công không.
-
----
-
-## 35. Case thực tế: trừ kho
-
-Yêu cầu:
-
-- Không cho tồn âm
-- Nhiều người đặt hàng cùng lúc
-- Có lịch sử kho
-
-Hướng tốt:
-
-```sql
-BEGIN TRANSACTION;
-
-UPDATE Products
-SET StockQuantity = StockQuantity - @quantity
-WHERE Id = @productId
-  AND StockQuantity >= @quantity;
-
--- Nếu affected rows = 0: rollback, báo không đủ tồn
-
-INSERT INTO StockTransactions(ProductId, Quantity, Reason)
-VALUES (@productId, -@quantity, 'OrderCreated');
-
-COMMIT;
-```
-
-Nếu đơn hàng có nhiều sản phẩm:
-
-```text
-Sort ProductId tăng dần trước khi trừ kho từng dòng.
-```
-
-Giúp giảm deadlock khi nhiều đơn cùng chứa các sản phẩm giống nhau nhưng thứ tự khác.
-
----
-
-## 36. Case thực tế: cập nhật trạng thái đơn
-
-Sai:
-
-```sql
-UPDATE Orders
-SET Status = 'Cancelled'
-WHERE Id = @orderId;
-```
-
-Nếu không kiểm tra trạng thái hiện tại, request song song có thể ghi đè trạng thái.
-
-Tốt hơn:
-
-```sql
-UPDATE Orders
-SET Status = 'Cancelled'
-WHERE Id = @orderId
-  AND Status = 'Pending';
-```
-
-Check affected rows:
-
-```text
-1: cancel thành công
-0: order không còn Pending hoặc không tồn tại
-```
-
-Đây là optimistic concurrency ở mức business state.
-
----
-
-## 37. Case thực tế: batch expire orders
-
-Query:
-
-```sql
-UPDATE Orders
-SET Status = 'Expired'
-WHERE Status = 'Pending'
-  AND ExpiredAt < @now;
-```
-
-Rủi ro:
-
-- Update quá nhiều dòng
-- Scan nếu thiếu index
-- Lock lâu
-- Chặn API user đang thao tác order
-
-Hướng tốt:
-
-```text
-1. Có index (Status, ExpiredAt).
-2. Lấy batch nhỏ order ids cần expire.
-3. Update theo Id trong batch.
-4. Commit từng batch.
-5. Có checkpoint/resume.
-6. Chạy ngoài giờ cao điểm nếu cần.
-```
-
----
-
-## 38. Checklist debug blocking production
-
-Khi API timeout nghi do lock:
-
-1. Xác định query/request nào đang chờ.
-2. Tìm blocker đang giữ lock.
-3. Xem blocker mở transaction bao lâu.
-4. Xem blocker đang chạy SQL nào.
-5. Xem waiter đang chờ resource nào.
-6. Kiểm tra query update/delete có index không.
-7. Kiểm tra có batch/report đang chạy không.
-8. Kiểm tra transaction có gọi API ngoài không.
-9. Kiểm tra isolation level.
-10. Kiểm tra số dòng bị đụng tới.
-11. Nếu cần, kill blocker có kiểm soát và ghi nhận hậu quả.
-12. Sau incident, sửa root cause: index, batch, boundary, schedule, code flow.
-
----
-
-## 39. Checklist debug deadlock
-
-Khi gặp deadlock:
-
-1. Lấy deadlock graph/log.
-2. Xác định victim.
-3. Xác định các transaction tham gia.
-4. Xem câu SQL mỗi transaction đang chạy.
-5. Xác định resource bị giữ/chờ.
-6. Kiểm tra thứ tự lock có ngược nhau không.
-7. Kiểm tra query có scan rộng vì thiếu index không.
-8. Kiểm tra transaction có quá dài không.
-9. Kiểm tra batch nhiều dòng có sort Id không.
-10. Thêm retry có kiểm soát nếu operation idempotent.
-11. Sửa root cause, không chỉ tăng retry.
-
----
-
-## 40. Checklist thiết kế chống lock/deadlock
-
-Khi thiết kế use case ghi dữ liệu:
-
-1. Những dòng/bảng nào sẽ bị update?
-2. Có request song song tác động cùng dữ liệu không?
-3. Transaction boundary có đủ hẹp không?
-4. Có side effect ngoài database trong transaction không?
-5. Các flow khác có update cùng bảng theo thứ tự khác không?
-6. Update nhiều dòng có sort key trước không?
-7. Điều kiện update/delete có index không?
-8. Có cần optimistic concurrency/version không?
-9. Có cần pessimistic lock không?
-10. Có check affected rows không?
-11. Có unique constraint bảo vệ invariant không?
-12. Có retry deadlock đúng cách không?
-13. Có idempotency key cho request có thể retry không?
-14. Có log business id/correlation id để truy sự cố không?
-
----
-
-## 41. Khi nào dùng lock mạnh hơn?
-
-Có lúc cần lock mạnh hơn hoặc isolation cao hơn:
-
-- Booking slot không được trùng
-- Trừ kho contention cao
-- Rút tiền/chuyển tiền
-- Claim job trong queue
-- Sinh số thứ tự tuần tự theo nghiệp vụ
-- Kiểm tra invariant trên một khoảng dữ liệu
-
-Nhưng lock mạnh hơn phải đi cùng:
-
-- Transaction ngắn
-- Index tốt
-- Retry
-- Monitoring
-- Test concurrency
-
-Không nên bật isolation mạnh toàn hệ thống chỉ vì một nghiệp vụ nhỏ.
-
----
-
-## 42. Khi nào không nên dùng lock để giải quyết?
-
-Không nên dùng lock nặng nếu vấn đề thật là:
-
-- Report cần read model
-- API trả quá nhiều dữ liệu
-- Batch job nên chia nhỏ
-- Workflow dài nên dùng saga
-- Side effect nên dùng outbox
-- Duplicate nên dùng unique constraint/idempotency
-- Form edit nên dùng optimistic concurrency
-- Search text nên dùng search engine/full-text
-
-Senior biết khi nào lock là đúng thuốc, và khi nào lock chỉ làm hệ thống nghẽn hơn.
-
----
-
-## 43. Tư duy Middle/Senior
-
-Junior thường nghĩ:
-
-```text
-Bọc transaction là an toàn.
-```
-
-Middle bắt đầu hỏi:
-
-```text
-Transaction này update bảng nào?
-Có deadlock không?
-Có giữ lock lâu không?
-```
-
-Senior hỏi sâu hơn:
-
-```text
-Lock order giữa các use case có nhất quán không?
-Query update/delete có seek đúng index không?
-Batch job có lock quá rộng không?
-Retry có idempotent không?
-Side effect ngoài database có làm transaction dài không?
-Deadlock graph nói resource nào đang tranh chấp?
-Nếu dữ liệu tăng 10 lần, lock duration có còn ổn không?
-```
-
-Locking không phải kiến thức DBA xa vời. Nó là phần lõi của backend production.
-
----
-
-## 44. Câu tổng kết
-
-Lock giúp database giữ dữ liệu đúng khi nhiều transaction chạy cùng lúc. Deadlock là hệ quả khi nhiều transaction lấy tài nguyên theo thứ tự xung đột.
-
-Muốn xử lý tốt locking/deadlock, đừng chỉ nhớ tên lock. Hãy nhìn vào:
-
-```text
-Transaction boundary
-Thứ tự update
-Index cho write path
-Isolation level
-Side effect ngoài database
-Batch size
-Retry và idempotency
-Deadlock graph/log
-```
-
-**Kết luận**: Backend senior không chỉ làm cho query chạy đúng. Backend senior làm cho query chạy đúng khi nhiều request cùng lúc, dữ liệu lớn, production có batch job, có retry, có timeout, và có người dùng thật đang chờ hệ thống phản hồi.
+Các ý chính:
+
+- Writer–writer conflict cần điểm phân xử.
+- Lock mode và resource đều ảnh hưởng blocking.
+- Index quyết định access path và lock footprint.
+- Transaction dài làm wait kéo dài.
+- Lock ordering nhất quán giảm deadlock phổ biến.
+- Deadlock victim phải retry toàn transaction.
+- Retry là recovery, không thay root-cause analysis.
+
+[Concurrency Control Patterns](/database/concurrency-control-patterns/theory) tiếp tục bằng câu hỏi application cần chọn constraint, atomic update, optimistic lock, pessimistic lock, queue hay Outbox trong từng failure window nào.

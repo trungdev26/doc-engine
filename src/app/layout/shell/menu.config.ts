@@ -540,7 +540,7 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
       icon: 'database',
       groups: [
         {
-          title: '01. Index và chiến lược truy cập',
+          title: '01. Index trong cơ sở dữ liệu',
           items: [
             { label: 'Lý thuyết', link: '/database/index/theory' },
             { label: 'Demo', link: '/database/index/demo' },
@@ -565,25 +565,33 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
           items: [{ label: 'Lý thuyết', link: '/database/query-tuning-workflow/theory' }],
         },
         {
-          title: '05. Giao dịch và kiểm soát đồng thời',
+          title: '05. Transaction và Concurrency Control',
           items: [
             {
               label: 'Lý thuyết',
               children: [
                 {
-                  label: '01. Transaction và Isolation',
+                  label: '01. Transaction',
                   link: '/database/transactions/theory',
                 },
                 {
-                  label: '02. Locking và Deadlock',
+                  label: '02. ACID',
+                  link: '/database/acid/theory',
+                },
+                {
+                  label: '03. Transaction Isolation',
+                  link: '/database/isolation-levels/theory',
+                },
+                {
+                  label: '04. Locking, Blocking và Deadlock',
                   link: '/database/locking-deadlock/theory',
                 },
                 {
-                  label: '03. Concurrency Control Patterns',
+                  label: '05. Concurrency Control Patterns',
                   link: '/database/concurrency-control-patterns/theory',
                 },
                 {
-                  label: '04. MySQL InnoDB Concurrency',
+                  label: '06. MySQL InnoDB Concurrency Internals',
                   link: '/database/mysql-innodb-concurrency/theory',
                 },
               ],
@@ -592,20 +600,20 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
               label: 'Demo',
               children: [
                 {
-                  label: '01. Transaction Boundary và Lost Update',
+                  label: '01. Transaction Boundary',
                   link: '/database/transactions/demo',
                 },
                 {
-                  label: '02. Deadlock và Lock Ordering',
+                  label: '02. Isolation Anomalies',
+                  link: '/database/isolation-anomalies/demo',
+                },
+                {
+                  label: '03. Blocking, Deadlock và Lock Ordering',
                   link: '/database/locking-deadlock/demo',
                 },
                 {
-                  label: '03. Transactional Outbox',
+                  label: '04. Transactional Outbox',
                   link: '/database/concurrency-control-patterns/demo',
-                },
-                {
-                  label: '04. Isolation Anomalies',
-                  link: '/database/isolation-anomalies/demo',
                 },
               ],
             },

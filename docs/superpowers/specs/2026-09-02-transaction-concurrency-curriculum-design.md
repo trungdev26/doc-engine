@@ -25,15 +25,15 @@ Nhóm hiện tại `05. Giao dịch và kiểm soát đồng thời` đổi thà
 
 ```text
 05. Transaction và Concurrency Control
-├── 01. Transaction Fundamentals
-├── 02. ACID Properties
-├── 03. Isolation Levels và Anomalies
+├── 01. Transaction
+├── 02. ACID
+├── 03. Transaction Isolation
 ├── 04. Locking, Blocking và Deadlock
 ├── 05. Concurrency Control Patterns
 └── 06. MySQL InnoDB Concurrency Internals
 ```
 
-Navigation phải đưa `ACID Properties` và `Isolation Levels và Anomalies` vào lộ trình chính. Demo giữ trong nhóm riêng và được đặt tên theo đúng cơ chế mà nó minh họa.
+Navigation phải đưa `ACID` và `Transaction Isolation` vào lộ trình chính. Demo giữ trong nhóm riêng và được đặt tên theo đúng cơ chế mà nó minh họa.
 
 ## Trình tự trình bày
 
@@ -50,21 +50,23 @@ Các bài áp dụng cách dẫn dắt đã tạo hiệu quả trong tài liệu
 
 Tên các phần phải là thuật ngữ kỹ thuật chuẩn, ngắn và có thể tìm kiếm. Nội dung không dùng nhãn nội bộ để gọi tên phương pháp trình bày.
 
+Không rút gọn lý thuyết thành định nghĩa một dòng hoặc checklist. Mỗi khái niệm cốt lõi phải trả lời đủ: nó là gì, giải quyết vấn đề nào, cơ chế vận hành ra sao, bảo đảm trong phạm vi nào, không bảo đảm điều gì và biểu hiện thế nào trong một ví dụ có thể theo dõi. Khi một section chứa nhiều cơ chế hoặc nhiều bước suy luận, tách thành các heading con có tên kỹ thuật thay vì đặt toàn bộ nội dung trong một đoạn dài.
+
 ## Phạm vi kiến thức của từng bài
 
-### Transaction Fundamentals
+### Transaction
 
 Sở hữu các khái niệm transaction boundary, trạng thái tạm thời, `COMMIT`, `ROLLBACK`, auto-commit, explicit transaction, lifecycle, savepoint, connection/session ownership, ambiguous commit outcome và transaction dài.
 
 Bài chỉ giới thiệu ACID ở mức liên kết sang bài kế tiếp, không giải thích lại bốn thuộc tính.
 
-### ACID Properties
+### ACID
 
 Sở hữu định nghĩa Atomicity, Consistency, Isolation và Durability; giải thích mỗi thuộc tính bảo đảm gì, không bảo đảm gì và trade-off cơ bản.
 
 Bài không lặp lại transaction lifecycle, không phân tích chi tiết isolation levels và không đi sâu vào implementation riêng của engine.
 
-### Isolation Levels và Anomalies
+### Transaction Isolation
 
 Sở hữu concurrent schedule, serial schedule, Dirty Read, Non-repeatable Read, Phantom Read, Lost Update, Write Skew, bốn isolation level chuẩn và sự khác nhau giữa MVCC với lock-based read ở mức database-neutral.
 
@@ -107,6 +109,8 @@ Demo được audit theo trách nhiệm sau:
 
 Không tạo demo riêng cho ACID hoặc InnoDB trừ khi audit chứng minh nội dung hiện tại không thể giải thích rõ bằng prose, SQL và diagram tĩnh. Mọi demo được sửa phải tiếp tục dùng shared components và interaction model hiện có.
 
+Các bài lý thuyết không có section `Demo`, `Lab`, không nhắc route UI và không giải thích thao tác trên demo. Ví dụ trong bài được trình bày như case thực tế độc lập; navigation chịu trách nhiệm dẫn người dùng tới demo.
+
 ## Liên kết và dependency
 
 Mỗi bài mở đầu bằng prerequisite boundary ngắn:
@@ -124,11 +128,15 @@ Cross-link chỉ dùng để nối prerequisite, nội dung chuyên sâu thuộc
 
 - Sáu bài xuất hiện đúng thứ tự trong navigation và route hợp lệ.
 - Không có thuật ngữ bắt buộc nào được dùng trước khi định nghĩa hoặc liên kết prerequisite rõ ràng.
+- Định nghĩa không chỉ thay thuật ngữ bằng một từ đồng nghĩa; nó phải nêu phạm vi, hành vi quan sát được và điểm khác với khái niệm gần nhất.
+- Nội dung giữ đủ chiều sâu để giải thích nguyên nhân và cơ chế, không rút thành ghi chú hoặc danh sách kết luận.
+- Section dài được tách theo thành phần, giai đoạn thực thi, failure mode hoặc giới hạn; heading con phải cho biết phần đó sở hữu kiến thức gì.
 - Mỗi khái niệm chính có một bài sở hữu; phần lặp lại ở bài khác được rút thành liên kết hoặc recap ngắn.
 - Headings dùng thuật ngữ chuẩn và phản ánh dependency từ nền tảng đến chuyên sâu.
 - Ví dụ có input, state transition và kết quả được giải thích; không có code block đứng riêng thay cho lý thuyết.
 - Khác biệt engine được tách khỏi phần database-neutral.
 - Demo và nhãn navigation khớp với phạm vi bài tương ứng.
+- Sáu bài lý thuyết không chứa section hoặc liên kết giới thiệu demo.
 - Tất cả liên kết nội bộ hợp lệ; production build thành công.
 - Nội dung tiếng Việt giữ đúng UTF-8 và không sửa dựa trên mojibake của terminal.
 

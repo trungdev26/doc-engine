@@ -2,13 +2,11 @@ import { Injectable, NgZone } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class FpsMeterService {
-  fps = 60;
-
   private rafId?: number;
 
   constructor(private readonly ngZone: NgZone) {}
 
-  start(): void {
+  start(publish: (fps: number) => void): void {
     if (this.rafId !== undefined) {
       return;
     }
@@ -23,7 +21,7 @@ export class FpsMeterService {
           const fps = Math.round((frames * 1000) / elapsed);
           frames = 0;
           lastTime = now;
-          this.ngZone.run(() => (this.fps = fps));
+          publish(fps);
         }
         this.rafId = requestAnimationFrame(loop);
       };

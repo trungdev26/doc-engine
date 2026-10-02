@@ -17,7 +17,7 @@ export class IndicatorsTableComponent implements OnInit, OnDestroy {
   rowCount = 1;
   strategy: Strategy = 'default';
   stressMode = false;
-  tickCount = 0;
+  rafCallbackCount = 0;
 
   private rafId?: number;
 
@@ -57,12 +57,12 @@ export class IndicatorsTableComponent implements OnInit, OnDestroy {
 
   resetCounter(): void {
     this.counter.reset();
-    this.tickCount = 0;
+    this.rafCallbackCount = 0;
   }
 
   private startStress(): void {
     const loop = () => {
-      this.tickCount++;
+      this.rafCallbackCount++;
       this.rafId = requestAnimationFrame(loop);
     };
     this.rafId = requestAnimationFrame(loop);

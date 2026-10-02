@@ -1113,3 +1113,72 @@ html[data-theme='dark'] app-load-parameter-demo
     border-top: 1px solid var(--demo-border); border-left: 0;
   }
 }
+
+/* app-indicators-table dùng thẳng nz-table/nz-select/... (xem angular.json, ng-zorro chỉ nạp theme light) */
+html[data-theme='dark'] app-indicators-table .ant-alert-info {
+  background: var(--demo-surface);
+  border-color: var(--demo-border);
+}
+html[data-theme='dark'] app-indicators-table .ant-alert-info :is(.ant-alert-message, li) {
+  color: var(--demo-text);
+}
+html[data-theme='dark'] app-indicators-table .ant-table {
+  background: var(--demo-surface);
+  color: var(--demo-text);
+}
+html[data-theme='dark'] app-indicators-table .ant-table-thead > tr > th {
+  background: var(--demo-surface-muted);
+  color: var(--demo-text-strong);
+  border-bottom-color: var(--demo-border);
+}
+html[data-theme='dark'] app-indicators-table .ant-table-tbody > tr > td {
+  background: var(--demo-surface);
+  color: var(--demo-text);
+  border-bottom-color: var(--demo-border);
+}
+html[data-theme='dark'] app-indicators-table .ant-table-tbody > tr:hover > td {
+  background: var(--demo-surface-subtle);
+}
+html[data-theme='dark'] app-indicators-table :is(.ant-select-selector, .ant-input-number, .ant-input) {
+  background: var(--demo-surface) !important;
+  border-color: var(--demo-border) !important;
+  color: var(--demo-text) !important;
+}
+html[data-theme='dark'] app-indicators-table .ant-select-arrow {
+  color: var(--demo-text-muted);
+}
+html[data-theme='dark'] app-indicators-table .ant-radio-button-wrapper {
+  background: var(--demo-surface);
+  border-color: var(--demo-border);
+  color: var(--demo-text);
+}
+html[data-theme='dark'] app-indicators-table .ant-radio-button-wrapper-checked {
+  color: var(--demo-text-strong);
+}
+html[data-theme='dark'] app-indicators-table .ant-checkbox-wrapper {
+  color: var(--demo-text);
+}
+html[data-theme='dark'] app-indicators-table .ant-btn-default {
+  background: var(--demo-surface);
+  border-color: var(--demo-border);
+  color: var(--demo-text);
+}
+html[data-theme='dark'] app-indicators-table .ant-btn-default:hover {
+  border-color: var(--demo-border-strong);
+  color: var(--demo-text-strong);
+}
+/* nz-select dropdown mount vào cdk-overlay ở body, nằm ngoài app-indicators-table */
+html[data-theme='dark'] .cdk-overlay-container .ant-select-dropdown {
+  background: var(--demo-surface);
+  border: 1px solid var(--demo-border);
+}
+html[data-theme='dark'] .cdk-overlay-container .ant-select-item {
+  color: var(--demo-text);
+}
+html[data-theme='dark'] .cdk-overlay-container .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--demo-surface-muted);
+  color: var(--demo-text-strong);
+}
+html[data-theme='dark'] .cdk-overlay-container .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background: var(--demo-surface-subtle);
+}

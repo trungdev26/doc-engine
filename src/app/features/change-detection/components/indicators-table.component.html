@@ -38,7 +38,7 @@
 
   <div class="toolbar-group toolbar-stats">
     <app-fps-meter></app-fps-meter>
-    <nz-tag nzColor="blue">Tick: {{ tickCount }}</nz-tag>
+    <nz-tag nzColor="blue">rAF callback: {{ rafCallbackCount }}</nz-tag>
     <nz-tag nzColor="green">Tổng lượt CD check: {{ counter.checkCount }}</nz-tag>
   </div>
 </div>
@@ -65,7 +65,11 @@
       <tr app-indicator-row-onpush *ngFor="let row of rows; trackBy: trackById" [data]="row"></tr>
     </ng-container>
     <ng-container *ngIf="strategy === 'onpush-pipe'">
-      <tr app-indicator-row-onpush-pipe *ngFor="let row of rows; trackBy: trackById" [data]="row"></tr>
+      <tr
+        app-indicator-row-onpush-pipe
+        *ngFor="let row of rows; trackBy: trackById"
+        [data]="row"
+      ></tr>
     </ng-container>
   </tbody>
 </nz-table>

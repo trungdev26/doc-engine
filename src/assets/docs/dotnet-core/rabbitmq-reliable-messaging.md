@@ -250,13 +250,21 @@ Trước khi gửi thư, cần có một con đường dẫn tới bưu điện.
 
 #### Chặng 2 — Exchange: bác bưu tá phân loại thư
 
-Bưu điện không bắt người gửi tự đi tìm đúng hòm thư. Người gửi chỉ ném thư vào một cái máy phân loại tự động gọi là **Exchange**, kèm theo một cái nhãn (**Routing Key**, ví dụ `order.created`). Exchange nhìn nhãn đó và áp dụng luật phân loại (**Binding**) để ném thư vào đúng những hòm thư đang chờ:
+Bưu điện không bắt người gửi tự đi tìm đúng hòm thư. Người gửi chỉ ném thư vào một cái máy phân loại tự động gọi là **Exchange**, kèm theo một cái nhãn (**Routing Key**, ví dụ `order.created`).
 
-- **Direct** (khớp chính xác) — nhãn ghi gì, ném đúng vào hòm thư ghi đúng chữ đó. Nhãn `order.created` chỉ vào hòm thư `order.created`.
-- **Topic** (khớp theo nhóm) — phân loại theo cụm từ: thư dán nhãn `order.shipping` hay `order.success` đều gom vào một chỗ nếu luật ghi `order.*`.
-- **Fanout** (phát tờ rơi) — bất kể nhãn ghi gì, Exchange nhân bản bức thư và phát đều vào mọi hòm thư đang có.
+**Binding** là luật phân loại được khai báo trước, nối một Exchange với một Queue theo một điều kiện cụ thể — một routing key, một pattern, hoặc không điều kiện gì tuỳ loại Exchange. Một Exchange có thể có nhiều Binding trỏ tới nhiều Queue khác nhau, và một Queue cũng có thể nhận Binding từ nhiều Exchange khác nhau. Xoá một Binding chỉ cắt đúng đường nối đó — không đụng tới Exchange hay Queue ở hai đầu, và cũng không xoá message đang nằm trong Queue.
 
-RabbitMQ còn một kiểu thứ tư là `headers`, phân loại theo metadata thay vì nhãn, nhưng ít dùng nên không đi sâu ở đây.
+Cách Exchange áp dụng Binding để chọn hòm thư phụ thuộc vào loại của nó:
+
+- **Direct** (khớp chính xác) — nhãn ghi gì, ném đúng vào hòm thư có Binding ghi đúng chữ đó.
+  - Ví dụ: Binding `order.created` chỉ nhận thư dán đúng nhãn `order.created`, không nhận `order.shipped`.
+- **Topic** (khớp theo nhóm) — Binding dùng pattern với `*` (khớp đúng một từ) hoặc `#` (khớp không hoặc nhiều từ), phân tách bằng dấu chấm.
+  - Ví dụ: Binding `order.*` khớp `order.shipping` và `order.success`, nhưng không khớp `order.shipping.urgent` vì `*` chỉ thay cho đúng một từ.
+  - Ví dụ: Binding `order.#` khớp mọi nhãn bắt đầu bằng `order.`, kể cả `order.shipping.urgent`.
+- **Fanout** (phát tờ rơi) — bỏ qua nhãn và Binding key hoàn toàn, phát một bản sao cho mọi Queue đã bind vào Exchange đó.
+  - Ví dụ: Exchange fanout `order.broadcast` gửi cùng một bản tin tới queue email, queue audit và queue analytics cùng lúc, không cần khai báo routing key nào.
+
+RabbitMQ còn một kiểu thứ tư là `headers`, dùng Binding so khớp theo metadata trong header thay vì nhãn, nhưng ít dùng nên không đi sâu ở đây.
 
 #### Chặng 3 — Queue: hòm thư chứa tin nhắn
 
@@ -315,6 +323,18 @@ Hai port có hai vai trò khác nhau:
 Management UI chỉ hiển thị `Connections` sau khi application thực sự mở connection.
 
 Foundation tạo connection theo cơ chế lazy. Khởi động API chưa làm connection xuất hiện — readiness check hoặc lần publish đầu tiên sẽ kích hoạt kết nối.
+
+Mở Management UI lần đầu, tab Overview hiển thị năm con số tổng:
+
+| Chỉ số | Ý nghĩa |
+|---|---|
+| `Connections` | Số TCP connection đang mở tới RabbitMQ (mục 5.3) |
+| `Channels` | Số channel logic đang chạy trên các connection đó (mục 5.4) |
+| `Exchanges` | Số exchange đang tồn tại, kể cả exchange mặc định |
+| `Queues` | Số queue đã được declare |
+| `Consumers` | Số consumer đang subscribe một queue bất kỳ |
+
+`Exchanges` khác 0 ngay cả khi chưa tạo gì, vì RabbitMQ luôn có sẵn một tập exchange mặc định: `amq.direct`, `amq.fanout`, `amq.topic`, `amq.headers`, `amq.match`, `amq.rabbitmq.trace`, và exchange rỗng `""` (default exchange, route theo tên queue trùng routing key). `Queues` và `Consumers` bằng 0 là bình thường ở giai đoạn này — chưa có mục nào trong bài declare một business queue thật.
 
 ## 5. RabbitMQ Client trong .NET 6
 
@@ -592,6 +612,8 @@ Vì vậy trước khi publish, cần tạo sẵn một queue và bind nó vào 
 4. Gọi publisher với routing key `order.created`.
 5. Quay lại queue và quan sát `Ready = 1` nếu chưa có consumer.
 
+Mở lại `notification.order-created`, cuộn tới `Get messages`, chọn ack mode rồi bấm `Get Message(s)` để xem trực tiếp payload vừa publish mà không cần viết consumer.
+
 ```mermaid
 sequenceDiagram
     participant A as .NET API
@@ -602,7 +624,7 @@ sequenceDiagram
     Q-->>Q: Ready tăng 1
 ```
 
-Nếu routing key không có binding, `mandatory = true` làm broker return message với `NO_ROUTE`.
+Nếu routing key không có binding, `mandatory = true` làm broker return message với `NO_ROUTE`. Trên Management UI, những lần return này được đếm vào chỉ số `Unroutable` ở tab message rates — một con số tăng liên tục ở đây nghĩa là đang có publish dùng sai routing key hoặc thiếu binding.
 
 Nếu bỏ `mandatory`, broker vẫn chấp nhận publish bình thường rồi âm thầm loại message vì không tìm được đích — và Publisher Confirm không phát hiện được điều đó, vì hai cơ chế này trả lời hai câu hỏi khác nhau:
 

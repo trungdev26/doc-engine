@@ -1,0 +1,81 @@
+.home {
+  max-width: 1100px;
+}
+.home__hero h1 {
+  margin: 0 0 6px;
+  color: var(--app-text-strong);
+  font-size: 2em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.home__hero p {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+.home__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 34px 0 14px;
+}
+.home__heading h2 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.2em;
+  font-weight: 750;
+}
+.home__heading span {
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.home__recent,
+.home__grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.card {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 16px 18px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.card--link:hover {
+  border-color: var(--app-accent);
+  box-shadow: var(--app-shadow);
+  transform: translateY(-2px);
+}
+.card small {
+  color: var(--app-accent-strong);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.card strong {
+  color: var(--app-text-strong);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.card span {
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.card__icon {
+  width: fit-content;
+  padding: 8px;
+  color: var(--app-accent-strong);
+  font-size: 18px;
+  background: var(--app-accent-soft);
+  border-radius: 12px;
+}

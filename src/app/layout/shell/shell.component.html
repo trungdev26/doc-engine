@@ -19,13 +19,34 @@
     [nzWidth]="sidebarWidth"
     nzTheme="light"
   >
-    <a class="brand" routerLink="/angular/change-detection/theory" (click)="closeMobileMenu()">
+    <a class="brand" routerLink="/" (click)="closeMobileMenu()">
       <span class="brand__mark">DI</span>
       <span class="brand__copy">
         <strong>Dev Internals</strong>
-        <small>Engineering notes</small>
+        <small>{{ currentTrack === 'english' ? 'Học tiếng Anh' : 'Engineering notes' }}</small>
       </span>
     </a>
+
+    <div class="track-switch" *ngIf="!collapsed" role="tablist" aria-label="Chọn nội dung học">
+      <button
+        type="button"
+        role="tab"
+        [class.is-active]="currentTrack === 'dev'"
+        [attr.aria-selected]="currentTrack === 'dev'"
+        (click)="chooseTrack('dev')"
+      >
+        Dev
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [class.is-active]="currentTrack === 'english'"
+        [attr.aria-selected]="currentTrack === 'english'"
+        (click)="chooseTrack('english')"
+      >
+        English
+      </button>
+    </div>
 
     <button *ngIf="!collapsed" class="sidebar-search" type="button" (click)="openSearch()">
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -36,11 +57,40 @@
       <kbd>Ctrl K</kbd>
     </button>
 
-    <div class="sidebar-label" *ngIf="!collapsed">Knowledge library</div>
-    <ul nz-menu class="app-menu" nzMode="inline" nzTheme="light" [nzInlineCollapsed]="collapsed">
+    <div class="sidebar-label" *ngIf="!collapsed">
+      {{ currentTrack === 'english' ? 'Học tiếng Anh' : 'Knowledge library' }}
+    </div>
+    <!-- Track tiếng Anh: danh sách phẳng, mỗi mục một icon, không cần mở rộng nhóm -->
+    <nav class="flat-menu" *ngIf="currentTrack === 'english'" aria-label="Học tiếng Anh">
+      <a
+        *ngFor="let item of englishItems"
+        class="flat-menu__item"
+        [routerLink]="item.link"
+        routerLinkActive="is-active"
+        [title]="item.label"
+        (click)="closeMobileMenu()"
+      >
+        <span
+          class="flat-menu__icon"
+          nz-icon
+          [nzType]="item.icon || 'appstore'"
+          nzTheme="outline"
+        ></span>
+        <span class="flat-menu__label" *ngIf="!collapsed">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <ul
+      nz-menu
+      *ngIf="currentTrack !== 'english'"
+      class="app-menu"
+      nzMode="inline"
+      nzTheme="light"
+      [nzInlineCollapsed]="collapsed"
+    >
       <li
         nz-submenu
-        *ngFor="let section of menuSections"
+        *ngFor="let section of visibleSections"
         class="app-menu__section"
         [nzTitle]="section.title"
         [title]="section.title"
@@ -217,6 +267,39 @@
           <i></i>
           <span>{{ focusMode ? 'Exit focus' : 'Focus mode' }}</span>
         </button>
+
+        <button
+          *ngIf="auth.isAdmin()"
+          class="header-icon"
+          type="button"
+          routerLink="/admin/content"
+          aria-label="Soạn bài học"
+          title="Soạn bài học"
+        >
+          <span nz-icon nzType="edit" nzTheme="outline"></span>
+        </button>
+
+        <div class="user-chip" *ngIf="auth.user() as user; else loginLink">
+          <span class="user-chip__avatar" aria-hidden="true">{{
+            user.username.charAt(0).toUpperCase()
+          }}</span>
+          <span class="user-chip__name">{{ user.username }}</span>
+          <button
+            class="user-chip__logout"
+            type="button"
+            (click)="logout()"
+            aria-label="Đăng xuất"
+            title="Đăng xuất"
+          >
+            <span nz-icon nzType="logout" nzTheme="outline"></span>
+          </button>
+        </div>
+        <ng-template #loginLink>
+          <a class="login-link" routerLink="/login">
+            <span nz-icon nzType="login" nzTheme="outline"></span>
+            <span>Đăng nhập</span>
+          </a>
+        </ng-template>
       </div>
     </nz-header>
 
@@ -224,7 +307,11 @@
       <main class="reading-surface">
         <router-outlet></router-outlet>
 
-        <nav class="article-navigation" aria-label="Article navigation">
+        <nav
+          class="article-navigation"
+          aria-label="Article navigation"
+          *ngIf="currentTrack !== 'english'"
+        >
           <a *ngIf="previousItem" class="article-navigation__item" [routerLink]="previousItem.link">
             <small>← Previous</small>
             <strong>{{ previousItem.context }}</strong>
@@ -331,6 +418,65 @@
       <span><kbd>↵</kbd> Open</span>
       <span>{{ navigationItems.length }} searchable articles</span>
     </footer>
+  </section>
+</div>
+
+<nav class="mobile-tabbar" aria-label="Điều hướng nhanh">
+  <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19H4z" /></svg>
+    <span>Trang chủ</span>
+  </a>
+  <button type="button" (click)="toggleMobileMenu()">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    <span>Mục lục</span>
+  </button>
+  <button type="button" (click)="openSearch()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5"></circle>
+      <path d="m16 16 4 4"></path>
+    </svg>
+    <span>Tìm</span>
+  </button>
+  <button type="button" (click)="openOnboarding()">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="8.5" r="3.5"></circle>
+      <path d="M5 20c.6-3.6 3.4-5.5 7-5.5s6.4 1.9 7 5.5"></path>
+    </svg>
+    <span>Mục tiêu</span>
+  </button>
+</nav>
+
+<div class="onboarding-backdrop" *ngIf="showOnboarding">
+  <section class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <h2 id="onboarding-title">Bạn muốn học gì?</h2>
+    <p class="onboarding__lead">
+      Chọn một hướng để bắt đầu. Giao diện và mục lục sẽ hiển thị đúng phần bạn cần.
+    </p>
+
+    <div class="onboarding__choices">
+      <button type="button" class="onboarding__card" (click)="chooseTrack('dev')">
+        <span class="onboarding__icon" aria-hidden="true">&lt;/&gt;</span>
+        <strong>Học Dev</strong>
+        <small>Angular, .NET, Database, System Design và các case study thực tế.</small>
+      </button>
+      <button type="button" class="onboarding__card" (click)="chooseTrack('english')">
+        <span class="onboarding__icon" aria-hidden="true">Aa</span>
+        <strong>Học tiếng Anh</strong>
+        <small>Từ vựng, ngữ pháp, nghe, nói, đọc với giải thích bằng tiếng Việt.</small>
+      </button>
+    </div>
+
+    <p class="onboarding__hint">
+      Bạn có thể đổi bất cứ lúc nào ở nút Dev / English trên thanh bên.
+    </p>
+    <button
+      *ngIf="currentTrack"
+      type="button"
+      class="onboarding__close"
+      (click)="showOnboarding = false"
+    >
+      Để sau
+    </button>
   </section>
 </div>
 

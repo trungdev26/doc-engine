@@ -1,5 +1,9 @@
+import { ENGLISH_FEATURES } from '../../features/english/english-features';
+
 export interface MenuItem {
   label: string;
+  /** Tên icon antd, hiện ở menu phẳng (track tiếng Anh). */
+  icon?: string;
   link?: string;
   open?: boolean;
   children?: MenuItem[];
@@ -13,9 +17,12 @@ export interface MenuGroup {
   items?: MenuItem[];
 }
 
+export type MenuTrack = 'dev' | 'english';
+
 export interface MenuSection {
   title: string;
   icon: string;
+  track?: MenuTrack;
   open?: boolean;
   groups?: MenuGroup[];
   items?: MenuItem[];
@@ -129,7 +136,7 @@ const MENU_SECTION_ORDER = [
   '.NET Core',
 ];
 
-export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
+const DEV_MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
   groupFoundationContent([
     {
       title: 'Angular',
@@ -275,6 +282,14 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
               label: 'RabbitMQ và Reliable Messaging',
               link: '/dotnet-core/rabbitmq-reliable-messaging',
             },
+            {
+              label: 'Worker Backpressure',
+              link: '/dotnet-core/rabbitmq-worker-backpressure',
+            },
+            {
+              label: 'Elasticsearch và Search Engine',
+              link: '/dotnet-core/elasticsearch-search-engine',
+            },
           ],
         },
         {
@@ -354,8 +369,20 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
               link: '/system-design/case-studies/hsm-signing-multi-department-result',
             },
             {
-              label: '04. Food Ordering Correctness',
-              link: '/system-design/case-studies/food-ordering-correctness',
+              label: '04. Top-K Leaderboard',
+              link: '/system-design/case-studies/top-k-leaderboard',
+            },
+            {
+              label: '05. Cloud Storage và File Sync',
+              link: '/system-design/case-studies/cloud-storage-sync',
+            },
+            {
+              label: '06. Messaging App',
+              link: '/system-design/case-studies/messaging-app',
+            },
+            {
+              label: '07. News Feed và Fan-out',
+              link: '/system-design/case-studies/news-feed',
             },
           ],
         },
@@ -679,6 +706,24 @@ export const MENU_SECTIONS: MenuSection[] = addCascadingIndexes(
       ],
     },
   ]),
-).sort(
-  (left, right) => MENU_SECTION_ORDER.indexOf(left.title) - MENU_SECTION_ORDER.indexOf(right.title),
-);
+)
+  .sort(
+    (left, right) =>
+      MENU_SECTION_ORDER.indexOf(left.title) - MENU_SECTION_ORDER.indexOf(right.title),
+  )
+  .map(section => ({ ...section, track: 'dev' as const }));
+
+const ENGLISH_MENU_SECTIONS: MenuSection[] = [
+  {
+    title: 'Học tiếng Anh',
+    icon: 'global',
+    track: 'english',
+    items: ENGLISH_FEATURES.map(feature => ({
+      label: feature.label,
+      icon: feature.icon,
+      link: `/english/${feature.slug}`,
+    })),
+  },
+];
+
+export const MENU_SECTIONS: MenuSection[] = [...DEV_MENU_SECTIONS, ...ENGLISH_MENU_SECTIONS];

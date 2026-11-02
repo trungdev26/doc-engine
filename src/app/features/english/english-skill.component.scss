@@ -1,0 +1,210 @@
+.skill {
+  max-width: 960px;
+}
+.skill__head h1 {
+  margin: 0 0 6px;
+  color: var(--app-text-strong);
+  font-size: 2em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.skill__head p {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+.skill__heading {
+  margin: 28px 0 12px;
+  color: var(--app-text-strong);
+  font-size: 1.05em;
+  font-weight: 750;
+}
+.skill__state {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+  padding: 18px;
+  color: var(--app-text-muted);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+}
+.skill__state--error strong {
+  color: var(--app-text-strong);
+}
+.skill__state button {
+  justify-self: start;
+  padding: 6px 14px;
+  color: var(--app-accent-contrast);
+  font-weight: 700;
+  background: var(--app-accent);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.bands {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+.band {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  color: var(--app-text);
+  text-align: left;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+.band:hover {
+  border-color: var(--app-accent);
+}
+.band.is-active {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+}
+.band strong {
+  color: var(--app-text-strong);
+  font-size: 15px;
+}
+.band small {
+  color: var(--app-text-muted);
+  font-size: 11px;
+}
+.band span {
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+.band em {
+  margin-top: 6px;
+  color: var(--app-accent-strong);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.progress {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.progress__bar {
+  height: 6px;
+  overflow: hidden;
+  background: var(--app-chip);
+  border-radius: 999px;
+}
+.progress__bar i {
+  display: block;
+  height: 100%;
+  background: var(--app-accent);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.empty {
+  display: grid;
+  gap: 4px;
+  margin-top: 22px;
+  padding: 18px;
+  color: var(--app-text-muted);
+  border: 1px dashed var(--app-border);
+  border-radius: 16px;
+}
+.empty strong {
+  color: var(--app-text-strong);
+}
+
+.next {
+  display: grid;
+  gap: 4px;
+  margin-top: 22px;
+  padding: 18px 20px;
+  text-decoration: none;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  transition: 0.16s ease;
+}
+.next:hover {
+  border-color: var(--app-accent);
+  box-shadow: var(--app-shadow);
+}
+.next__label {
+  color: var(--app-accent-strong);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.next strong {
+  color: var(--app-text-strong);
+  font-size: 1.25em;
+}
+.next__cta {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 7px 16px;
+  color: var(--app-accent-contrast);
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--app-accent);
+  border-radius: 12px;
+}
+
+.unit {
+  margin-top: 28px;
+}
+.unit h3 {
+  margin: 0 0 10px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.unit ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.unit a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  transition: 0.16s ease;
+}
+.unit a:hover {
+  border-color: var(--app-accent);
+}
+.dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--app-text-muted);
+  background: var(--app-chip);
+  border-radius: 50%;
+}
+.is-done .dot {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.title {
+  flex: 1;
+  color: var(--app-text-strong);
+  font-weight: 600;
+}
+.unit small {
+  color: var(--app-text-muted);
+  font-size: 11.5px;
+}

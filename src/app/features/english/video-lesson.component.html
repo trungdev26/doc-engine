@@ -1,0 +1,454 @@
+<section class="video" *ngIf="!error || lesson; else failed">
+  <header class="video__head">
+    <a class="video__back" routerLink="/english/video" aria-label="Quay lại danh sách video">←</a>
+    <div>
+      <h1>{{ lesson?.title }}</h1>
+      <p *ngIf="lesson?.channel">{{ lesson?.channel }}</p>
+      <p class="video__credit" *ngIf="lesson?.credit">{{ lesson?.credit }}</p>
+    </div>
+  </header>
+
+  <div class="video__error" *ngIf="error" role="alert">
+    <span nz-icon nzType="close-circle" nzTheme="outline"></span> {{ error }}
+  </div>
+
+  <div class="video__layout" *ngIf="lesson">
+    <!-- Cột trái: trình phát và điều khiển -->
+    <div class="video__main">
+      <div #stage class="stage" [class.is-fullscreen]="fullscreen">
+        <div class="stage__ratio">
+          <div #youtubeHost class="stage__frame" *ngIf="lesson.source.type === 'youtube'"></div>
+          <video
+            #fileVideo
+            class="stage__frame"
+            *ngIf="lesson.source.type === 'file'"
+            playsinline
+            preload="metadata"
+          ></video>
+        </div>
+        <div
+          class="stage__caption"
+          *ngIf="currentCue as cue"
+          [hidden]="!showEnglish && !(showTranslation && cue.vi)"
+          aria-live="off"
+        >
+          <strong *ngIf="showEnglish">{{ cue.text }}</strong>
+          <span *ngIf="showTranslation && cue.vi">{{ cue.vi }}</span>
+        </div>
+      </div>
+
+      <div class="controls" [class.is-disabled]="!playerReady">
+        <div
+          class="controls__bar"
+          (click)="seekTo($event)"
+          role="slider"
+          aria-label="Tua video"
+          [attr.aria-valuenow]="time | number: '1.0-0'"
+          aria-valuemin="0"
+          [attr.aria-valuemax]="duration | number: '1.0-0'"
+        >
+          <i [style.width.%]="percent"></i>
+        </div>
+        <div class="controls__row">
+          <button type="button" class="ctl" (click)="previousCue()" aria-label="Câu trước">
+            <span nz-icon nzType="step-backward" nzTheme="outline"></span>
+          </button>
+          <button
+            type="button"
+            class="ctl"
+            (click)="jump(-5)"
+            aria-label="Lùi 5 giây"
+            title="Lùi 5 giây"
+          >
+            <span nz-icon nzType="undo" nzTheme="outline"></span>
+          </button>
+          <button
+            type="button"
+            class="ctl ctl--play"
+            (click)="togglePlay()"
+            [attr.aria-label]="playing ? 'Tạm dừng' : 'Phát'"
+          >
+            <span
+              nz-icon
+              [nzType]="playing ? 'pause-circle' : 'play-circle'"
+              nzTheme="outline"
+            ></span>
+          </button>
+          <button
+            type="button"
+            class="ctl"
+            (click)="jump(5)"
+            aria-label="Tiến 5 giây"
+            title="Tiến 5 giây"
+          >
+            <span nz-icon nzType="redo" nzTheme="outline"></span>
+          </button>
+          <button type="button" class="ctl" (click)="nextCue()" aria-label="Câu sau">
+            <span nz-icon nzType="step-forward" nzTheme="outline"></span>
+          </button>
+          <button
+            type="button"
+            class="ctl"
+            (click)="toggleMute()"
+            [attr.aria-pressed]="muted"
+            [attr.aria-label]="muted ? 'Bật tiếng' : 'Tắt tiếng'"
+          >
+            <span nz-icon [nzType]="muted ? 'audio-muted' : 'sound'" nzTheme="outline"></span>
+          </button>
+          <span class="controls__time">{{ timeLabel }}</span>
+          <span class="controls__break" aria-hidden="true"></span>
+          <span class="controls__spacer"></span>
+          <button
+            type="button"
+            class="pill"
+            [class.is-on]="loopA !== null"
+            (click)="cycleLoop()"
+            title="Lặp đoạn: bấm để đặt A, bấm lần nữa để đặt B, bấm lần ba để xóa"
+          >
+            {{ loopLabel }}
+          </button>
+          <button type="button" class="pill" (click)="cycleRate()" title="Đổi tốc độ">
+            {{ rate }}×
+          </button>
+          <div class="lang" role="group" aria-label="Ngôn ngữ phụ đề">
+            <button
+              type="button"
+              class="lang__btn"
+              [class.is-on]="showEnglish"
+              [attr.aria-pressed]="showEnglish"
+              (click)="showEnglish = !showEnglish"
+              title="Hiện hoặc ẩn tiếng Anh"
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              class="lang__btn"
+              [class.is-on]="showTranslation"
+              [attr.aria-pressed]="showTranslation"
+              (click)="showTranslation = !showTranslation"
+              title="Hiện hoặc ẩn bản dịch tiếng Việt"
+            >
+              VI
+            </button>
+          </div>
+          <button
+            type="button"
+            class="ctl"
+            (click)="toggleFullscreen()"
+            [attr.aria-label]="fullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'"
+          >
+            <span
+              nz-icon
+              [nzType]="fullscreen ? 'fullscreen-exit' : 'fullscreen'"
+              nzTheme="outline"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: các chế độ học -->
+    <aside class="side">
+      <div class="modes" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="mode === 'script'"
+          [attr.aria-selected]="mode === 'script'"
+          (click)="setMode('script')"
+        >
+          <span nz-icon nzType="unordered-list" nzTheme="outline"></span> Phụ đề
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="mode === 'shadowing'"
+          [attr.aria-selected]="mode === 'shadowing'"
+          (click)="setMode('shadowing')"
+        >
+          <span nz-icon nzType="audio" nzTheme="outline"></span> Shadowing
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="mode === 'dictation'"
+          [attr.aria-selected]="mode === 'dictation'"
+          (click)="setMode('dictation')"
+        >
+          <span nz-icon nzType="edit" nzTheme="outline"></span> Chính tả
+        </button>
+      </div>
+
+      <!-- Phụ đề: chữ chạy theo lời -->
+      <ng-container *ngIf="mode === 'script'">
+        <div class="side__head">
+          <strong>Lời thoại</strong>
+          <small>{{ activeIndex + 1 > 0 ? activeIndex + 1 : 0 }} / {{ cues.length }}</small>
+          <button
+            type="button"
+            class="switch"
+            role="switch"
+            [attr.aria-checked]="autoScroll"
+            (click)="autoScroll = !autoScroll"
+            title="Tự cuộn danh sách theo câu đang đọc"
+          >
+            <span class="switch__track" aria-hidden="true"><i></i></span>
+            Tự cuộn
+          </button>
+        </div>
+
+        <!-- translate="no": các tiện ích dịch trang tôn trọng thuộc tính này và không chèn bản dịch vào lời thoại -->
+        <!-- Các sự kiện chuột dừng lại ở khung này (sau khi chữ và thẻ tra từ đã xử lý xong) nên tiện ích từ điển
+             hay dịch của trình duyệt, vốn nghe ở cấp document, không bật popup riêng đè lên thẻ tra từ. -->
+        <div
+          class="script-wrap notranslate"
+          translate="no"
+          (mouseup)="$event.stopPropagation()"
+          (dblclick)="$event.stopPropagation()"
+          (contextmenu)="$event.stopPropagation()"
+        >
+          <!-- Tra từ: thẻ nổi trên đầu danh sách nên không đẩy các dòng thoại đi đâu cả -->
+          <section class="dict" *ngIf="dict" aria-live="polite">
+            <div class="dict__head">
+              <span class="dict__word">{{ dict.word }}</span>
+              <span
+                class="dict__ipa"
+                *ngIf="dict.entry?.ipa as ipa"
+                title="Tím: nguyên âm. Xám: phụ âm."
+                ><span *ngFor="let part of ipaOf(ipa)" [class]="'ipa ipa--' + part.kind">{{
+                  part.text
+                }}</span></span
+              >
+              <button
+                type="button"
+                class="dict__icon"
+                *ngIf="canSpeak || dict.entry?.audio"
+                (click)="playPronunciation()"
+                aria-label="Nghe phát âm"
+                title="Nghe phát âm"
+              >
+                <span nz-icon nzType="sound" nzTheme="outline"></span>
+              </button>
+              <span class="dict__spacer"></span>
+              <button
+                type="button"
+                class="dict__icon dict__save"
+                *ngIf="dict.entry"
+                [class.is-saved]="dict.saved"
+                [disabled]="dict.saved || dict.saving || !!dict.entry?.partial"
+                (click)="saveDictWord()"
+                [attr.aria-label]="dict.saved ? 'Đã lưu' : dict.phrase ? 'Lưu cụm' : 'Lưu từ'"
+                [title]="
+                  dict.entry?.partial
+                    ? 'Chưa lấy đủ dữ liệu nên chưa lưu được'
+                    : dict.saved
+                      ? 'Đã lưu vào thư viện'
+                      : dict.phrase
+                        ? 'Lưu cụm'
+                        : 'Lưu từ'
+                "
+              >
+                <span nz-icon [nzType]="dict.saved ? 'check' : 'star'" nzTheme="outline"></span>
+              </button>
+              <button
+                type="button"
+                class="dict__icon dict__close"
+                (click)="closeDict()"
+                aria-label="Đóng"
+                title="Đóng (Esc)"
+              >
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </div>
+            <p class="dict__example" *ngIf="contextOf(dict) as context">“{{ context }}”</p>
+            <p class="dict__note" *ngIf="dict.loading">Đang tra...</p>
+            <p class="dict__note" *ngIf="dict.error">{{ dict.error }}</p>
+            <ng-container *ngIf="dict.entry as entry">
+              <p class="dict__vi" *ngIf="entry.vi">{{ entry.vi }}</p>
+              <ul class="dict__list" *ngIf="entry.meanings.length">
+                <li *ngFor="let meaning of entry.meanings | slice: 0 : 3">
+                  <em>{{ posLabel(meaning.partOfSpeech) }}</em>
+                  <span>{{ meaning.definition }}</span>
+                </li>
+              </ul>
+              <p
+                class="dict__note"
+                *ngIf="!entry.partial && !entry.vi && !entry.meanings.length && !entry.ipa"
+              >
+                Chưa tìm thấy từ này trong từ điển.
+              </p>
+              <p class="dict__note" *ngIf="entry.partial">
+                Chưa lấy đủ phiên âm và từ loại (nguồn từ điển đang bận).
+                <button type="button" class="dict__retry" (click)="retryDict()">Thử lại</button>
+              </p>
+              <p class="dict__source">Nguồn: Wiktionary (CC BY-SA), Free Dictionary, MyMemory</p>
+            </ng-container>
+          </section>
+
+          <ol #scriptList class="script">
+            <li
+              *ngFor="let cue of cues; let i = index"
+              class="cue"
+              [class.is-active]="i === activeIndex"
+              [class.is-past]="i < activeIndex"
+              (click)="onCueClick(i)"
+              (keydown.enter)="playCue(i)"
+              tabindex="0"
+            >
+              <span class="cue__time">{{ time$(cue) }}</span>
+              <div class="cue__body">
+                <p
+                  class="cue__text"
+                  *ngIf="showEnglish || !(showTranslation && cue.vi)"
+                  title="Bấm một từ hoặc kéo chọn cả cụm để tra nghĩa"
+                  (mouseup)="lookupSelection(i, $event)"
+                >
+                  <!-- Dấu cách nằm ngoài thẻ từ để gạch chân và nền khi di chuột ôm đúng chữ -->
+                  <ng-container *ngFor="let word of words(cue); let w = index"
+                    ><span
+                      class="word"
+                      [class.is-lit]="w < litWords(i, cue)"
+                      [class.is-picked]="dict && dict.cueIndex === i && dict.wordIndex === w"
+                      (click)="lookupWord(word, i, w, $event)"
+                      >{{ word }}</span
+                    >{{ ' ' }}</ng-container
+                  >
+                </p>
+                <p class="cue__vi" *ngIf="showTranslation && cue.vi">{{ cue.vi }}</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </ng-container>
+
+      <!-- Shadowing -->
+      <ng-container *ngIf="mode === 'shadowing' && focusCue as cue">
+        <div class="drill">
+          <p class="drill__count">Câu {{ focusIndex + 1 }} / {{ cues.length }}</p>
+          <p class="drill__text">{{ cue.text }}</p>
+          <p class="drill__vi" *ngIf="showTranslation && cue.vi">{{ cue.vi }}</p>
+
+          <div class="drill__row">
+            <button type="button" class="btn btn--ghost" (click)="listenFocus()">
+              <span nz-icon nzType="sound" nzTheme="outline"></span> Nghe câu này
+            </button>
+          </div>
+
+          <p class="drill__note" *ngIf="recorder.state === 'unsupported'">
+            Trình duyệt này chưa hỗ trợ ghi âm. Bạn vẫn có thể nghe và đọc theo.
+          </p>
+          <p class="drill__note" *ngIf="recorder.state === 'denied'">
+            Chưa cấp quyền micro. Hãy cho phép micro trong cài đặt trình duyệt rồi thử lại.
+          </p>
+          <ng-container *ngIf="recorder.state !== 'unsupported'">
+            <button
+              type="button"
+              class="mic"
+              [class.is-recording]="recorder.state === 'recording'"
+              (click)="toggleRecord()"
+              [attr.aria-label]="recorder.state === 'recording' ? 'Dừng ghi âm' : 'Ghi âm'"
+            >
+              <span
+                nz-icon
+                [nzType]="recorder.state === 'recording' ? 'pause-circle' : 'audio'"
+                nzTheme="outline"
+              ></span>
+            </button>
+            <span class="drill__label">{{
+              recorder.state === 'recording'
+                ? 'Đang ghi... bấm để dừng'
+                : recorder.state === 'recorded'
+                  ? 'Ghi lại'
+                  : 'Bấm để ghi âm'
+            }}</span>
+            <audio *ngIf="recorder.url" [src]="recorder.url" controls></audio>
+          </ng-container>
+
+          <div class="drill__nav">
+            <button
+              type="button"
+              class="btn btn--ghost"
+              (click)="focus(focusIndex - 1)"
+              [disabled]="focusIndex === 0"
+            >
+              Câu trước
+            </button>
+            <button
+              type="button"
+              class="btn btn--primary"
+              (click)="focus(focusIndex + 1)"
+              [disabled]="focusIndex >= cues.length - 1"
+            >
+              Câu tiếp →
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Chính tả -->
+      <ng-container *ngIf="mode === 'dictation' && focusCue as cue">
+        <div class="drill">
+          <p class="drill__count">Câu {{ focusIndex + 1 }} / {{ cues.length }}</p>
+          <p class="drill__title">Nghe và gõ lại điều bạn nghe được</p>
+          <button type="button" class="btn btn--ghost" (click)="listenFocus()">
+            <span nz-icon nzType="sound" nzTheme="outline"></span> Nghe câu này
+          </button>
+          <textarea
+            rows="3"
+            [(ngModel)]="dictationInput"
+            [readOnly]="!!dictationResult"
+            placeholder="Gõ lại câu bạn vừa nghe..."
+            aria-label="Gõ lại câu vừa nghe"
+          ></textarea>
+
+          <div class="drill__result" *ngIf="dictationResult as result">
+            <p>
+              <span
+                *ngFor="let item of result.words"
+                class="dword"
+                [class.is-ok]="item.correct"
+                [class.is-miss]="!item.correct"
+                >{{ item.word }}</span
+              >
+            </p>
+            <small>{{
+              result.exact
+                ? 'Chính xác!'
+                : 'Đúng ' + result.correctCount + '/' + result.total + ' từ'
+            }}</small>
+            <small *ngIf="!result.exact">Câu gốc: {{ cue.text }}</small>
+          </div>
+
+          <div class="drill__nav">
+            <button
+              *ngIf="!dictationResult"
+              type="button"
+              class="btn btn--primary"
+              [disabled]="!dictationInput.trim()"
+              (click)="check()"
+            >
+              Kiểm tra
+            </button>
+            <button
+              *ngIf="dictationResult"
+              type="button"
+              class="btn btn--primary"
+              (click)="focus(focusIndex + 1)"
+              [disabled]="focusIndex >= cues.length - 1"
+            >
+              Câu tiếp →
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </aside>
+  </div>
+</section>
+
+<ng-template #failed>
+  <div class="video__error" role="alert">
+    <span nz-icon nzType="close-circle" nzTheme="outline"></span> {{ error }}
+    <a routerLink="/english/video">Quay lại</a>
+  </div>
+</ng-template>

@@ -1,1 +1,2 @@
-<app-shell></app-shell>
+<app-shell *ngIf="!isLoginPage; else login"></app-shell>
+<ng-template #login><router-outlet></router-outlet></ng-template>

@@ -1,0 +1,235 @@
+.lib {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.lib__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.lib__head h1 {
+  margin: 0 0 4px;
+  color: var(--app-text-strong);
+  font-size: 2em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.lib__head p {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+.lib__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  padding: 0 14px;
+  color: var(--app-text-muted);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+.lib__search:focus-within {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 3px var(--app-accent-soft);
+}
+.lib__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  color: var(--app-text-strong);
+  font: inherit;
+  font-size: 14px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.state {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 18px 20px;
+  color: var(--app-text-muted);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+}
+.state strong {
+  color: var(--app-text-strong);
+}
+.state button {
+  padding: 7px 16px;
+  color: var(--app-accent-contrast);
+  font-weight: 700;
+  background: var(--app-accent);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.empty {
+  color: var(--app-text-muted);
+}
+
+.filters {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.chip {
+  flex: none;
+  padding: 7px 15px;
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 650;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: 0.14s ease;
+}
+.chip:hover {
+  border-color: var(--app-accent);
+}
+.chip.is-active {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+}
+.chips--level .chip {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.row {
+  margin-top: 26px;
+}
+.row__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.row__head h2 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.15em;
+  font-weight: 750;
+}
+.row__head small {
+  color: var(--app-text-muted);
+}
+.row__cards {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 8px 8px 12px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.card:hover,
+.card:focus-visible {
+  border-color: var(--app-accent);
+  box-shadow: var(--app-shadow);
+  outline: 0;
+  transform: translateY(-2px);
+}
+.card__thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--app-chip);
+  border-radius: 12px;
+}
+.card__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--app-text-muted);
+  font-size: 36px;
+}
+.card__level,
+.card__duration {
+  position: absolute;
+  padding: 2px 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: 999px;
+}
+.card__level {
+  top: 8px;
+  left: 8px;
+}
+.card__duration {
+  right: 8px;
+  bottom: 8px;
+}
+.card__play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 44px;
+  background: rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.card:hover .card__play,
+.card:focus-visible .card__play {
+  opacity: 1;
+}
+.card__title {
+  display: -webkit-box;
+  padding: 0 4px;
+  overflow: hidden;
+  color: var(--app-text-strong);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.card__channel {
+  padding: 0 4px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .row__cards {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+  }
+}

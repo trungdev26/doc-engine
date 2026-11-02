@@ -14,6 +14,7 @@ Write in the style of current framework and platform documentation such as Angul
 - Do not carry wording, assumptions, or section order from an older draft unless they still serve the current lesson.
 - Use conventional, searchable noun-phrase headings such as `Lexical scope và scope chain`. Do not use conversational headings such as `JavaScript tìm biến như thế nào?`.
 - Use direct, neutral documentation prose. Avoid meta-commentary about the writing process.
+- Do not use semicolons (`;`) to join independent ideas in prose. Split the ideas into separate sentences or introduce a short bullet list. Semicolons remain valid inside code when required by the language syntax.
 - Avoid rhetorical filler and repeated lead-ins such as `Điều đáng chú ý`, `Hãy nhớ rằng`, or `Trước tiên, tạm bỏ ... sang một bên`.
 - Introduce the problem before the mechanism, then define the mechanism, components, and behavior before using it in code.
 - Keep each paragraph focused on one claim. Connect adjacent paragraphs explicitly when the reasoning depends on the previous one.

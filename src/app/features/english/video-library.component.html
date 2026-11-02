@@ -1,0 +1,107 @@
+<section class="lib">
+  <header class="lib__head">
+    <div>
+      <h1>Xem video</h1>
+      <p>Học tiếng Anh qua video có phụ đề chạy theo, luyện shadowing và nghe chép từng câu.</p>
+    </div>
+    <label class="lib__search">
+      <span nz-icon nzType="search" nzTheme="outline" aria-hidden="true"></span>
+      <input
+        name="search"
+        [ngModel]="search"
+        (ngModelChange)="onSearch($event)"
+        placeholder="Tìm video"
+        aria-label="Tìm video"
+        autocomplete="off"
+      />
+    </label>
+  </header>
+
+  <div class="state" *ngIf="loading">Đang tải danh sách video...</div>
+  <div class="state state--error" *ngIf="failed" role="alert">
+    <strong>Không tải được danh sách video.</strong>
+    <button type="button" (click)="load()">Thử lại</button>
+  </div>
+
+  <ng-container *ngIf="!loading && !failed">
+    <div class="state" *ngIf="!cards.length">
+      <strong>Chưa có video nào.</strong>
+      <span>Video được thêm vào bởi quản trị viên.</span>
+    </div>
+
+    <ng-container *ngIf="cards.length">
+      <!-- Lọc theo chủ đề và trình độ -->
+      <div class="filters" aria-label="Lọc video">
+        <div class="chips" role="tablist" aria-label="Chủ đề">
+          <button type="button" class="chip" [class.is-active]="!topic" (click)="setTopic('')">
+            Tất cả
+          </button>
+          <button
+            *ngFor="let name of topics"
+            type="button"
+            class="chip"
+            [class.is-active]="topic === name"
+            (click)="setTopic(name)"
+          >
+            {{ name }}
+          </button>
+        </div>
+        <div
+          class="chips chips--level"
+          role="tablist"
+          aria-label="Trình độ"
+          *ngIf="levels.length > 1"
+        >
+          <button type="button" class="chip" [class.is-active]="!level" (click)="setLevel('')">
+            Mọi trình độ
+          </button>
+          <button
+            *ngFor="let item of levels"
+            type="button"
+            class="chip"
+            [class.is-active]="level === item"
+            (click)="setLevel(item)"
+          >
+            {{ item }}
+          </button>
+        </div>
+      </div>
+
+      <p class="empty" *ngIf="!rows.length">Không có video nào khớp bộ lọc.</p>
+
+      <!-- Mỗi chủ đề là một hàng -->
+      <section class="row" *ngFor="let row of rows">
+        <div class="row__head">
+          <h2>{{ row.topic }}</h2>
+          <small>{{ row.cards.length }} video</small>
+        </div>
+        <div class="row__cards">
+          <a
+            *ngFor="let card of row.cards; trackBy: trackById"
+            class="card"
+            [routerLink]="['/english/video-lesson', card.id]"
+          >
+            <div class="card__thumb">
+              <img
+                *ngIf="thumbnail(card) as src"
+                [src]="src"
+                [alt]="'Ảnh xem trước: ' + card.title"
+                loading="lazy"
+              />
+              <span class="card__fallback" *ngIf="!thumbnail(card)" aria-hidden="true">
+                <span nz-icon nzType="play-circle" nzTheme="outline"></span>
+              </span>
+              <span class="card__level" *ngIf="card.level">{{ card.level }}</span>
+              <span class="card__duration" *ngIf="duration(card)">{{ duration(card) }}</span>
+              <span class="card__play" aria-hidden="true">
+                <span nz-icon nzType="play-circle" nzTheme="outline"></span>
+              </span>
+            </div>
+            <strong class="card__title">{{ card.title }}</strong>
+            <small class="card__channel" *ngIf="card.channel">{{ card.channel }}</small>
+          </a>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</section>

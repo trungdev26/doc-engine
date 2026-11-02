@@ -1,0 +1,424 @@
+.player {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.player__state {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  color: var(--app-text-muted);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+}
+.player__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.player__head h1 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.4em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.player__back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-chip);
+  border-radius: 50%;
+}
+
+.steps {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 22px;
+  padding: 0 0 14px;
+  list-style: none;
+  border-bottom: 1px solid var(--app-border);
+}
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+.steps__num {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+}
+.steps .is-active {
+  color: var(--app-accent-strong);
+  background: var(--app-accent-soft);
+}
+.steps .is-active .steps__num,
+.steps .is-done .steps__num {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+}
+
+.panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  color: var(--app-text);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+}
+.panel--soft {
+  background: var(--app-accent-soft);
+}
+.panel h3 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+.panel p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.btn {
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: 0.16s ease;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn--primary {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.btn--ghost {
+  color: var(--app-text);
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.icon-btn {
+  padding: 6px 10px;
+  background: var(--app-chip);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  color: var(--app-text);
+  font-size: 12px;
+  background: var(--app-chip);
+  border-radius: 999px;
+}
+.pill--warm {
+  color: var(--app-warm);
+}
+
+.cards__progress {
+  margin-bottom: 10px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+  text-align: right;
+}
+.card {
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+}
+.card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card h2 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 2.4em;
+  font-weight: 800;
+}
+.card__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.ipa {
+  color: var(--app-text-muted);
+}
+.card__meaning {
+  margin: 8px 0 0;
+  color: var(--app-text-strong);
+  font-size: 1.6em;
+  font-weight: 700;
+}
+.card__definition {
+  margin: 0;
+  color: var(--app-text-muted);
+}
+.card__example {
+  padding: 14px 16px;
+  background: var(--app-surface);
+  border-radius: 14px;
+}
+.card__example p {
+  margin: 0 0 4px;
+  color: var(--app-text-strong);
+}
+.card__example small {
+  color: var(--app-text-muted);
+}
+.card__error {
+  margin: 0;
+  color: var(--app-warm);
+  font-size: 12.5px;
+}
+.card .btn--ghost {
+  justify-self: start;
+}
+
+.rule {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
+}
+.rule__formula {
+  color: var(--app-text-muted);
+}
+.rule__formula strong {
+  color: var(--app-warm);
+}
+.rule__example {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--app-text-strong);
+  font-size: 1.1em;
+}
+.rule small {
+  color: var(--app-text-muted);
+}
+
+.reading__meta {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 13px;
+}
+.reading hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--app-border);
+}
+.reading__text {
+  color: var(--app-text-strong);
+  font-size: 1.05em;
+  line-height: 1.85;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 14px;
+  color: var(--app-text);
+  font-size: 13px;
+}
+.line {
+  display: grid;
+  gap: 4px;
+  max-width: 88%;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+}
+.line.is-right {
+  margin-left: auto;
+  background: var(--app-accent-soft);
+}
+.line__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.line__head strong {
+  color: var(--app-accent-strong);
+  font-size: 13px;
+}
+.line p {
+  margin: 0;
+  color: var(--app-text-strong);
+}
+.line small {
+  color: var(--app-text-muted);
+}
+
+.quiz__num {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 6px;
+  color: var(--app-accent-strong);
+  font-size: 12px;
+  border: 1px solid var(--app-accent);
+  border-radius: 50%;
+}
+.panel .option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  color: var(--app-text-strong);
+  font-size: 14.5px;
+  text-align: left;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.14s ease;
+}
+.option:hover {
+  border-color: var(--app-accent);
+}
+.option__key {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--app-chip);
+  border-radius: 50%;
+}
+.option.is-picked {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+}
+.option.is-correct {
+  background: color-mix(in oklab, #22c55e 18%, var(--app-surface));
+  border-color: #22c55e;
+}
+.option.is-wrong {
+  background: color-mix(in oklab, #ef4444 16%, var(--app-surface));
+  border-color: #ef4444;
+}
+
+.result {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  text-align: center;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+}
+.result h2 {
+  margin: 0;
+  color: var(--app-text-strong);
+}
+.result__score {
+  margin: 0;
+  color: var(--app-accent-strong);
+  font-size: 3.4em;
+  font-weight: 800;
+}
+.result__score small {
+  color: var(--app-text-muted);
+  font-size: 0.4em;
+}
+.result__note {
+  margin: 0;
+  color: var(--app-warm);
+  font-size: 13px;
+}
+
+.dictation__count {
+  margin: 0 0 10px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+  text-align: right;
+}
+.dictation__listen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dictation__listen small {
+  color: var(--app-text-muted);
+}
+.dictation__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  color: var(--app-text-strong);
+  font: inherit;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  resize: vertical;
+}
+.dictation__input:focus {
+  border-color: var(--app-accent);
+  outline: 0;
+}
+.dictation__result {
+  display: grid;
+  gap: 6px;
+}
+.dictation__result p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dword {
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.dword.is-ok {
+  background: color-mix(in oklab, #22c55e 18%, var(--app-surface));
+}
+.dword.is-miss {
+  background: color-mix(in oklab, #ef4444 18%, var(--app-surface));
+}
+.dictation__result small {
+  color: var(--app-text-muted);
+}

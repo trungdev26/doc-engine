@@ -785,6 +785,8 @@ maximumUnacked  = 32 × 32 = 1.024
 
 Reference load ghi nhận `Unacked = 1.024`, đúng như công thức tính trước — nghĩa là prefetch đang hoạt động đúng như thiết kế, chứ không chứng minh 32 là cấu hình tối ưu.
 
+`prefetch` là một giới hạn tĩnh. Nó không tự giảm tốc khi database hoặc dịch vụ bên ngoài bắt đầu quá tải. Khi worker cần điều chỉnh concurrency theo tỷ lệ lỗi và latency của downstream, xem [Worker Backpressure trong RabbitMQ](/dotnet-core/rabbitmq-worker-backpressure).
+
 **Điểm nghẽn tiếp theo: Giới hạn của Database**
 
 Việc cố tình tăng số lượng Worker hay nâng cao chỉ số Prefetch chỉ làm kéo dài thời gian xử lý một transaction (latency) và tăng tỷ lệ tranh chấp khóa dữ liệu (lock contention), khiến hệ thống càng dễ lâm vào cảnh bế tắc.

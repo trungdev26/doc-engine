@@ -9,7 +9,7 @@ import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { FormsModule } from '@angular/forms';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { MarkdownModule } from 'ngx-markdown';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -44,6 +44,51 @@ import {
   AppstoreOutline,
   HighlightOutline,
   TagOutline,
+  FontSizeOutline,
+  BookOutline,
+  CustomerServiceOutline,
+  AudioOutline,
+  ReadOutline,
+  UserOutline,
+  LockOutline,
+  EyeOutline,
+  EyeInvisibleOutline,
+  LogoutOutline,
+  EditOutline,
+  DeleteOutline,
+  FolderOutline,
+  FolderAddOutline,
+  SearchOutline,
+  CheckOutline,
+  CloseOutline,
+  SoundOutline,
+  StarOutline,
+  ThunderboltFill,
+  HomeOutline,
+  CheckCircleOutline,
+  RightOutline,
+  LeftOutline,
+  BookFill,
+  FireFill,
+  SwapOutline,
+  UnorderedListOutline,
+  AppstoreAddOutline,
+  CloseCircleOutline,
+  LoginOutline,
+  PlayCircleOutline,
+  PauseCircleOutline,
+  AudioMutedOutline,
+  StepForwardOutline,
+  StepBackwardOutline,
+  TranslationOutline,
+  FullscreenOutline,
+  EnvironmentOutline,
+  AimOutline,
+  MessageOutline,
+  BulbOutline,
+  UndoOutline,
+  RedoOutline,
+  FullscreenExitOutline,
 } from '@ant-design/icons-angular/icons';
 import { NzImageModule } from 'ng-zorro-antd/image';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
@@ -73,6 +118,24 @@ import { OutboxFlowDemoComponent } from './features/database/transactions/outbox
 import { IsolationAnomaliesDemoComponent } from './features/database/isolation-anomalies/isolation-anomalies-demo.component';
 import { StepHistoryComponent } from './features/database/shared/step-history/step-history.component';
 import { AdvancedSqlDemoComponent } from './features/database/advanced-sql/advanced-sql-demo.component';
+import { HomeComponent } from './features/home/home.component';
+import { EnglishFeatureComponent } from './features/english/english-feature.component';
+import { EnglishSkillComponent } from './features/english/english-skill.component';
+import { LessonPlayerComponent } from './features/english/lesson-player.component';
+import { EnglishReviewComponent } from './features/english/english-review.component';
+import { SpeakingLessonComponent } from './features/english/speaking-lesson.component';
+import { WordGardenComponent } from './features/english/word-garden.component';
+import { ContentEditorComponent } from './features/admin/content-editor.component';
+import { LoginComponent } from './features/auth/login.component';
+import { VideoLessonComponent } from './features/english/video-lesson.component';
+import { VideoLibraryComponent } from './features/english/video-library.component';
+import { DialogueLessonComponent } from './features/english/dialogue-lesson.component';
+import { SpeakingRouterComponent } from './features/english/speaking-router.component';
+import { authInterceptor } from './core/auth.interceptor';
+import {
+  LearningProfileStore,
+  LocalStorageLearningProfileStore,
+} from './core/learning-profile.service';
 
 registerLocaleData(en);
 
@@ -99,6 +162,19 @@ registerLocaleData(en);
     IsolationAnomaliesDemoComponent,
     StepHistoryComponent,
     AdvancedSqlDemoComponent,
+    HomeComponent,
+    EnglishFeatureComponent,
+    EnglishSkillComponent,
+    LessonPlayerComponent,
+    EnglishReviewComponent,
+    SpeakingLessonComponent,
+    WordGardenComponent,
+    ContentEditorComponent,
+    LoginComponent,
+    VideoLessonComponent,
+    VideoLibraryComponent,
+    DialogueLessonComponent,
+    SpeakingRouterComponent,
   ],
   imports: [
     BrowserModule,
@@ -135,6 +211,51 @@ registerLocaleData(en);
       AppstoreOutline,
       HighlightOutline,
       TagOutline,
+      FontSizeOutline,
+      BookOutline,
+      CustomerServiceOutline,
+      AudioOutline,
+      ReadOutline,
+      UserOutline,
+      LockOutline,
+      EyeOutline,
+      EyeInvisibleOutline,
+      LogoutOutline,
+      EditOutline,
+      DeleteOutline,
+      FolderOutline,
+      FolderAddOutline,
+      SearchOutline,
+      CheckOutline,
+      CloseOutline,
+      SoundOutline,
+      StarOutline,
+      ThunderboltFill,
+      HomeOutline,
+      CheckCircleOutline,
+      RightOutline,
+      LeftOutline,
+      BookFill,
+      FireFill,
+      SwapOutline,
+      UnorderedListOutline,
+      AppstoreAddOutline,
+      CloseCircleOutline,
+      LoginOutline,
+      PlayCircleOutline,
+      PauseCircleOutline,
+      AudioMutedOutline,
+      StepForwardOutline,
+      StepBackwardOutline,
+      TranslationOutline,
+      FullscreenOutline,
+      EnvironmentOutline,
+      AimOutline,
+      MessageOutline,
+      BulbOutline,
+      UndoOutline,
+      RedoOutline,
+      FullscreenExitOutline,
     ]),
     NzImageModule,
     NzInputNumberModule,
@@ -149,7 +270,12 @@ registerLocaleData(en);
       sanitize: SecurityContext.NONE,
     }),
   ],
-  providers: [{ provide: NZ_I18N, useValue: en_US }, provideAnimationsAsync(), provideHttpClient()],
+  providers: [
+    { provide: NZ_I18N, useValue: en_US },
+    { provide: LearningProfileStore, useClass: LocalStorageLearningProfileStore },
+    provideAnimationsAsync(),
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

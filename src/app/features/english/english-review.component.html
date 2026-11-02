@@ -1,0 +1,342 @@
+<section class="review">
+  <header class="review__head">
+    <div>
+      <h1>Ôn tập</h1>
+      <p>Từ bạn lưu sẽ quay lại đúng lúc sắp quên.</p>
+    </div>
+    <div class="review__stats" *ngIf="!loading">
+      <span
+        ><strong>{{ summary.saved }}</strong> từ</span
+      >
+      <span class="is-due"
+        ><strong>{{ summary.due }}</strong> cần ôn</span
+      >
+    </div>
+  </header>
+
+  <div class="alert" *ngIf="error" role="alert">
+    <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+    <span>{{ error }}</span>
+    <button type="button" (click)="refresh()">Thử lại</button>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      [class.is-active]="tab === 'review'"
+      [attr.aria-selected]="tab === 'review'"
+      (click)="setTab('review')"
+    >
+      <span nz-icon nzType="swap" nzTheme="outline"></span> Ôn tập
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [class.is-active]="tab === 'library'"
+      [attr.aria-selected]="tab === 'library'"
+      (click)="setTab('library')"
+    >
+      <span nz-icon nzType="unordered-list" nzTheme="outline"></span> Thư viện từ
+    </button>
+  </div>
+
+  <!-- Chọn nhóm: dùng chung cho cả hai tab -->
+  <div class="chips" *ngIf="!loading && phase === 'setup'" aria-label="Lọc theo nhóm">
+    <button type="button" class="chip" [class.is-active]="!groupId" (click)="selectGroup('')">
+      Tất cả <small>{{ summary.saved }}</small>
+    </button>
+    <button
+      *ngFor="let group of groups"
+      type="button"
+      class="chip"
+      [class.is-active]="groupId === group.id"
+      (click)="selectGroup(group.id)"
+    >
+      {{ group.name }} <small>{{ group.count }}</small>
+    </button>
+  </div>
+
+  <!-- ===== Tab Ôn tập ===== -->
+  <ng-container *ngIf="tab === 'review'">
+    <!-- Thiết lập -->
+    <div class="panel" *ngIf="phase === 'setup' && !loading">
+      <h2>Chọn cách ôn</h2>
+      <div class="modes">
+        <button
+          type="button"
+          class="mode"
+          [class.is-active]="mode === 'flashcard'"
+          (click)="mode = 'flashcard'"
+        >
+          <span class="mode__icon" nz-icon nzType="book" nzTheme="outline"></span>
+          <strong>Flashcard</strong>
+          <small>Lật thẻ rồi tự đánh giá đã nhớ hay chưa.</small>
+        </button>
+        <button
+          type="button"
+          class="mode"
+          [class.is-active]="mode === 'quiz'"
+          (click)="mode = 'quiz'"
+        >
+          <span class="mode__icon" nz-icon nzType="check-circle" nzTheme="outline"></span>
+          <strong>Trắc nghiệm</strong>
+          <small>Chọn nghĩa đúng trong các đáp án.</small>
+        </button>
+      </div>
+
+      <label class="check" *ngIf="mode === 'flashcard'">
+        <input type="checkbox" [(ngModel)]="reviewAll" />
+        Ôn cả những từ chưa đến hạn
+      </label>
+
+      <p class="scope">
+        Phạm vi: <strong>{{ selectedGroup ? selectedGroup.name : 'Tất cả từ' }}</strong> ·
+        {{ available }} từ {{ mode === 'flashcard' && !reviewAll ? 'đến hạn' : '' }}
+      </p>
+      <p class="hint" *ngIf="startHint">{{ startHint }}</p>
+
+      <button
+        type="button"
+        class="btn btn--primary"
+        [disabled]="!canStart || busy"
+        (click)="start()"
+      >
+        {{ busy ? 'Đang chuẩn bị...' : 'Bắt đầu' }}
+      </button>
+    </div>
+
+    <!-- Đang ôn flashcard -->
+    <div class="session" *ngIf="phase === 'running' && mode === 'flashcard' && current as word">
+      <div class="session__bar">
+        <div class="bar"><i [style.width.%]="percent"></i></div>
+        <span>Còn {{ queue.length }} thẻ</span>
+        <button type="button" class="link" (click)="quit()">Dừng</button>
+      </div>
+      <article class="flash">
+        <p class="flash__stage">{{ stageLabel(word) }}</p>
+        <h2>{{ word.word }}</h2>
+        <p class="flash__ipa" *ngIf="word.ipa">{{ word.ipa }}</p>
+        <ng-container *ngIf="revealed; else hidden">
+          <p class="flash__meaning">{{ word.meaning }}</p>
+          <p class="flash__example" *ngIf="word.example">{{ word.example }}</p>
+        </ng-container>
+        <ng-template #hidden>
+          <button type="button" class="btn btn--primary" (click)="reveal()">Lật thẻ</button>
+        </ng-template>
+      </article>
+      <div class="grades" *ngIf="revealed">
+        <button type="button" class="grade grade--again" [disabled]="busy" (click)="grade('again')">
+          <strong>Quên</strong><small>Gặp lại ngay</small>
+        </button>
+        <button type="button" class="grade grade--good" [disabled]="busy" (click)="grade('good')">
+          <strong>Nhớ</strong><small>Ôn lại sau</small>
+        </button>
+        <button type="button" class="grade grade--easy" [disabled]="busy" (click)="grade('easy')">
+          <strong>Quá dễ</strong><small>Ôn lại rất lâu sau</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- Đang làm trắc nghiệm -->
+    <div class="session" *ngIf="phase === 'running' && mode === 'quiz' && question as q">
+      <div class="session__bar">
+        <div class="bar">
+          <i [style.width.%]="((quizIndex + (picked !== null ? 1 : 0)) / total) * 100"></i>
+        </div>
+        <span>Câu {{ quizIndex + 1 }}/{{ total }}</span>
+        <button type="button" class="link" (click)="quit()">Dừng</button>
+      </div>
+      <article class="flash">
+        <p class="flash__stage">Từ này nghĩa là gì?</p>
+        <h2>{{ q.prompt }}</h2>
+        <div class="options">
+          <button
+            *ngFor="let option of q.options; let i = index"
+            type="button"
+            class="option"
+            [ngClass]="optionClass(i)"
+            [disabled]="picked !== null"
+            (click)="pickAnswer(i)"
+          >
+            <span class="option__key">{{ 'ABCD'[i] }}</span>
+            {{ option }}
+          </button>
+        </div>
+      </article>
+      <div class="actions" *ngIf="picked !== null">
+        <button type="button" class="btn btn--primary" (click)="nextQuestion()">
+          {{ quizIndex < total - 1 ? 'Câu tiếp' : 'Xem kết quả' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Kết quả -->
+    <div class="panel result" *ngIf="phase === 'done'">
+      <h2>{{ total ? 'Xong buổi ôn' : 'Không có gì để ôn' }}</h2>
+      <ng-container *ngIf="total">
+        <p class="result__big" *ngIf="mode === 'quiz'">
+          {{ quizCorrect }}<small>/{{ total }} câu đúng</small>
+        </p>
+        <ul class="result__stats" *ngIf="mode === 'flashcard'">
+          <li>
+            <strong>{{ stats.again }}</strong> lần quên
+          </li>
+          <li>
+            <strong>{{ stats.good }}</strong> lần nhớ
+          </li>
+          <li>
+            <strong>{{ stats.easy }}</strong> lần quá dễ
+          </li>
+        </ul>
+      </ng-container>
+      <button type="button" class="btn btn--primary" (click)="backToSetup()">
+        Về trang ôn tập
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- ===== Tab Thư viện từ ===== -->
+  <ng-container *ngIf="tab === 'library'">
+    <!-- Quản lý nhóm -->
+    <div class="panel">
+      <h2>Nhóm từ</h2>
+      <form class="inline" (ngSubmit)="createGroup()">
+        <input
+          name="newGroup"
+          [(ngModel)]="newGroupName"
+          maxlength="40"
+          placeholder="Tên nhóm mới, ví dụ: Du lịch"
+          aria-label="Tên nhóm mới"
+        />
+        <button type="submit" class="btn btn--primary" [disabled]="!newGroupName.trim()">
+          <span nz-icon nzType="folder-add" nzTheme="outline"></span> Tạo nhóm
+        </button>
+      </form>
+      <p class="hint hint--error" *ngIf="groupMessage">{{ groupMessage }}</p>
+
+      <ul class="groups" *ngIf="groups.length; else noGroups">
+        <li *ngFor="let group of groups">
+          <ng-container *ngIf="editingGroupId !== group.id; else editing">
+            <span nz-icon nzType="folder" nzTheme="outline" class="groups__icon"></span>
+            <div class="groups__name">
+              <strong>{{ group.name }}</strong>
+              <small>{{ group.count }} từ · {{ group.due }} cần ôn</small>
+            </div>
+            <button
+              type="button"
+              class="icon"
+              (click)="startRename(group)"
+              aria-label="Đổi tên nhóm"
+              title="Đổi tên"
+            >
+              <span nz-icon nzType="edit" nzTheme="outline"></span>
+            </button>
+            <button
+              type="button"
+              class="icon"
+              (click)="deleteGroup(group)"
+              aria-label="Xoá nhóm"
+              title="Xoá nhóm"
+            >
+              <span nz-icon nzType="delete" nzTheme="outline"></span>
+            </button>
+          </ng-container>
+          <ng-template #editing>
+            <form class="inline inline--grow" (ngSubmit)="saveRename()">
+              <input name="rename" [(ngModel)]="editingName" maxlength="40" aria-label="Tên nhóm" />
+              <button type="submit" class="icon" aria-label="Lưu">
+                <span nz-icon nzType="check" nzTheme="outline"></span>
+              </button>
+              <button type="button" class="icon" (click)="cancelRename()" aria-label="Huỷ">
+                <span nz-icon nzType="close" nzTheme="outline"></span>
+              </button>
+            </form>
+          </ng-template>
+        </li>
+      </ul>
+      <ng-template #noGroups>
+        <p class="hint">
+          Chưa có nhóm nào. Tạo nhóm để gom các từ theo chủ đề rồi ôn riêng từng nhóm.
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- Danh sách từ -->
+    <div class="panel">
+      <div class="panel__head">
+        <h2>
+          Từ đã lưu <small>{{ words.length }}</small>
+        </h2>
+        <label class="search">
+          <span nz-icon nzType="search" nzTheme="outline"></span>
+          <input
+            name="search"
+            [(ngModel)]="search"
+            (ngModelChange)="loadWords()"
+            placeholder="Tìm từ hoặc nghĩa"
+            aria-label="Tìm từ"
+          />
+        </label>
+      </div>
+
+      <p class="hint" *ngIf="!words.length">
+        {{
+          search.trim() || groupId
+            ? 'Không có từ nào khớp.'
+            : 'Thư viện còn trống. Khi học từ vựng, bấm "Lưu để ôn tập" để thêm từ.'
+        }}
+      </p>
+
+      <ul class="words">
+        <li *ngFor="let word of words" [class.is-due]="isDue(word)">
+          <div class="words__main">
+            <div class="words__title">
+              <strong>{{ word.word }}</strong>
+              <span class="words__ipa" *ngIf="word.ipa">{{ word.ipa }}</span>
+              <span class="tag" [class.tag--due]="isDue(word)">{{
+                isDue(word) ? 'Cần ôn' : stageLabel(word)
+              }}</span>
+            </div>
+            <span class="words__meaning">{{ word.meaning }}</span>
+            <div class="words__groups" *ngIf="word.groupIds.length">
+              <span class="tag tag--group" *ngFor="let id of word.groupIds">{{
+                groupName(id)
+              }}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="icon"
+            (click)="toggleAssign(word)"
+            aria-label="Chọn nhóm"
+            title="Chọn nhóm"
+          >
+            <span nz-icon nzType="folder" nzTheme="outline"></span>
+          </button>
+          <button
+            type="button"
+            class="icon"
+            (click)="removeWord(word)"
+            aria-label="Xoá từ"
+            title="Xoá từ"
+          >
+            <span nz-icon nzType="delete" nzTheme="outline"></span>
+          </button>
+
+          <div class="assign" *ngIf="assigningWordId === word.id">
+            <p *ngIf="!groups.length" class="hint">Hãy tạo nhóm trước.</p>
+            <label *ngFor="let group of groups" class="check">
+              <input
+                type="checkbox"
+                [checked]="inGroup(word, group.id)"
+                (change)="toggleWordGroup(word, group.id)"
+              />
+              {{ group.name }}
+            </label>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+</section>

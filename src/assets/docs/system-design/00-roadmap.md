@@ -300,6 +300,10 @@ Học case study theo thứ tự:
 1. [Refresh cache từ nhiều nguồn](/system-design/case-studies/cache-refresh-multi-source)
 2. [Hàng chờ khám bệnh](/system-design/case-studies/clinic-queue-current-load)
 3. [Ký số HSM đa phòng ban](/system-design/case-studies/hsm-signing-multi-department-result)
+4. [Top-K Leaderboard theo tải](/system-design/case-studies/top-k-leaderboard)
+5. [Cloud Storage và File Sync](/system-design/case-studies/cloud-storage-sync)
+6. [Messaging App và đồng bộ đa thiết bị](/system-design/case-studies/messaging-app)
+7. [News Feed và chiến lược fan-out theo tải](/system-design/case-studies/news-feed)
 
 Đừng chỉ đọc lời giải. Với mỗi case:
 

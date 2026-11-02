@@ -1,25 +1,15 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { STORAGE_KEYS, readStringArray } from '../../core/local-storage';
+import { AuthService } from '../../core/auth.service';
+import { LearningProfileService, LearningTrack } from '../../core/learning-profile.service';
+import { ENGLISH_FEATURES } from '../../features/english/english-features';
 import { MENU_SECTIONS, MenuItem } from './menu.config';
+import { NAVIGATION_ITEMS, NavigationItem, normalizeText } from './navigation';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 type SearchScope = 'all' | 'bookmarks' | 'recent';
-
-interface NavigationItem {
-  label: string;
-  context: string;
-  section: string;
-  link: string;
-  searchText: string;
-}
-
-const STORAGE_KEYS = {
-  theme: 'dev-internals.theme',
-  bookmarks: 'dev-internals.bookmarks',
-  recent: 'dev-internals.recent',
-  sidebarWidth: 'dev-internals.sidebar-width',
-} as const;
 
 const SIDEBAR_DEFAULT_WIDTH = 300;
 const SIDEBAR_MIN_WIDTH = 300;
@@ -32,7 +22,8 @@ const SIDEBAR_MAX_WIDTH = 360;
 })
 export class ShellComponent implements OnInit, OnDestroy {
   readonly menuSections = MENU_SECTIONS;
-  readonly navigationItems = this.flattenNavigation();
+  readonly navigationItems = NAVIGATION_ITEMS;
+  readonly englishFeatures = ENGLISH_FEATURES;
   readonly sidebarMinWidth = SIDEBAR_MIN_WIDTH;
   readonly sidebarMaxWidth = SIDEBAR_MAX_WIDTH;
 
@@ -40,6 +31,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   sidebarWidth = SIDEBAR_DEFAULT_WIDTH;
   mobileMenuOpen = false;
   showBackToTop = false;
+  showOnboarding = false;
   searchOpen = false;
   searchQuery = '';
   searchScope: SearchScope = 'all';
@@ -51,6 +43,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   currentSection = 'Knowledge library';
   currentTitle = 'Engineering notes';
   currentLink = '';
+  currentTrack: LearningTrack = 'dev';
   bookmarks = new Set<string>();
   recentLinks: string[] = [];
   private isResizingSidebar = false;
@@ -65,11 +58,17 @@ export class ShellComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { read: ElementRef })
   private searchInput?: ElementRef<HTMLInputElement>;
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly profile: LearningProfileService,
+    readonly auth: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.restorePreferences();
     this.applyTheme();
+    this.currentTrack = this.profile.track;
+    this.showOnboarding = !this.profile.isOnboarded;
     this.updateNavigationState(this.router.url);
 
     this.router.events.pipe(filter(event => event instanceof NavigationEnd)).subscribe(event => {
@@ -85,8 +84,23 @@ export class ShellComponent implements OnInit, OnDestroy {
     this.stopSidebarResize();
   }
 
+  /** Mục menu phẳng của track tiếng Anh (không có nhóm con). */
+  get englishItems(): MenuItem[] {
+    return this.menuSections
+      .filter(section => section.track === 'english')
+      .flatMap(section => section.items ?? []);
+  }
+
+  get visibleSections() {
+    return this.menuSections.filter(section => (section.track ?? 'dev') === this.currentTrack);
+  }
+
+  get trackItems(): NavigationItem[] {
+    return this.navigationItems.filter(item => item.track === this.currentTrack);
+  }
+
   get searchResults(): NavigationItem[] {
-    const query = this.normalize(this.searchQuery);
+    const query = normalizeText(this.searchQuery);
     let items = this.navigationItems;
 
     if (this.searchScope === 'bookmarks') {
@@ -106,15 +120,15 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   get previousItem(): NavigationItem | undefined {
-    const index = this.navigationItems.findIndex(item => item.link === this.currentLink);
-    return index > 0 ? this.navigationItems[index - 1] : undefined;
+    const items = this.trackItems;
+    const index = items.findIndex(item => item.link === this.currentLink);
+    return index > 0 ? items[index - 1] : undefined;
   }
 
   get nextItem(): NavigationItem | undefined {
-    const index = this.navigationItems.findIndex(item => item.link === this.currentLink);
-    return index >= 0 && index < this.navigationItems.length - 1
-      ? this.navigationItems[index + 1]
-      : undefined;
+    const items = this.trackItems;
+    const index = items.findIndex(item => item.link === this.currentLink);
+    return index >= 0 && index < items.length - 1 ? items[index + 1] : undefined;
   }
 
   get isCurrentBookmarked(): boolean {
@@ -161,6 +175,22 @@ export class ShellComponent implements OnInit, OnDestroy {
         this.navigateTo(result.link);
       }
     }
+  }
+
+  logout(): void {
+    this.auth.logout().subscribe();
+  }
+
+  chooseTrack(track: LearningTrack): void {
+    this.profile.chooseTrack(track);
+    this.currentTrack = track;
+    this.showOnboarding = false;
+    this.closeMobileMenu();
+    void this.router.navigateByUrl('/');
+  }
+
+  openOnboarding(): void {
+    this.showOnboarding = true;
   }
 
   resizeSidebar(event: PointerEvent): void {
@@ -313,42 +343,19 @@ export class ShellComponent implements OnInit, OnDestroy {
     if (current) {
       this.currentSection = current.section;
       this.currentTitle = current.context;
+      this.currentTrack = current.track;
       this.addToRecent(current.link);
-    }
-  }
-
-  private flattenNavigation(): NavigationItem[] {
-    const items: NavigationItem[] = [];
-
-    for (const section of MENU_SECTIONS) {
-      this.appendNavigationItems(items, section.items, section.title, []);
-
-      for (const group of section.groups ?? []) {
-        if (group.link) {
-          items.push(
-            this.createNavigationItem(group.title, group.title, section.title, group.link),
-          );
-        }
-        this.appendNavigationItems(items, group.items, section.title, [group.title]);
-      }
-    }
-
-    return items;
-  }
-
-  private appendNavigationItems(
-    target: NavigationItem[],
-    menuItems: MenuItem[] | undefined,
-    section: string,
-    ancestors: string[],
-  ): void {
-    for (const item of menuItems ?? []) {
-      if (item.link) {
-        const context = ancestors.length ? ancestors.join(' · ') : section;
-        target.push(this.createNavigationItem(item.label, context, section, item.link));
-      }
-
-      this.appendNavigationItems(target, item.children, section, [...ancestors, item.label]);
+    } else if (cleanUrl.startsWith('/english')) {
+      // Bài học và trang ôn tập không nằm trong mục lục nhưng vẫn thuộc track tiếng Anh.
+      this.currentTrack = 'english';
+      this.currentSection = 'Học tiếng Anh';
+      this.currentTitle = /^\/english\/(speaking-)?lesson/.test(cleanUrl)
+        ? 'Bài học'
+        : 'Học tiếng Anh';
+    } else {
+      this.currentTrack = this.profile.track;
+      this.currentSection = 'Trang chủ';
+      this.currentTitle = this.currentTrack === 'english' ? 'Học tiếng Anh' : 'Dev Internals';
     }
   }
 
@@ -368,21 +375,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     return url === link || url.startsWith(`${link}/`);
   }
 
-  private createNavigationItem(
-    label: string,
-    context: string,
-    section: string,
-    link: string,
-  ): NavigationItem {
-    return {
-      label,
-      context,
-      section,
-      link,
-      searchText: this.normalize(`${label} ${context} ${section}`),
-    };
-  }
-
   private moveSearchSelection(direction: number): void {
     const count = this.searchResults.length;
     if (!count) {
@@ -396,8 +388,8 @@ export class ShellComponent implements OnInit, OnDestroy {
     const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) as ThemeMode | null;
     this.themeMode =
       savedTheme && ['light', 'dark', 'system'].includes(savedTheme) ? savedTheme : 'dark';
-    this.bookmarks = this.restoreSet(STORAGE_KEYS.bookmarks);
-    this.recentLinks = this.restoreArray(STORAGE_KEYS.recent);
+    this.bookmarks = new Set(readStringArray(STORAGE_KEYS.bookmarks));
+    this.recentLinks = readStringArray(STORAGE_KEYS.recent);
     const savedSidebarWidth = Number(localStorage.getItem(STORAGE_KEYS.sidebarWidth));
     this.sidebarWidth =
       Number.isFinite(savedSidebarWidth) && savedSidebarWidth > 0
@@ -417,19 +409,6 @@ export class ShellComponent implements OnInit, OnDestroy {
     localStorage.setItem(STORAGE_KEYS.recent, JSON.stringify(this.recentLinks));
   }
 
-  private restoreSet(key: string): Set<string> {
-    return new Set(this.restoreArray(key));
-  }
-
-  private restoreArray(key: string): string[] {
-    try {
-      const value = JSON.parse(localStorage.getItem(key) ?? '[]');
-      return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
-    } catch {
-      return [];
-    }
-  }
-
   private persistSet(key: string, value: Set<string>): void {
     localStorage.setItem(key, JSON.stringify([...value]));
   }
@@ -440,13 +419,5 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   private persistSidebarWidth(): void {
     localStorage.setItem(STORAGE_KEYS.sidebarWidth, String(this.sidebarWidth));
-  }
-
-  private normalize(value: string): string {
-    return value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
   }
 }

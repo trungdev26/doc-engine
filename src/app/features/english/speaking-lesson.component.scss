@@ -1,0 +1,198 @@
+.speak {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.speak__state {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  color: var(--app-text-muted);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+}
+.speak__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.speak__head h1 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.4em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.speak__back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-chip);
+  border-radius: 50%;
+}
+.speak__situation {
+  margin: 18px 0;
+  padding: 14px 16px;
+  color: var(--app-text);
+  line-height: 1.65;
+  background: var(--app-accent-soft);
+  border-radius: 16px;
+}
+.speak__progress {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.bar {
+  height: 6px;
+  overflow: hidden;
+  background: var(--app-chip);
+  border-radius: 999px;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--app-accent);
+  transition: width 0.3s ease;
+}
+.sentence {
+  display: grid;
+  gap: 8px;
+  padding: 26px 22px;
+  text-align: center;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+}
+.sentence p {
+  margin: 0;
+}
+.sentence__text {
+  color: var(--app-text-strong);
+  font-size: 1.7em;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.sentence__ipa {
+  color: var(--app-text-muted);
+}
+.sentence__vi {
+  color: var(--app-accent-strong);
+}
+.sentence__row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.chip {
+  padding: 8px 16px;
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 650;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--app-accent);
+}
+.recorder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+.recorder__note {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.recorder__label {
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.mic {
+  width: 72px;
+  height: 72px;
+  color: var(--app-accent-contrast);
+  font-size: 26px;
+  background: var(--app-accent);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 8px var(--app-accent-soft);
+  transition: 0.16s ease;
+}
+.mic.is-recording {
+  background: #ef4444;
+  box-shadow: 0 0 0 10px color-mix(in oklab, #ef4444 25%, transparent);
+}
+audio {
+  width: 100%;
+  max-width: 360px;
+}
+.btn {
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn--primary {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.btn--ghost {
+  color: var(--app-text);
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 22px;
+}
+.result {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  text-align: center;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+}
+.result h2 {
+  margin: 0;
+  color: var(--app-text-strong);
+}
+.result__score {
+  margin: 0;
+  color: var(--app-accent-strong);
+  font-size: 3em;
+  font-weight: 800;
+}
+.result__score small {
+  color: var(--app-text-muted);
+  font-size: 0.35em;
+}
+.result__note {
+  margin: 0;
+  color: var(--app-warm);
+  font-size: 13px;
+}

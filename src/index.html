@@ -1,11 +1,24 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="vi" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <title>Dev Internals</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d9488" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script>
+      // Áp theme trước khi paint để không bị flash nền tối rồi mới đổi sang sáng.
+      (function () {
+        try {
+          var mode = localStorage.getItem('dev-internals.theme') || 'dark';
+          var dark =
+            mode === 'dark' ||
+            (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

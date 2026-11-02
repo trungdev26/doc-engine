@@ -1,281 +1,251 @@
-# Middleware trong ASP.NET Core
+# Middleware và request pipeline trong ASP.NET Core
 
-Middleware là một đoạn code nằm trên đường đi của mỗi HTTP request trong ASP.NET Core. Trước khi request đến controller action, middleware có thể kiểm tra hoặc bổ sung thông tin; sau khi action xử lý xong, nó có thể tiếp tục kiểm tra hoặc thay đổi response.
+Khi một API nhận request tạo đơn hàng, controller không phải thành phần duy nhất tham gia xử lý. Request còn cần đi qua exception handling, logging, authentication, authorization, tenant resolution và nhiều bước hạ tầng khác.
 
-ASP.NET Core có hai cách khai báo endpoint: Controller (`ControllerBase`, `[ApiController]`) và Minimal API (`MapGet`, `MapPost` gọi trực tiếp trên `WebApplication`). Middleware — `Use`, `Run`, `Map`, class middleware — xử lý ở tầng `IApplicationBuilder`, trước khi routing chọn ra endpoint cụ thể, nên hoạt động giống nhau ở cả hai cách khai báo. Các ví dụ dưới đây dùng Controller cho endpoint và class cho middleware.
+Các chức năng xuất hiện ở nhiều use case nhưng không thuộc riêng use case nào được gọi là **cross-cutting concern**. Middleware đưa các concern ở HTTP boundary vào một request pipeline có thứ tự, thay vì để từng endpoint tự gọi lại cùng một đoạn code.
 
----
+Bài này bắt đầu từ pipeline của ASP.NET trên .NET Framework, sau đó đi qua lý do ASP.NET Core chuyển sang middleware có thể compose bằng code. Một API đặt hàng multi-tenant được dùng làm ví dụ xuyên suốt. Mỗi cơ chế chỉ được giới thiệu sau khi vấn đề dẫn đến nó đã xuất hiện.
 
-## 1. Middleware là gì
+## 1. Pipeline trong ASP.NET trên .NET Framework
 
-Hãy hình dung request là một người đi qua nhiều trạm kiểm soát. Mỗi trạm là một middleware. Trạm có thể cho đi tiếp, trả kết quả ngay, hoặc xử lý việc gì đó trước và sau trạm kế tiếp.
+### 1.1 System.Web pipeline
 
-| Khái niệm | Ý nghĩa đơn giản |
-| --- | --- |
-| Request | Dữ liệu client gửi lên, ví dụ `GET /api/orders/10`. |
-| Response | Kết quả API trả về: status code, header và body. |
-| `HttpContext` | Đối tượng chứa toàn bộ thông tin của request/response hiện tại. |
-| Endpoint | Điểm xử lý cuối: controller action, health check, SignalR hub... |
-| Pipeline | Thứ tự các middleware và endpoint mà request đi qua. |
-| `next` | Lệnh chuyển request sang middleware hoặc endpoint tiếp theo. |
+Trước ASP.NET Core, ứng dụng ASP.NET chạy trên .NET Framework thường dựa vào IIS và `System.Web`. Request đi qua một pipeline do `HttpApplication` điều phối.
 
-Ví dụ: middleware xác thực đọc `Authorization` header và đặt người dùng đã xác thực vào `HttpContext.User`; middleware phân quyền đọc user đó để quyết định endpoint có được chạy hay không.
+Hai extension point chính là:
 
-> **Lưu ý:** Middleware xử lý chính sách chung cho HTTP. Nghiệp vụ cụ thể của đơn hàng, thanh toán hay bệnh án nên ở application/domain layer, không đặt tại đây.
+- `IHttpModule`: tham gia các event trong vòng đời request, ví dụ `BeginRequest`, `AuthenticateRequest` và `EndRequest`.
+- `IHttpHandler`: xử lý request và tạo response cho một loại resource hoặc route.
 
-## 2. Cài đặt và cấu hình tối thiểu
-
-Tạo project ASP.NET Core Web API dùng Controller:
-
-```bash
-dotnet new webapi --use-controllers -o SampleApi
-cd SampleApi
-```
-
-`Program.cs` sau khi khởi tạo có cấu trúc tối thiểu sau:
+Ví dụ logging bằng `IHttpModule`:
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-
-var app = builder.Build();
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
-```
-
-| Dòng | Vai trò |
-| --- | --- |
-| `builder.Services.AddControllers()` | Đăng ký các service MVC cần thiết để controller hoạt động: model binding, action result, validation... |
-| `app.Build()` | Tạo `WebApplication`, đồng thời là `IApplicationBuilder` để đăng ký middleware. |
-| `app.Use...(...)` | Thêm middleware vào pipeline, theo đúng thứ tự sẽ thực thi. |
-| `app.MapControllers()` | Đăng ký endpoint dựa trên route attribute (`[Route]`, `[HttpGet]`...) khai báo trên controller. |
-
-Controller mẫu dùng xuyên suốt tài liệu:
-
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public sealed class PingController : ControllerBase
+public sealed class RequestLoggingModule : IHttpModule
 {
-    [HttpGet]
-    public IActionResult Get() => Ok("pong");
+    public void Init(HttpApplication application)
+    {
+        application.BeginRequest += OnBeginRequest;
+        application.EndRequest += OnEndRequest;
+    }
+
+    private static void OnBeginRequest(object sender, EventArgs args)
+    {
+        var application = (HttpApplication)sender;
+        var context = application.Context;
+
+        // Ghi nhận thời điểm request bắt đầu.
+    }
+
+    private static void OnEndRequest(object sender, EventArgs args)
+    {
+        var application = (HttpApplication)sender;
+        var context = application.Context;
+
+        // Ghi status code và thời gian xử lý.
+    }
+
+    public void Dispose()
+    {
+    }
 }
 ```
 
-## 3. Mô hình thực thi
+Module thường được đăng ký qua `web.config` hoặc IIS configuration. Thứ tự xử lý chịu ảnh hưởng của pipeline event và hosting environment.
 
-Một middleware nhận `HttpContext` và một delegate đại diện cho bước kế tiếp (`RequestDelegate`).
+Mô hình này giải quyết được cross-cutting concern, nhưng application code phụ thuộc mạnh vào `System.Web`, `HttpApplication` và IIS. Unit test một module cũng khó hơn vì request context gắn với runtime lớn của framework.
+
+### 1.2 OWIN và Katana
+
+OWIN, viết tắt của Open Web Interface for .NET, tách web application khỏi web server bằng một interface nhỏ dựa trên delegate. Katana là implementation OWIN của Microsoft trên .NET Framework.
+
+OWIN đưa ra một thay đổi quan trọng: application có thể tự compose pipeline từ các component nhỏ, thay vì chỉ gắn code vào event của `HttpApplication`.
 
 ```text
-Request  -->  A (before) --> B (before) --> Endpoint
-Response <--  A (after)  <-- B (after)  <-- Endpoint
+Web server
+  -> middleware A
+    -> middleware B
+      -> application
 ```
 
-Ví dụ ngắn nhất, thêm hai middleware trước `PingController`. Middleware ở đây là một class implement quy ước `InvokeAsync(HttpContext)`, không phải lambda khai báo trực tiếp trong `Program.cs`:
+Đây là bước chuyển tiếp về tư duy giữa `System.Web` pipeline và ASP.NET Core middleware.
+
+### 1.3 ASP.NET Core middleware
+
+ASP.NET Core bỏ dependency vào `System.Web` và thiết kế request pipeline quanh `HttpContext` cùng `RequestDelegate`. Pipeline được khai báo bằng code và chỉ chứa các component ứng dụng thực sự cần.
+
+Các API `Use`, `Run` và `Map` xuất phát từ mô hình pipeline có thể compose này. Chúng không phải API riêng của ASP.NET Core 3.x và cũng không phải cú pháp thay thế một-một cho `IHttpModule`. Chúng đã tồn tại từ các phiên bản ASP.NET Core đầu tiên.
+
+ASP.NET Core 3.x là một mốc dễ nhận thấy vì endpoint routing trở thành mô hình trung tâm. Tuy nhiên, bản chất middleware và các API compose pipeline đã xuất hiện trước đó.
+
+Sự thay đổi có thể tóm tắt như sau:
+
+| ASP.NET trên .NET Framework | ASP.NET Core |
+| --- | --- |
+| IIS và `System.Web` giữ vai trò trung tâm | Hosting abstraction không phụ thuộc `System.Web` |
+| `IHttpModule` đăng ký vào request events | Middleware bao quanh `RequestDelegate` |
+| `IHttpHandler` xử lý request cuối pipeline | Endpoint xử lý request sau middleware |
+| Cấu hình phụ thuộc nhiều vào `web.config` | Pipeline được compose bằng code |
+| Runtime cung cấp pipeline lớn | Ứng dụng chọn component cần dùng |
+
+Lịch sử này giải thích vì sao người học ASP.NET cũ không gặp `app.Use(...)` hoặc `app.Map(...)`. Đó là API của mô hình pipeline mới, không phải cách viết khác của cùng `System.Web` pipeline.
+
+## 2. Cross-cutting concern trong endpoint
+
+### 2.1 Luồng tạo đơn hàng
+
+Giả sử hệ thống bắt đầu với một endpoint tạo đơn hàng:
 
 ```csharp
-public sealed class LabeledLoggingMiddleware
+[HttpPost("/api/don-hang")]
+public async Task<IActionResult> TaoDonHang(
+    TaoDonHangRequest request,
+    CancellationToken cancellationToken)
 {
-    private readonly RequestDelegate _next;
-    private readonly string _label;
-
-    public LabeledLoggingMiddleware(RequestDelegate next, string label)
+    try
     {
-        _next = next;
-        _label = label;
-    }
+        var correlationId = Request.Headers["X-Correlation-ID"].FirstOrDefault()
+            ?? Guid.NewGuid().ToString("N");
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        Console.WriteLine($"{_label}: before");
-        await _next(context);
-        Console.WriteLine($"{_label}: after");
-    }
-}
-```
+        _logger.LogInformation(
+            "Bat dau tao don hang {CorrelationId}",
+            correlationId);
 
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-
-var app = builder.Build();
-
-app.UseMiddleware<LabeledLoggingMiddleware>("A");
-app.UseMiddleware<LabeledLoggingMiddleware>("B");
-
-app.MapControllers();
-
-app.Run();
-```
-
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public sealed class PingController : ControllerBase
-{
-    [HttpGet]
-    public IActionResult Get()
-    {
-        Console.WriteLine("Endpoint");
-        return Ok("pong");
-    }
-}
-```
-
-`UseMiddleware<T>(...)` chấp nhận thêm tham số ngoài `RequestDelegate`; các tham số đó được truyền vào constructor của middleware sau `next`, ở đây là chuỗi `"A"` và `"B"` để phân biệt hai instance cùng loại.
-
-Gọi `GET /api/ping` sẽ in:
-
-```text
-A: before
-B: before
-Endpoint
-B: after
-A: after
-```
-
-`await _next(context)` là ranh giới quan trọng. Code trước nó xử lý request đi vào; code sau nó xử lý response đi ra. Nếu không gọi `_next`, các bước sau và endpoint sẽ không chạy.
-
-## 4. Ba cách thêm middleware
-
-### `Use`: bao quanh bước tiếp theo
-
-`Use` phù hợp khi cần làm việc ở cả hai chiều.
-
-```csharp
-public sealed class TimingMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public TimingMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var startedAt = Stopwatch.GetTimestamp();
-        await _next(context);
-
-        var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
-        Console.WriteLine($"{context.Response.StatusCode} in {elapsedMs:N0} ms");
-    }
-}
-```
-
-```csharp
-app.UseMiddleware<TimingMiddleware>();
-```
-
-### `Run`: middleware kết thúc pipeline
-
-`Run` không có `next`; request luôn dừng tại đây.
-
-```csharp
-public static class NotFoundHandler
-{
-    public static async Task HandleAsync(HttpContext context)
-    {
-        context.Response.StatusCode = StatusCodes.Status404NotFound;
-        await context.Response.WriteAsync("No endpoint matched");
-    }
-}
-```
-
-```csharp
-app.Run(NotFoundHandler.HandleAsync);
-```
-
-Đặt `Run` trước `MapControllers` hoặc middleware khác sẽ làm các bước sau không thể chạy. Vì vậy nó thường chỉ xuất hiện ở cuối pipeline hoặc trong nhánh riêng.
-
-### `Map` và `UseWhen`: rẽ nhánh
-
-`Map` tạo một nhánh theo path và loại bỏ phần prefix đã match khỏi `Request.Path` trong lúc chạy nhánh.
-
-```csharp
-public sealed class InternalKeyAuthMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public InternalKeyAuthMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        if (!context.Request.Headers.ContainsKey("X-Internal-Key"))
+        if (_maintenanceOptions.Enabled)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return;
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
         }
 
-        await _next(context);
-    }
-}
+        var tenant = await _tenantLookup.FindByHostAsync(
+            Request.Host.Host,
+            cancellationToken);
 
-public static class InternalBranch
-{
-    public static void Configure(IApplicationBuilder internalApp)
+        if (tenant is null)
+        {
+            return NotFound();
+        }
+
+        var donHangId = await _donHangService.TaoAsync(
+            tenant.Id,
+            request,
+            cancellationToken);
+
+        return Ok(new { donHangId });
+    }
+    catch (Exception exception)
     {
-        internalApp.UseMiddleware<InternalKeyAuthMiddleware>();
-        internalApp.Run(HandleAsync);
+        _logger.LogError(exception, "Tao don hang that bai");
+        return Problem(statusCode: StatusCodes.Status500InternalServerError);
     }
-
-    private static Task HandleAsync(HttpContext context) =>
-        context.Response.WriteAsync("Internal API");
 }
 ```
 
+Business operation của endpoint là tạo đơn hàng. Phần còn lại là cross-cutting concern:
+
+- Correlation ID liên kết log của cùng một request.
+- Request logging cung cấp observability.
+- Maintenance check có thể kết thúc request sớm.
+- Tenant resolution tạo request context cho các bước phía sau.
+- Exception handling chuyển lỗi thành HTTP response.
+
+Khi hệ thống chỉ có một endpoint, cách viết trực tiếp này chưa tạo áp lực rõ ràng. Vấn đề xuất hiện khi cùng các concern phải chạy cho menu, giỏ hàng, thanh toán và quản trị shop.
+
+### 2.2 Helper method
+
+Bước refactor tự nhiên là chuyển code lặp vào helper:
+
 ```csharp
-app.Map("/internal", InternalBranch.Configure);
+var correlationId = RequestContextHelper.GetCorrelationId(HttpContext);
+var tenant = await RequestContextHelper.ResolveTenantAsync(
+    HttpContext,
+    cancellationToken);
 ```
 
-`UseWhen` rẽ nhánh theo điều kiện nhưng sau khi nhánh hoàn tất có thể quay lại pipeline chính.
+Helper giảm số dòng code nhưng không tạo ra một execution contract. Mỗi endpoint vẫn phải nhớ:
+
+- Gọi đúng helper.
+- Gọi theo đúng thứ tự.
+- Dừng xử lý khi helper không tìm thấy tenant.
+- Bao toàn bộ code còn lại bằng exception handling và logging.
+
+Endpoint quên một lời gọi vẫn biên dịch và chạy. Helper cũng không thể tự bao quanh phần xử lý phía sau để đo duration hoặc bắt exception.
+
+### 2.3 Base controller và MVC filter
+
+Base controller có thể đặt một số hành vi vào class cha, nhưng chỉ tác động đến MVC controller. Minimal API, health endpoint và static file không đi qua class đó. Inheritance còn ghép nhiều concern không liên quan vào cùng một hierarchy.
+
+MVC filter là extension point hợp lệ khi concern cần model binding, action arguments hoặc action result. Tuy nhiên, filter chỉ bao quanh MVC action. Nó không bao quanh toàn bộ HTTP pipeline và không xử lý exception phát sinh trước khi MVC được chọn.
+
+Vấn đề gốc không phải thiếu một method hoặc base class. Hệ thống cần một chuỗi xử lý dùng chung tại HTTP boundary, có thứ tự rõ ràng và có thể bao quanh endpoint.
+
+## 3. Middleware và request pipeline
+
+**Request pipeline** là chuỗi component xử lý một HTTP request trước và sau endpoint. Mỗi component trong chuỗi được gọi là **middleware**.
+
+Middleware nhận `HttpContext` của request hiện tại và có ba lựa chọn:
+
+1. Thực hiện công việc rồi chuyển request cho middleware kế tiếp.
+2. Bao quanh middleware kế tiếp bằng logic chạy trước và sau.
+3. Tự tạo response và kết thúc pipeline, gọi là short-circuit.
+
+```mermaid
+flowchart LR
+    C[HTTP Client] --> K[Kestrel]
+    K --> E[Exception handling]
+    E --> L[Request logging]
+    L --> T[Tenant resolution]
+    T --> A[Authentication]
+    A --> P[Endpoint]
+```
+
+`HttpContext` là request context dùng chung cho toàn pipeline. Nó chứa:
+
+- `Request`: method, path, headers, query string và body.
+- `Response`: status code, headers và response body.
+- `User`: identity của request.
+- `RequestServices`: DI scope của request.
+- `RequestAborted`: cancellation token được kích hoạt khi request bị hủy.
+
+Middleware không tạo `HttpContext` mới khi chuyển tiếp. Nó đọc hoặc bổ sung state vào cùng một object để các bước phía sau sử dụng.
+
+## 4. RequestDelegate
+
+Request pipeline cuối cùng phải trở thành một hàm mà server có thể gọi. ASP.NET Core biểu diễn hàm đó bằng `RequestDelegate`:
 
 ```csharp
-public sealed class ApiHeaderMiddleware
+public delegate Task RequestDelegate(HttpContext context);
+```
+
+`RequestDelegate` nhận `HttpContext` và trả `Task`. Response không phải return value của delegate vì middleware ghi trực tiếp vào `HttpContext.Response`.
+
+Một middleware cần tham chiếu đến delegate kế tiếp. Vì vậy hình thức nền tảng của middleware là:
+
+```csharp
+Func<RequestDelegate, RequestDelegate> component = next =>
 {
-    private readonly RequestDelegate _next;
-
-    public ApiHeaderMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
+    return async context =>
     {
-        context.Response.Headers["X-Api"] = "true";
-        await _next(context);
-    }
-}
-
-public static class ApiBranch
-{
-    public static bool IsApiRequest(HttpContext context) =>
-        context.Request.Path.StartsWithSegments("/api");
-
-    public static void Configure(IApplicationBuilder apiApp) =>
-        apiApp.UseMiddleware<ApiHeaderMiddleware>();
-}
+        // Logic trước middleware kế tiếp.
+        await next(context);
+        // Logic sau middleware kế tiếp.
+    };
+};
 ```
 
-```csharp
-app.UseWhen(ApiBranch.IsApiRequest, ApiBranch.Configure);
+Component nhận delegate đại diện cho phần pipeline phía sau rồi trả về một delegate mới bao quanh phần đó:
+
+```text
+next RequestDelegate
+        ↓
+middleware component
+        ↓
+wrapped RequestDelegate
 ```
 
-Chọn `Map` cho khu vực tách biệt rõ ràng như `/internal` hoặc `/metrics`; chọn `UseWhen` cho behavior điều kiện vẫn cần tiếp tục pipeline chung.
+Class middleware, extension method và các API registration đều được xây trên mô hình này. Class không phải bản chất của middleware. Nó chỉ là cách tổ chức dependency và logic.
 
-## 5. Khi nào nên dùng middleware
+## 5. Quá trình dựng request pipeline
 
-Middleware phù hợp cho concern có phạm vi HTTP toàn cục hoặc theo nhánh:
-
-- Chuẩn hóa lỗi, correlation ID, logging, metric, security header.
-- CORS, HTTPS redirect, authentication, authorization, rate limiting.
-- Kiểm tra bảo trì, tenant context, giới hạn request body, cache response.
-
-Không nên để business rule cụ thể trong middleware, ví dụ "đơn đã duyệt không được sửa" hay "bác sĩ chỉ xem phiếu khám được phân công". Những rule đó cần dữ liệu nghiệp vụ, authorization theo resource và transaction rõ ràng; chúng thuộc application/domain layer.
-
-## 6. Thứ tự pipeline thực tế
-
-Thứ tự quyết định tính đúng đắn. Một cấu hình API thường có dạng:
+Ứng dụng hiện đại đăng ký middleware trong `Program.cs`:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -283,110 +253,99 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-app.UseExceptionHandler("/error");
-app.UseForwardedHeaders();
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-app.UseCors("frontend");
+app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
-
-app.MapControllers();
-app.MapHealthChecks("/health");
-
-app.Run();
-```
-
-Các quan hệ cần giữ:
-
-| Thành phần | Lý do đặt vị trí này |
-| --- | --- |
-| Exception handler | Đặt sớm để bao được exception từ các bước phía sau. |
-| Forwarded headers | Đặt trước HTTPS redirect và code đọc scheme/IP thật. Chỉ tin proxy đã được cấu hình rõ. |
-| Static files | Có thể trả file ngay, tránh đi qua controller. |
-| Routing | Chọn endpoint và metadata. |
-| CORS | Sau routing để dùng endpoint metadata, trước auth/authorization để preflight được trả đúng. |
-| Authentication | Tạo `HttpContext.User`. |
-| Authorization | Đọc user và metadata `[Authorize]` / policy của endpoint. |
-| Rate limiting | Có thể chọn policy theo endpoint hoặc identity đã xác thực. |
-
-Trong hosting hiện đại, `MapControllers()` đăng ký endpoint theo route attribute; routing/endpoint middleware thường được framework tự thêm khi không gọi tường minh. Gọi `UseRouting()` là hữu ích khi cần đặt middleware giữa routing và endpoint execution.
-
-## 7. Tạo middleware tùy chỉnh
-
-Middleware nên là một class riêng khi behavior có tên riêng, được dùng lại, cần test hoặc có dependency.
-
-### Ví dụ minh họa: thêm request ID
-
-Ví dụ này tạo middleware tùy chỉnh, thêm `X-Request-ID` vào response, sau đó controller action trả lại chính ID đó.
-
-```csharp
-public sealed class RequestIdMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public RequestIdMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var requestId = context.Request.Headers["X-Request-ID"].FirstOrDefault();
-        context.TraceIdentifier = string.IsNullOrWhiteSpace(requestId)
-            ? Guid.NewGuid().ToString("N")
-            : requestId;
-
-        context.Response.Headers["X-Request-ID"] = context.TraceIdentifier;
-        await _next(context);
-    }
-}
-```
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-
-var app = builder.Build();
-
-app.UseMiddleware<RequestIdMiddleware>();
-
 app.MapControllers();
 
 app.Run();
 ```
 
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public sealed class PingController : ControllerBase
-{
-    [HttpGet]
-    public IActionResult Get() => Ok(new
-    {
-        message = "pong",
-        requestId = HttpContext.TraceIdentifier
-    });
-}
+Các lời gọi registration chưa xử lý request ngay lập tức. Chúng mô tả những component sẽ tham gia pipeline.
+
+Khi application khởi động, hosting infrastructure ghép các component từ cuối về đầu. Giả sử pipeline có ba bước `A`, `B` và endpoint:
+
+```text
+terminal = endpoint delegate
+B(terminal) = delegate B bao quanh endpoint
+A(B(terminal)) = delegate A bao quanh B
 ```
 
-Gọi `GET /api/ping`. Nếu client gửi `X-Request-ID: demo-001`, response header và JSON body đều có `demo-001`; nếu không gửi, ứng dụng tạo một ID mới. Đây là mẫu đơn giản để hiểu ba việc cốt lõi: nhận `HttpContext`, làm việc trước `next`, rồi chuyển request đi tiếp.
-
-### Tách registration thành extension method
-
-Ví dụ middleware đo thời gian và thêm response header, lần này có logger được inject qua DI:
+Pipeline hoàn chỉnh có thể hình dung như một delegate lồng nhau:
 
 ```csharp
-using System.Diagnostics;
+RequestDelegate pipeline = context =>
+    A(context, () =>
+        B(context, () =>
+            Endpoint(context)));
+```
 
-public sealed class RequestTimingMiddleware
+Đoạn code trên chỉ minh họa cấu trúc, không phải API cần tự viết. Kestrel chuyển `HttpContext` vào delegate đầu tiên. Từ đó mỗi middleware quyết định có gọi delegate kế tiếp hay không.
+
+## 6. Luồng request và response
+
+`await next(context)` chia middleware thành hai pha:
+
+```csharp
+app.Use(async (context, next) =>
+{
+    Console.WriteLine("Logging: before");
+    await next(context);
+    Console.WriteLine("Logging: after");
+});
+
+app.Use(async (context, next) =>
+{
+    Console.WriteLine("Tenant: before");
+    await next(context);
+    Console.WriteLine("Tenant: after");
+});
+```
+
+Kết quả khi endpoint hoàn thành:
+
+```text
+Logging: before
+Tenant: before
+Endpoint
+Tenant: after
+Logging: after
+```
+
+```text
+Request
+  -> Logging before
+    -> Tenant before
+      -> Endpoint
+    <- Tenant after
+  <- Logging after
+Response
+```
+
+Request đi xuôi theo thứ tự đăng ký. Khi endpoint hoàn thành, quyền điều khiển quay ngược qua các lệnh `await` đang chờ.
+
+Cấu trúc hai chiều giải thích vì sao middleware phù hợp với:
+
+- Request timing: lấy thời điểm trước `next`, tính duration sau `next`.
+- Request logging: mở log scope trước `next`, ghi status code sau `next`.
+- Exception handling: đặt `next` trong `try/catch`.
+- Response compression và response caching: xử lý response trên chiều quay về.
+
+Pipeline có cấu trúc của Chain of Responsibility ở chiều request và hành vi giống Decorator khi middleware bao quanh delegate phía sau. Pattern mô tả cơ chế, không thay thế việc xác định đúng ownership của concern.
+
+## 7. Request logging middleware
+
+Controller ban đầu tự ghi log. Concern này áp dụng cho toàn bộ API và cần chạy trước lẫn sau endpoint, nên middleware là extension point phù hợp.
+
+```csharp
+public sealed class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<RequestTimingMiddleware> _logger;
+    private readonly ILogger<RequestLoggingMiddleware> _logger;
 
-    public RequestTimingMiddleware(
+    public RequestLoggingMiddleware(
         RequestDelegate next,
-        ILogger<RequestTimingMiddleware> logger)
+        ILogger<RequestLoggingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -398,538 +357,220 @@ public sealed class RequestTimingMiddleware
 
         await _next(context);
 
-        var elapsedMs = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
-        context.Response.Headers["X-Response-Time-Ms"] = elapsedMs.ToString("F0");
-
+        var elapsed = Stopwatch.GetElapsedTime(startedAt);
         _logger.LogInformation(
-            "HTTP {Method} {Path} returned {StatusCode} in {ElapsedMs:0.0} ms",
+            "{Method} {Path} returned {StatusCode} in {ElapsedMs} ms",
             context.Request.Method,
             context.Request.Path,
             context.Response.StatusCode,
-            elapsedMs);
+            elapsed.TotalMilliseconds);
     }
 }
-
-public static class RequestTimingMiddlewareExtensions
-{
-    public static IApplicationBuilder UseRequestTiming(this IApplicationBuilder app) =>
-        app.UseMiddleware<RequestTimingMiddleware>();
-}
 ```
 
-Đăng ký vào pipeline:
-
 ```csharp
-app.UseRequestTiming();
+app.UseMiddleware<RequestLoggingMiddleware>();
 ```
 
-`RequestDelegate` được inject qua constructor. Dependency scoped không được inject trực tiếp vào constructor middleware kiểu này vì instance middleware có thể được tái sử dụng trong toàn bộ vòng đời ứng dụng. Hãy inject dependency scoped vào `InvokeAsync`:
+Framework nhận biết conventional middleware qua hai convention:
+
+- Constructor nhận `RequestDelegate` và các dependency có lifetime phù hợp.
+- Method `Invoke` hoặc `InvokeAsync` nhận `HttpContext` và trả `Task`.
+
+Sau khi registration hoàn tất, controller không cần gọi logging helper. Mọi request đi qua vị trí đó trong pipeline đều được xử lý nhất quán.
+
+## 8. Short-circuit
+
+Maintenance mode không cần chạy business use case. Middleware có đủ thông tin để tự tạo response và không gọi `next`:
 
 ```csharp
-public async Task InvokeAsync(HttpContext context, IRequestAuditWriter auditWriter)
+public async Task InvokeAsync(HttpContext context)
 {
-    await _next(context);
-    await auditWriter.WriteAsync(context.TraceIdentifier, context.Response.StatusCode);
-}
-```
-
-Hoặc dùng middleware theo `IMiddleware`, khi container tạo instance theo lifetime đã đăng ký:
-
-```csharp
-public sealed class AuditMiddleware : IMiddleware
-{
-    private readonly IRequestAuditWriter _auditWriter;
-
-    public AuditMiddleware(IRequestAuditWriter auditWriter) => _auditWriter = auditWriter;
-
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    if (_options.Enabled &&
+        context.Request.Path.StartsWithSegments("/api"))
     {
-        await next(context);
-        await _auditWriter.WriteAsync(context.TraceIdentifier, context.Response.StatusCode);
-    }
-}
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.Headers["Retry-After"] = "120";
 
-builder.Services.AddScoped<AuditMiddleware>();
-builder.Services.AddScoped<IRequestAuditWriter, RequestAuditWriter>();
-
-app.UseMiddleware<AuditMiddleware>();
-```
-
-## 8. Ví dụ hoàn chỉnh: correlation ID, log và lỗi chuẩn
-
-Mỗi request nhận một correlation ID. ID này được trả về client, đặt trong scope log và đưa vào `ProblemDetails` khi có lỗi để việc truy vết giữa log, gateway và client nhất quán.
-
-```csharp
-public sealed class GlobalExceptionHandler : IExceptionHandler
-{
-    private readonly ILogger<GlobalExceptionHandler> _logger;
-
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) => _logger = logger;
-
-    public async ValueTask<bool> TryHandleAsync(
-        HttpContext context,
-        Exception exception,
-        CancellationToken cancellationToken)
-    {
-        _logger.LogError(exception, "Unhandled exception. TraceId: {TraceId}", context.TraceIdentifier);
-
-        var problem = new ProblemDetails
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An unexpected error occurred",
-            Instance = context.Request.Path
-        };
-        problem.Extensions["traceId"] = context.TraceIdentifier;
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Title = "Service is temporarily unavailable"
+        });
 
-        context.Response.StatusCode = problem.Status.Value;
-        await context.Response.WriteAsJsonAsync(problem, cancellationToken);
-        return true;
-    }
-}
-```
-
-```csharp
-public sealed class CorrelationIdMiddleware
-{
-    private const string HeaderName = "X-Correlation-ID";
-
-    private readonly RequestDelegate _next;
-    private readonly ILoggerFactory _loggerFactory;
-
-    public CorrelationIdMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
-    {
-        _next = next;
-        _loggerFactory = loggerFactory;
+        return;
     }
 
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var correlationId = context.Request.Headers[HeaderName].FirstOrDefault();
-
-        if (string.IsNullOrWhiteSpace(correlationId) || correlationId.Length > 128)
-            correlationId = Guid.NewGuid().ToString("N");
-
-        context.TraceIdentifier = correlationId;
-        context.Response.Headers[HeaderName] = correlationId;
-
-        var logger = _loggerFactory.CreateLogger("Request");
-        using (logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId }))
-        {
-            await _next(context);
-        }
-    }
-}
-```
-
-```csharp
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
-var app = builder.Build();
-
-app.UseExceptionHandler();
-app.UseMiddleware<CorrelationIdMiddleware>();
-
-app.MapControllers();
-
-app.Run();
-```
-
-```csharp
-[ApiController]
-[Route("api/[controller]")]
-public sealed class OrdersController : ControllerBase
-{
-    [HttpGet("{id:int}")]
-    public IActionResult Get(int id)
-    {
-        if (id == 0) throw new InvalidOperationException("Demo failure");
-        return Ok(new { id, status = "created" });
-    }
-}
-```
-
-`IExceptionHandler` (từ .NET 8) tách xử lý exception ra một class riêng thay vì nhánh lambda; `builder.Services.AddExceptionHandler<GlobalExceptionHandler>()` đăng ký nó và `app.UseExceptionHandler()` (không tham số) kích hoạt middleware đọc danh sách handler đã đăng ký.
-
-Lưu ý: không đưa stack trace, connection string, token hoặc dữ liệu cá nhân vào response. Log nội bộ có thể giữ exception đầy đủ theo chính sách bảo mật; response chỉ trả thông tin an toàn và `traceId` để hỗ trợ tra cứu.
-
-## 9. Short-circuit đúng cách: chế độ bảo trì
-
-Middleware có thể dừng request có chủ đích. Ví dụ dưới đây chỉ cho phép health check đi qua trong thời gian bảo trì.
-
-```csharp
-public sealed class MaintenanceModeMiddleware
-{
-    private readonly RequestDelegate _next;
-    private readonly IOptionsMonitor<MaintenanceOptions> _options;
-
-    public MaintenanceModeMiddleware(
-        RequestDelegate next,
-        IOptionsMonitor<MaintenanceOptions> options)
-    {
-        _next = next;
-        _options = options;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var options = _options.CurrentValue;
-        var isHealthCheck = context.Request.Path.StartsWithSegments("/health");
-
-        if (options.Enabled && !isHealthCheck)
-        {
-            context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            context.Response.Headers.RetryAfter = options.RetryAfterSeconds.ToString();
-            await context.Response.WriteAsJsonAsync(new
-            {
-                title = "Service is under maintenance",
-                retryAfterSeconds = options.RetryAfterSeconds
-            });
-            return;
-        }
-
-        await _next(context);
-    }
-}
-
-public sealed class MaintenanceOptions
-{
-    public bool Enabled { get; init; }
-    public int RetryAfterSeconds { get; init; } = 60;
-}
-```
-
-```csharp
-builder.Services.AddOptions<MaintenanceOptions>()
-    .BindConfiguration("Maintenance")
-    .Validate(x => x.RetryAfterSeconds > 0, "RetryAfterSeconds must be positive");
-
-app.UseMiddleware<MaintenanceModeMiddleware>();
-app.MapHealthChecks("/health");
-```
-
-`appsettings.json`:
-
-```json
-{
-  "Maintenance": {
-    "Enabled": false,
-    "RetryAfterSeconds": 60
-  }
-}
-```
-
-Đừng short-circuit mơ hồ. Middleware phải trả status code, content type và body nhất quán để frontend/client có thể xử lý rõ ràng.
-
-## 10. Làm việc an toàn với response
-
-Sau khi response bắt đầu gửi, header và status code không còn thay đổi được. Kiểm tra `HasStarted` trước khi cố ghi lỗi thay thế:
-
-```csharp
-try
-{
     await _next(context);
 }
-catch (Exception ex) when (!context.Response.HasStarted)
-{
-    context.Response.Clear();
-    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-    await context.Response.WriteAsJsonAsync(new { error = "Unexpected error" });
-}
 ```
 
-Nếu response đã bắt đầu, không thể trả một JSON 500 sạch mà không làm hỏng payload đang stream. Hãy log exception và để server đóng/hoàn tất response theo cơ chế phù hợp. Đây là lý do exception handler cần ở sớm và endpoint streaming phải được thiết kế, quan sát riêng.
+Đây là short-circuit: middleware kết thúc pipeline trước endpoint.
 
-`Response.OnStarting` phù hợp khi cần thêm header ngay trước lúc header được gửi:
+Short-circuit phù hợp khi quyết định chỉ phụ thuộc request context hoặc system state đã có tại HTTP boundary, ví dụ:
+
+- Maintenance mode.
+- Rate limiting.
+- Authentication failure.
+- CORS preflight.
+- Request không thỏa giới hạn kích thước.
+
+Short-circuit không phù hợp với business rule như “shop đóng cửa thì không nhận đơn”. Rule đó phải đúng cả khi use case được gọi từ scheduled job hoặc message consumer.
+
+## 9. Pipeline branching
+
+Một số concern chỉ áp dụng cho một nhóm request. ASP.NET Core cung cấp branching để tránh đặt điều kiện path rải rác trong nhiều middleware.
+
+`Map` tạo branch theo path và không quay lại pipeline chính:
 
 ```csharp
-context.Response.OnStarting(() =>
+app.Map("/internal", internalApp =>
 {
-    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-    return Task.CompletedTask;
+    internalApp.UseMiddleware<InternalNetworkMiddleware>();
+    internalApp.Run(context => context.Response.WriteAsync("Internal API"));
 });
 ```
 
-Không đọc hoặc thay thế `Response.Body` chỉ để log body nếu chưa đo được nhu cầu. Cách này tăng allocation, phá streaming và có nguy cơ ghi log dữ liệu nhạy cảm.
-
-## 11. Request body: đọc một lần và buffering có chủ đích
-
-Request body là stream. Nếu middleware đọc hết body, model binder hoặc endpoint phía sau có thể không còn gì để đọc.
+`UseWhen` chạy branch có điều kiện rồi quay lại pipeline chính:
 
 ```csharp
-public sealed class RequestBodyBufferingMiddleware
+app.UseWhen(
+    context => context.Request.Path.StartsWithSegments("/api"),
+    apiApp => apiApp.UseMiddleware<ApiRequestLoggingMiddleware>());
+```
+
+Hai API này không phải kiến thức cần học thuộc trước khi hiểu pipeline:
+
+- Dùng `Map` khi branch có terminal behavior và endpoint riêng.
+- Dùng `UseWhen` khi request chỉ cần thêm một middleware rồi tiếp tục pipeline chung.
+- Dùng endpoint metadata khi điều kiện gắn với ý nghĩa của endpoint thay vì cấu trúc URL.
+
+## 10. Dependency injection lifetime
+
+Conventional middleware thường được tạo một lần khi pipeline được dựng. Vì vậy scoped dependency không được giữ trong constructor của middleware đó.
+
+`TenantContext` chứa state của request hiện tại nên có scoped lifetime:
+
+```csharp
+builder.Services.AddScoped<TenantContext>();
+```
+
+Inject nó vào constructor của conventional middleware sẽ tạo lifetime mismatch. Dependency scoped cần được resolve theo request qua `InvokeAsync`:
+
+```csharp
+public sealed class TenantResolutionMiddleware
 {
     private readonly RequestDelegate _next;
 
-    public RequestBodyBufferingMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
+    public TenantResolutionMiddleware(RequestDelegate next)
     {
-        if (context.Request.ContentLength is > 0 &&
-            context.Request.ContentType?.Contains("application/json") == true)
+        _next = next;
+    }
+
+    public async Task InvokeAsync(
+        HttpContext context,
+        TenantContext tenantContext,
+        ITenantHostLookup tenantLookup)
+    {
+        var tenantId = await tenantLookup.FindActiveTenantIdAsync(
+            context.Request.Host.Host,
+            context.RequestAborted);
+
+        if (tenantId is null)
         {
-            context.Request.EnableBuffering(bufferThreshold: 30 * 1024, bufferLimit: 100 * 1024);
-
-            using var reader = new StreamReader(
-                context.Request.Body,
-                leaveOpen: true);
-            var body = await reader.ReadToEndAsync(context.RequestAborted);
-            context.Request.Body.Position = 0;
-
-            // Chỉ log metadata hoặc body đã được redaction; không log token/password.
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
         }
 
+        tenantContext.Set(tenantId.Value);
         await _next(context);
     }
 }
 ```
 
-```csharp
-app.UseMiddleware<RequestBodyBufferingMiddleware>();
-```
-
-Chỉ bật buffering cho path/content type cần thiết, giới hạn kích thước và luôn reset `Position`. Với upload hoặc payload lớn, ưu tiên log metadata như content length, hash, file name đã được kiểm soát thay vì copy toàn bộ dữ liệu vào memory/disk.
-
-## 12. Cancellation và outbound call
-
-`HttpContext.RequestAborted` được kích hoạt khi client ngắt kết nối hoặc request bị abort. Trong controller action, model binder tự bind tham số kiểu `CancellationToken` vào `HttpContext.RequestAborted`; truyền token này xuống I/O để giải phóng tài nguyên sớm:
+`IMiddleware` là lựa chọn khác khi middleware cần per-request activation và constructor injection của scoped dependency:
 
 ```csharp
-[ApiController]
-[Route("api/[controller]")]
-public sealed class CatalogController : ControllerBase
+public sealed class TenantResolutionMiddleware : IMiddleware
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly TenantContext _tenantContext;
+    private readonly ITenantHostLookup _tenantLookup;
 
-    public CatalogController(IHttpClientFactory httpClientFactory) =>
-        _httpClientFactory = httpClientFactory;
-
-    [HttpGet]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    public TenantResolutionMiddleware(
+        TenantContext tenantContext,
+        ITenantHostLookup tenantLookup)
     {
-        var client = _httpClientFactory.CreateClient("catalog");
-        using var response = await client.GetAsync("/products", cancellationToken);
+        _tenantContext = tenantContext;
+        _tenantLookup = tenantLookup;
+    }
 
-        response.EnsureSuccessStatusCode();
-        var payload = await response.Content.ReadAsStringAsync(cancellationToken);
-        return Content(payload, "application/json");
+    public Task InvokeAsync(HttpContext context, RequestDelegate next)
+    {
+        // Resolve tenant, set context, rồi gọi next.
     }
 }
 ```
 
-Không truyền token cancellation này vào công việc cần hoàn tất độc lập sau khi client rời đi, chẳng hạn message outbox đã commit. Khi đó cần workflow nền, retry và cancellation policy riêng.
+Không chọn `IMiddleware` vì nó mới hơn. Chọn nó khi activation qua DI container làm dependency ownership rõ hơn.
 
-## 13. Endpoint metadata: bỏ qua middleware theo endpoint
+## 11. Middleware ordering
 
-Middleware có thể đọc endpoint đã được routing chọn để dùng metadata. Ví dụ tạo attribute đánh dấu action không cần audit:
+Thứ tự pipeline không phải danh sách cố định. Nó là kết quả của dependency giữa state mà mỗi middleware cần và tạo ra.
 
-```csharp
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public sealed class SkipAuditAttribute : Attribute;
-
-[ApiController]
-[Route("api/[controller]")]
-public sealed class PingController : ControllerBase
-{
-    [HttpGet]
-    [SkipAudit]
-    public IActionResult Get() => Ok("pong");
-}
-```
-
-```csharp
-public sealed class EndpointAuditMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public EndpointAuditMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(HttpContext context)
-    {
-        var endpoint = context.GetEndpoint();
-        var skipAudit = endpoint?.Metadata.GetMetadata<SkipAuditAttribute>() is not null;
-
-        if (!skipAudit)
-        {
-            // Ghi audit metadata; không ghi secret hoặc request body thô.
-        }
-
-        await _next(context);
-    }
-}
-```
-
-```csharp
-app.UseRouting();
-app.UseMiddleware<EndpointAuditMiddleware>();
-app.MapControllers();
-```
-
-Middleware này phải đứng sau routing; trước routing, `context.GetEndpoint()` chưa có kết quả. Metadata giúp tránh `if (path == ...)` rải rác và làm ý định của endpoint rõ ràng.
-
-## 14. Kiểm thử middleware
-
-Kiểm thử đơn vị có thể tạo `DefaultHttpContext` và fake `RequestDelegate`.
-
-```csharp
-[Fact]
-public async Task Adds_request_id_when_client_did_not_send_one()
-{
-    var context = new DefaultHttpContext();
-    var nextCalled = false;
-    RequestDelegate next = _ =>
-    {
-        nextCalled = true;
-        return Task.CompletedTask;
-    };
-
-    var middleware = new RequestIdMiddleware(next);
-
-    await middleware.InvokeAsync(context);
-
-    Assert.True(nextCalled);
-    Assert.True(context.Response.Headers.ContainsKey("X-Request-ID"));
-}
-```
-
-Kiểm thử integration nên dùng `WebApplicationFactory<Program>` để xác nhận thứ tự pipeline, status code, header và response thực tế:
-
-```csharp
-[Fact]
-public async Task Maintenance_mode_returns_503_for_api()
-{
-    await using var app = new WebApplicationFactory<Program>()
-        .WithWebHostBuilder(builder => builder.UseSetting("Maintenance:Enabled", "true"));
-    var client = app.CreateClient();
-
-    var response = await client.GetAsync("/api/orders/10");
-
-    Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-    Assert.True(response.Headers.Contains("Retry-After"));
-}
-```
-
-## 15. Tư duy thiết kế middleware từ yêu cầu thực tế
-
-Biết cú pháp `UseMiddleware<T>()` chưa đủ để thiết kế pipeline. Điểm khó là xác định một yêu cầu có thật sự thuộc HTTP pipeline hay không, middleware cần đứng ở đâu và state nào phải tồn tại trước khi nó chạy.
-
-Phần này dùng một luồng xuyên suốt: khách hàng gọi `POST /api/don-hang` trên hệ thống đặt đồ ăn multi-tenant. Host có thể là `live.food.com.vn` hoặc subdomain riêng như `banhmycay.food.com.vn`. Token xác định người dùng; host và quyền truy cập xác định tenant; body chứa `shopId` và các món cần đặt.
-
-### 15.1. Pipeline là Chain of Responsibility có chiều quay về
-
-Mỗi middleware giữ một `RequestDelegate` trỏ tới bước kế tiếp. Nó có ba lựa chọn:
-
-1. Xử lý rồi gọi `next`.
-2. Không gọi `next` và tự tạo response, gọi là **short-circuit**.
-3. Bao quanh `next` bằng code chạy trước và sau.
-
-Đây là hình thức thực tế của **Chain of Responsibility**: request lần lượt đi qua các handler cho đến khi một handler dừng chuỗi hoặc endpoint xử lý nó. Vì `await next(context)` trả quyền điều khiển về middleware trước đó, pipeline đồng thời có hành vi giống các **Decorator** lồng nhau.
-
-```text
-Request
-  -> ExceptionHandling before
-    -> CorrelationId before
-      -> TenantResolution before
-        -> Authentication
-          -> Authorization
-            -> Endpoint
-          <- Authorization
-        <- TenantResolution after
-      <- CorrelationId after
-  <- ExceptionHandling catch/after
-Response
-```
-
-Tên pattern giúp mô tả cấu trúc, nhưng không quyết định thiết kế. Quyết định phải bắt đầu từ dữ liệu đầu vào, phạm vi tác động và failure mode.
-
-### 15.2. Decision tree chọn đúng extension point
-
-Đặt lần lượt các câu hỏi sau:
-
-```text
-Concern có áp dụng cho hầu hết HTTP request hoặc một nhánh route?
-  Có -> Middleware
-  Không
-    Concern cần endpoint metadata, model binding hoặc action result?
-      Có -> MVC filter / endpoint filter
-      Không
-        Concern là quyền trên một resource cụ thể?
-          Có -> Authorization policy/handler hoặc application service
-          Không
-            Concern bảo vệ invariant nghiệp vụ?
-              Có -> Aggregate / domain service
-              Không -> Application service hoặc decorator quanh use case
-```
-
-Áp dụng vào hệ thống đặt hàng:
-
-| Yêu cầu | Vị trí | Lý do |
+| Middleware | State đầu vào | State đầu ra |
 | --- | --- | --- |
-| Gắn `correlationId` cho mọi request | Middleware | Chính sách HTTP toàn cục, không cần model nghiệp vụ. |
-| Phân giải tenant từ host | Middleware | Nhiều bước phía sau cần cùng một `tenantId`. |
-| Endpoint chỉ dành cho shop owner | Authorization policy | Cần identity và metadata quyền của endpoint. |
-| Kiểm tra `shopId` thuộc tenant hiện tại | Application service và query predicate | Đây là resource authorization gắn với dữ liệu, chỉ đọc host là chưa đủ. |
-| Không cho đặt món đã ngừng bán | Aggregate/application service | Đây là invariant nghiệp vụ và phải đúng cả khi gọi từ HTTP lẫn background job. |
-| Đo thời gian mọi handler của một use case | Application decorator | Concern bao quanh application handler, không phụ thuộc HTTP. |
+| Forwarded headers | Trusted proxy configuration | Scheme, host và client IP đã chuẩn hóa |
+| Exception handling | Không có | Error response cho exception phía sau |
+| Correlation ID | Request headers | `TraceIdentifier` và log scope |
+| Routing | Request path | Endpoint và endpoint metadata |
+| Authentication | Credential | `HttpContext.User` |
+| Tenant resolution | Host hoặc signed claim | `TenantContext` |
+| Authorization | User và endpoint metadata | Allow, 401 hoặc 403 |
 
-Middleware không phải lựa chọn mặc định cho mọi cross-cutting concern. Nếu cùng một rule phải chạy từ consumer hoặc scheduled job, đặt nó trong middleware sẽ tạo một đường đi bỏ qua rule.
+Từ bảng dependency có thể suy ra:
 
-### 15.3. Suy ra thứ tự từ dependency
-
-Không học thuộc một danh sách cố định. Với mỗi middleware, ghi rõ **đầu vào nó cần** và **state nó tạo ra**. Sau đó sắp xếp theo dependency.
-
-| Middleware | State cần trước khi chạy | State tạo ra |
-| --- | --- | --- |
-| `ExceptionHandling` | Không có | Error response thống nhất cho lỗi phía sau. |
-| `CorrelationId` | Header request | `TraceIdentifier`, response header, log scope. |
-| `ForwardedHeaders` | Cấu hình trusted proxy | Scheme, host và client IP đã chuẩn hóa. |
-| `TenantResolution` | Host thật sau proxy | `TenantContext`. |
-| `Routing` | Path | Endpoint và metadata. |
-| `Authentication` | Credential, có thể cần tenant | `HttpContext.User`. |
-| `Authorization` | User và endpoint metadata | Quyết định cho phép hoặc 401/403. |
-
-Từ bảng này có thể suy ra:
-
-- `ForwardedHeaders` phải đứng trước code đọc host nếu ứng dụng chạy sau reverse proxy.
-- `TenantResolution` phải đứng trước service/query cần `tenantId`.
-- `Authentication` phải đứng trước `Authorization` vì authorization đọc `HttpContext.User`.
-- Middleware đọc `GetEndpoint()` phải đứng sau routing.
-- `ExceptionHandling` phải đứng ngoài các middleware có thể throw nếu muốn chuẩn hóa lỗi của chúng.
+- Forwarded headers chạy trước code đọc host, scheme hoặc client IP.
+- Authentication chạy trước authorization.
+- Middleware đọc `GetEndpoint()` chạy sau routing.
+- Exception handling bao ngoài component có thể throw.
+- Tenant resolution chạy trước query hoặc service cần `tenantId`.
 
 ```csharp
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseForwardedHeaders();
-app.UseMiddleware<TenantResolutionMiddleware>();
 
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();
 ```
 
-Thứ tự giữa `CorrelationId` và exception handler là một trade-off. Đặt correlation trước exception handler giúp handler đọc ID nhưng correlation middleware không được handler bao lỗi. Đặt exception handler trước correlation bao được lỗi của correlation middleware, nhưng handler phải dùng `TraceIdentifier` mặc định nếu lỗi xảy ra trước khi ID được gắn. Với middleware correlation nhỏ và có validation đơn giản, cả hai hợp lệ; cần chọn rõ failure nào quan trọng hơn.
+Thứ tự giữa authentication và tenant resolution phụ thuộc nguồn tenant. Tenant từ host có thể được resolve trước authentication. Tenant từ signed claim cần authentication chạy trước. Thiết kế phải xác định nguồn có thẩm quyền thay vì sao chép một thứ tự mẫu.
 
-### 15.4. Bước 1: định nghĩa invariant ở HTTP boundary
+## 12. Exception handling
 
-Trước khi viết code, ghi các điều kiện phải luôn đúng:
+Exception handling cần bao quanh phần pipeline có thể throw. Trên .NET hiện đại, ưu tiên `UseExceptionHandler` và `IExceptionHandler` để tích hợp với framework.
 
-```text
-1. Mỗi request có một correlationId hợp lệ để truy vết.
-2. Request vào API tenant phải phân giải được đúng một tenant đang hoạt động.
-3. Client không được tự quyết định tenantId bằng body hoặc query string.
-4. Mọi query dữ liệu tenant phải có tenant predicate ở data/application boundary.
-5. Lỗi trước khi response started phải có error contract thống nhất.
+```csharp
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
+
+var app = builder.Build();
+app.UseExceptionHandler();
 ```
 
-Điều 3 giải thích vì sao không nhận `tenantId` từ payload làm nguồn tin cậy. Điều 4 giải thích giới hạn của middleware: `TenantContext` chỉ cung cấp context; nó không tự động làm Dapper query an toàn.
+Custom exception middleware vẫn có thể cần khi error contract hoặc telemetry có yêu cầu riêng. Dù dùng cơ chế nào, response state tạo ra một giới hạn quan trọng.
 
-### 15.5. Bước 2: tạo request-scoped Tenant Context
+Khi `Response.HasStarted` là `true`, response headers đã được gửi. Exception handler không thể an toàn đổi status code hoặc thay toàn bộ body. Nó thường log rồi rethrow hoặc kết thúc connection thay vì ghi thêm một JSON error vào stream đang chứa dữ liệu khác.
 
-`TenantContext` là state của request hiện tại nên dùng scoped lifetime. Chưa cần interface nếu chỉ có một implementation và không có boundary cần thay thế.
+`OperationCanceledException` cũng không mặc định là lỗi 500. Nếu `RequestAborted` đã được kích hoạt, client có thể đã ngắt kết nối. Trường hợp đó cần được phân loại riêng để tránh tạo error log và alert giả.
+
+## 13. Tenant context và data isolation
+
+Tenant resolution tạo request context cho các bước phía sau:
 
 ```csharp
 public sealed class TenantContext
@@ -942,64 +583,18 @@ public sealed class TenantContext
     public void Set(Guid tenantId)
     {
         if (TenantId is not null)
+        {
             throw new InvalidOperationException("Tenant was already resolved.");
+        }
 
         TenantId = tenantId;
     }
 }
-
-builder.Services.AddScoped<TenantContext>();
 ```
 
-`Set` chỉ cho ghi một lần để middleware phía sau không thể âm thầm đổi tenant giữa request. `RequireTenantId` fail fast thay vì trả `Guid.Empty`, vì `Guid.Empty` có thể biến lỗi cấu hình thành query sai dữ liệu.
+`Set` chỉ cho ghi một lần. `RequireTenantId` fail fast khi pipeline bị cấu hình sai.
 
-### 15.6. Bước 3: phân giải tenant bằng middleware
-
-Repository dưới đây đại diện cho hạ tầng đọc mapping `host -> tenant`. Code cache hoặc database cụ thể được bỏ qua vì không thay đổi invariant.
-
-```csharp
-public sealed class TenantResolutionMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public TenantResolutionMiddleware(RequestDelegate next) => _next = next;
-
-    public async Task InvokeAsync(
-        HttpContext context,
-        TenantContext tenantContext,
-        ITenantHostLookup tenantLookup)
-    {
-        var host = context.Request.Host.Host.Trim().ToLowerInvariant();
-        var tenantId = await tenantLookup.FindActiveTenantIdAsync(
-            host,
-            context.RequestAborted);
-
-        if (tenantId is null)
-        {
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            await context.Response.WriteAsJsonAsync(
-                new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Tenant was not found"
-                },
-                context.RequestAborted);
-            return;
-        }
-
-        tenantContext.Set(tenantId.Value);
-        await _next(context);
-    }
-}
-```
-
-`TenantContext` và `ITenantHostLookup` được inject vào `InvokeAsync`, không giữ trong constructor của conventional middleware. Lý do là middleware instance có vòng đời dài, còn hai dependency thuộc request scope.
-
-Với host chung như `live.food.com.vn`, host không đủ để chọn một tenant cụ thể. Luồng đăng nhập chung cần một quy tắc riêng: tenant có thể đến từ claim đã được server ký hoặc người dùng chọn sau đăng nhập. Khi đó không nên nhét hai chiến lược mơ hồ vào một middleware lớn; endpoint chung có thể được đánh dấu metadata để bỏ qua host resolution, sau đó authentication/application flow chọn tenant theo contract rõ ràng.
-
-### 15.7. Bước 4: sử dụng context nhưng vẫn bảo vệ query
-
-EF Core có thể áp dụng global query filter. Dapper không biết `TenantContext` nếu câu SQL không dùng nó.
+Middleware chỉ giải quyết **context propagation**, không tự bảo đảm **data isolation**. Query vẫn phải dùng tenant predicate:
 
 ```csharp
 public async Task<ShopDto?> GetShopAsync(Guid shopId, CancellationToken ct)
@@ -1015,89 +610,86 @@ public async Task<ShopDto?> GetShopAsync(Guid shopId, CancellationToken ct)
         """;
 
     return await _connection.QuerySingleOrDefaultAsync<ShopDto>(
-        new CommandDefinition(sql, new { shopId, tenantId }, cancellationToken: ct));
+        new CommandDefinition(
+            sql,
+            new { shopId, tenantId },
+            cancellationToken: ct));
 }
 ```
 
-Failure case:
+Nếu query chỉ lọc `shopId`, middleware có thể resolve đúng tenant X nhưng query vẫn trả dữ liệu của tenant Y. Data isolation còn cần authorization theo resource, database constraint đúng scope và cross-tenant test.
 
-```text
-Request A thuộc tenant X gọi GET /shops/42
-Shop 42 thực tế thuộc tenant Y
-SQL chỉ có WHERE id = @shopId
-Middleware đã phân giải đúng X nhưng query vẫn trả dữ liệu của Y
-```
+## 14. Extension point
 
-Vì vậy tenant middleware giải quyết **context propagation**, không giải quyết toàn bộ **data isolation**. Database predicate, unique constraint đúng scope và authorization theo resource vẫn phải được thiết kế riêng.
+Middleware không phải lựa chọn mặc định cho mọi cross-cutting concern.
 
-### 15.8. Bước 5: giữ business rule ngoài middleware
-
-Ví dụ sai:
-
-```csharp
-if (context.Request.Path.StartsWithSegments("/api/don-hang") && shop.DangDongCua)
-{
-    context.Response.StatusCode = StatusCodes.Status409Conflict;
-    return;
-}
-```
-
-Rule “shop đóng cửa thì không nhận đơn” phụ thuộc shop, khung giờ, loại đơn và có thể được gọi từ HTTP, scheduled order hoặc consumer. Đặt rule trong middleware làm nó phụ thuộc path và bị bỏ qua ở các entry point khác.
-
-```csharp
-public sealed class DonHangService
-{
-    public async Task<Guid> TaoAsync(TaoDonHangCommand command, CancellationToken ct)
-    {
-        var tenantId = _tenantContext.RequireTenantId();
-        var shop = await _shopRepository.GetRequiredAsync(tenantId, command.ShopId, ct);
-
-        shop.DamBaoDangNhanDon(_clock.UtcNow);
-
-        var donHang = DonHang.Tao(tenantId, shop.Id, command.MonAn);
-        await _donHangRepository.AddAsync(donHang, ct);
-        return donHang.Id;
-    }
-}
-```
-
-Middleware xác định request thuộc tenant nào. Application service điều phối use case. Aggregate bảo vệ invariant nhận đơn. Mỗi layer giữ một loại quyết định, nên worker sau này có thể gọi cùng application/domain logic mà không cần giả lập `HttpContext`.
-
-### 15.9. Pattern catalogue theo dấu hiệu
-
-| Dấu hiệu trong yêu cầu | Pattern/cơ chế nên xem xét | Câu hỏi xác nhận |
+| Requirement | Extension point | Lý do |
 | --- | --- | --- |
-| “Mọi request đều phải...” | Middleware / Chain of Responsibility | Có entry point ngoài HTTP cần cùng rule không? |
-| “Làm trước và sau bước kế tiếp” | Decorator-like middleware | Response có thể đã started không? |
-| “Nếu điều kiện sai thì trả ngay” | Short-circuit | Status, body, header và log có thống nhất không? |
-| “Chỉ route `/internal`” | `Map` | Có cần quay lại pipeline chính không? |
-| “Chỉ endpoint có metadata X” | Middleware sau routing hoặc filter | Metadata đã tồn tại tại vị trí này chưa? |
-| “Dependency scoped cho mỗi request” | Inject vào `InvokeAsync` hoặc `IMiddleware` | Có vô tình giữ scoped service trong singleton không? |
-| “Bao quanh mọi command handler” | Application decorator | Concern có thật sự phụ thuộc HTTP không? |
-| “Đơn hàng phải luôn...” | Aggregate/domain service | Rule có cần đúng ở worker và message consumer không? |
+| Correlation ID cho mọi request | Middleware | Concern ở HTTP boundary |
+| Error response thống nhất | `IExceptionHandler` hoặc middleware | Bao quanh request pipeline |
+| Tenant từ trusted host | Middleware | Tạo request context |
+| Validation của command DTO | Endpoint filter, model validation hoặc application layer | Cần input đã bind |
+| Endpoint dành cho shop owner | Authorization policy | Cần user và endpoint metadata |
+| `shopId` thuộc tenant hiện tại | Application/data layer | Resource authorization |
+| Shop đóng cửa không nhận đơn | Domain/application layer | Business invariant |
+| Timing cho command handler | Application decorator | Không phụ thuộc HTTP |
 
-Pattern là kết quả của constraint, không phải mục tiêu. Không tạo base middleware, generic pipeline builder hoặc custom framework khi hai class độc lập đã rõ hơn.
-
-### 15.10. Failure walkthrough: hai request đặt món đồng thời
-
-Hai khách cùng đặt phần hàng hóa cuối cùng:
+Một câu hỏi giúp xác định ownership:
 
 ```text
-Request A -> TenantResolution -> DonHangService -> đọc soLuong = 1
-Request B -> TenantResolution -> DonHangService -> đọc soLuong = 1
+Rule có phải tiếp tục đúng khi use case được gọi ngoài HTTP không?
+  Có  -> Không đặt ownership trong middleware.
+  Không -> Kiểm tra rule có thuộc request pipeline hay extension point khác.
+```
+
+Middleware có thể chuẩn bị context cho business logic, nhưng không thay thế business logic.
+
+## 15. Request body và cancellation
+
+Request body thường là stream chỉ đọc một lần. Middleware đọc hết body có thể khiến model binding phía sau nhận stream đã ở cuối.
+
+```csharp
+context.Request.EnableBuffering();
+
+using var reader = new StreamReader(
+    context.Request.Body,
+    Encoding.UTF8,
+    detectEncodingFromByteOrderMarks: false,
+    leaveOpen: true);
+
+var body = await reader.ReadToEndAsync(context.RequestAborted);
+context.Request.Body.Position = 0;
+```
+
+Buffering tăng memory hoặc disk I/O. Trước khi đọc body trong middleware, cần xác định:
+
+- Có thể lấy dữ liệu từ header, route hoặc endpoint filter không?
+- Request size limit là bao nhiêu?
+- Body có token, password, thông tin thanh toán hoặc dữ liệu cá nhân không?
+- Trường nào phải được redaction trước khi log?
+
+I/O trong middleware phải truyền `RequestAborted` xuống dependency. Cancellation không rollback transaction đã commit. Nếu client retry sau khi mất response, API vẫn cần idempotency để tránh tạo tác dụng phụ trùng lặp.
+
+## 16. Concurrency failure
+
+Hai request cùng đặt phần hàng hóa cuối cùng:
+
+```text
+Request A -> TenantResolution -> đọc soLuong = 1
+Request B -> TenantResolution -> đọc soLuong = 1
 A tạo đơn và trừ kho
 B tạo đơn và trừ kho
 Kết quả: oversell
 ```
 
-Thêm middleware lock theo URL không phải lời giải tốt:
+Middleware lock theo URL không giải quyết đúng vấn đề:
 
-- Lock chỉ có hiệu lực trong một process nếu dùng memory.
-- Nhiều instance ứng dụng vẫn chạy đồng thời.
+- In-memory lock chỉ bảo vệ một process.
+- Nhiều application instance vẫn chạy đồng thời.
 - URL không phải aggregate boundary.
 - Lock toàn route làm giảm throughput của các shop không liên quan.
 
-Correctness phải được bảo vệ tại nơi ghi dữ liệu, ví dụ atomic update:
+Correctness phải được bảo vệ tại nơi ghi dữ liệu:
 
 ```sql
 UPDATE TonKho
@@ -1108,49 +700,101 @@ WHERE tenantId = @tenantId
   AND soLuong >= @soLuongDat;
 ```
 
-Nếu affected rows bằng `0`, use case trả conflict hoặc hết hàng. Middleware vẫn có nhiệm vụ tạo context và error contract; database constraint/transaction giải quyết concurrency. Đây là ví dụ quan trọng để không chọn pattern theo từ khóa “nhiều request cùng lúc”.
+Nếu affected rows bằng `0`, use case trả conflict hoặc hết hàng. Middleware vẫn cung cấp request context và error mapping. Database transaction hoặc atomic update giải quyết concurrency.
 
-### 15.11. Quy trình tự viết middleware
+Vị trí nhìn thấy lỗi không nhất thiết là vị trí sở hữu lời giải.
 
-Khi gặp một yêu cầu mới, thực hiện theo thứ tự:
+## 17. Middleware testing
 
-1. Viết một câu mô tả concern và phạm vi: mọi HTTP request, một nhánh hay một use case.
-2. Liệt kê input đáng tin, output/state tạo ra và failure response.
-3. Kiểm tra entry point ngoài HTTP; nếu rule vẫn phải đúng ở đó, không đặt ownership trong middleware.
-4. Viết invariant trước code.
-5. Xác định middleware cần state nào từ bước trước và middleware sau cần state nào từ nó.
-6. Chọn continue, short-circuit hay wrap `next`.
-7. Chọn conventional middleware hay `IMiddleware` theo DI lifetime, không theo sở thích.
-8. Viết happy path ngắn nhất trước, rồi thêm đúng các guard ở trust boundary.
-9. Kiểm tra `Response.HasStarted`, cancellation, request body size và dữ liệu nhạy cảm nếu concern chạm tới chúng.
-10. Viết một integration test xác nhận thứ tự hoặc short-circuit; unit test riêng chỉ khi logic nhánh đủ phức tạp.
+Unit test phù hợp với middleware có branching logic độc lập:
 
-Một bản thiết kế ngắn có thể dùng mẫu sau:
+```csharp
+[Fact]
+public async Task Adds_correlation_id_when_header_is_missing()
+{
+    var context = new DefaultHttpContext();
+    var nextCalled = false;
 
-```text
-Concern: phân giải tenant cho API tenant-scoped.
-Scope: HTTP request, trừ endpoint public/shared-host có metadata cho phép bỏ qua.
-Trusted input: normalized host sau trusted proxy; signed claim khi dùng shared host.
-Produces: request-scoped TenantContext.
-Invariant: tenant được set tối đa một lần; query tenant-scoped luôn dùng tenantId.
-Ordering: after ForwardedHeaders, before consumers of TenantContext.
-Failure: unknown/inactive tenant -> 404; malformed trusted input -> 400/401 tùy nguồn.
-Not owned here: shop ownership, menu visibility, stock concurrency.
-Verification: integration test known host, unknown host, bypass endpoint và cross-tenant query.
+    RequestDelegate next = _ =>
+    {
+        nextCalled = true;
+        return Task.CompletedTask;
+    };
+
+    var middleware = new CorrelationIdMiddleware(
+        next,
+        NullLogger<CorrelationIdMiddleware>.Instance);
+
+    await middleware.InvokeAsync(context);
+
+    Assert.True(nextCalled);
+    Assert.False(string.IsNullOrWhiteSpace(context.TraceIdentifier));
+}
 ```
 
-## 16. Checklist thiết kế và review
+Integration test quan trọng hơn khi behavior phụ thuộc ordering, routing, authentication hoặc response thực. Dùng `WebApplicationFactory<Program>` để xác nhận:
 
-1. Concern này có áp dụng ở HTTP boundary hay là business rule cần nằm trong application/domain layer?
-2. Middleware có cần `next()` không? Nếu không, status/header/body khi short-circuit có nhất quán không?
-3. Thứ tự có đúng với routing, CORS, authentication, authorization và exception handling không?
-4. Có dependency scoped bị giữ trong constructor của middleware thường không?
-5. Có xử lý `RequestAborted`/`CancellationToken` cho I/O dài không?
-6. Có thay đổi response sau khi `HasStarted` không?
-7. Có đọc body lớn, stream hoặc dữ liệu nhạy cảm không? Buffer limit và redaction ở đâu?
-8. Log/metric có cardinality hợp lý, không đưa token, email, số điện thoại hoặc request body vào label không?
-9. Có integration test cho nhánh thành công, short-circuit và lỗi không?
+- Happy path đi đến endpoint.
+- Short-circuit trả đúng status, headers và body.
+- Exception được map sang error contract mong muốn.
+- Endpoint metadata tồn tại tại vị trí middleware đọc nó.
+- Unknown tenant và cross-tenant access không làm lộ dữ liệu.
+- Cancellation không tạo error log giả.
+
+## 18. Middleware design workflow
+
+Khi có một requirement mới, thực hiện theo thứ tự:
+
+1. Xác định scope: mọi request, một branch, một endpoint hay một use case.
+2. Xác định trusted input, state được tạo và failure response.
+3. Kiểm tra entry point ngoài HTTP.
+4. Viết invariant trước code.
+5. Liệt kê state cần từ middleware trước và state cung cấp cho middleware sau.
+6. Chọn continue, wrap `next`, short-circuit hoặc branching.
+7. Chọn conventional middleware hoặc `IMiddleware` theo DI lifetime.
+8. Kiểm tra `Response.HasStarted`, cancellation, body size và sensitive data.
+9. Viết integration test cho ordering hoặc short-circuit.
+
+Một middleware design note ngắn có thể dùng mẫu:
+
+```text
+Concern: tenant resolution cho tenant-scoped API.
+Scope: HTTP request, trừ public endpoint có metadata cho phép bỏ qua.
+Trusted input: normalized host sau trusted proxy hoặc signed claim.
+Produces: request-scoped TenantContext.
+Invariant: tenant được set tối đa một lần; query luôn dùng tenantId.
+Ordering: sau ForwardedHeaders; trước consumer của TenantContext.
+Failure: unknown hoặc inactive tenant -> 404.
+Not owned here: shop ownership, menu visibility, stock concurrency.
+Verification: known host, unknown host, bypass endpoint, cross-tenant query.
+```
+
+Mẫu này buộc thiết kế trả lời middleware sở hữu điều gì trước khi viết `InvokeAsync`.
+
+## 19. Production checklist
+
+1. Concern có thuộc HTTP boundary không?
+2. Rule có phải đúng ở entry point ngoài HTTP không?
+3. Middleware tiếp tục, bao quanh `next`, short-circuit hay branch?
+4. Ordering có được suy ra từ dependency không?
+5. Conventional middleware có giữ scoped dependency trong constructor không?
+6. I/O có nhận `RequestAborted` không?
+7. Middleware có ghi response sau khi `HasStarted` không?
+8. Request body có size limit, buffering và redaction rõ ràng không?
+9. Log và metric có tránh sensitive data cùng high-cardinality label không?
+10. Integration test có bao phủ happy path, short-circuit và failure response không?
+
+## 20. Tài liệu tham khảo
+
+- [ASP.NET Core middleware](https://learn.microsoft.com/aspnet/core/fundamentals/middleware/)
+- [Migrate HTTP modules to ASP.NET Core middleware](https://learn.microsoft.com/aspnet/core/migration/fx-to-core/areas/http-modules)
+- [Migrate HTTP handlers to ASP.NET Core middleware](https://learn.microsoft.com/aspnet/core/migration/fx-to-core/areas/http-handlers)
+- [OWIN with ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/owin)
 
 ## Kết luận
 
-Middleware là nơi đặt các chính sách HTTP dùng chung, không phải nơi chứa nghiệp vụ. Pipeline tốt có thứ tự có chủ đích, short-circuit rõ ràng, tôn trọng lifetime DI, cancellation và trạng thái response. Khi các ranh giới này rõ, API dễ quan sát, dễ kiểm thử và ít lỗi khó truy vết hơn.
+Middleware giải quyết cross-cutting concern tại HTTP boundary bằng cách đưa chúng vào một request pipeline có thứ tự. Bản chất của middleware là một component bao quanh `RequestDelegate` phía sau. Từ mô hình đó có thể suy ra luồng request-response hai chiều, short-circuit, branching và DI lifetime.
+
+Không nên chọn middleware chỉ vì code xuất hiện ở nhiều nơi. Middleware phù hợp khi concern cần quan sát hoặc tạo request context và phải chạy trong HTTP pipeline. Resource authorization, data isolation, concurrency và domain invariant vẫn phải được bảo vệ tại layer sở hữu dữ liệu và quyết định đó.
+
+Khi thiết kế bắt đầu từ scope, dependency và failure mode, middleware trở thành một lựa chọn có thể giải thích thay vì một API phải học thuộc.

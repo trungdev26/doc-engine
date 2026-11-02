@@ -1,0 +1,76 @@
+<main class="login">
+  <aside class="login__hero" aria-hidden="true">
+    <span class="login__mark">DI</span>
+    <h2>Học mỗi ngày,<br />nói tiếng Anh tự tin hơn.</h2>
+    <ul>
+      <li>
+        <span nz-icon nzType="sound" nzTheme="outline"></span> Luyện nói và luyện nghe theo tình
+        huống thật
+      </li>
+      <li><span nz-icon nzType="swap" nzTheme="outline"></span> Ôn từ vựng đúng lúc sắp quên</li>
+      <li>
+        <span nz-icon nzType="folder" nzTheme="outline"></span> Tự tạo nhóm từ theo chủ đề của bạn
+      </li>
+    </ul>
+  </aside>
+
+  <form class="login__card" (ngSubmit)="submit()" novalidate>
+    <h1>Đăng nhập</h1>
+    <p class="login__lead">Dành cho quản trị viên soạn nội dung.</p>
+
+    <div class="login__error" *ngIf="error" role="alert">
+      <span nz-icon nzType="close-circle" nzTheme="outline"></span>
+      <span>{{ error }}</span>
+    </div>
+
+    <label class="field">
+      <span>Tên đăng nhập</span>
+      <div class="field__box">
+        <span nz-icon nzType="user" nzTheme="outline" aria-hidden="true"></span>
+        <input
+          name="username"
+          [(ngModel)]="username"
+          autocomplete="username"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Nhập tên đăng nhập"
+          autofocus
+        />
+      </div>
+    </label>
+
+    <label class="field">
+      <span>Mật khẩu</span>
+      <div class="field__box">
+        <span nz-icon nzType="lock" nzTheme="outline" aria-hidden="true"></span>
+        <input
+          name="password"
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          autocomplete="current-password"
+          placeholder="Nhập mật khẩu"
+        />
+        <button
+          type="button"
+          class="field__toggle"
+          (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+        >
+          <span nz-icon [nzType]="showPassword ? 'eye-invisible' : 'eye'" nzTheme="outline"></span>
+        </button>
+      </div>
+    </label>
+
+    <button type="submit" class="login__submit" [disabled]="!canSubmit">
+      <span
+        nz-icon
+        [nzType]="submitting ? 'sync' : 'login'"
+        [nzSpin]="submitting"
+        nzTheme="outline"
+      ></span>
+      {{ submitting ? 'Đang đăng nhập...' : 'Đăng nhập' }}
+    </button>
+
+    <a class="login__back" routerLink="/">← Về trang học</a>
+  </form>
+</main>

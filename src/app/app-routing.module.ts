@@ -13,9 +13,68 @@ import { TransactionDemoComponent } from './features/database/transactions/trans
 import { IsolationAnomaliesDemoComponent } from './features/database/isolation-anomalies/isolation-anomalies-demo.component';
 import { AdvancedSqlDemoComponent } from './features/database/advanced-sql/advanced-sql-demo.component';
 import { withMenuRouteTitles } from './layout/shell/menu-route-titles';
+import { HomeComponent } from './features/home/home.component';
+import { EnglishFeatureComponent } from './features/english/english-feature.component';
+import { ENGLISH_FEATURES } from './features/english/english-features';
+import { EnglishSkillComponent } from './features/english/english-skill.component';
+import { VideoLibraryComponent } from './features/english/video-library.component';
+import { LessonPlayerComponent } from './features/english/lesson-player.component';
+import { EnglishReviewComponent } from './features/english/english-review.component';
+import { WordGardenComponent } from './features/english/word-garden.component';
+import { ContentEditorComponent } from './features/admin/content-editor.component';
+import { LoginComponent } from './features/auth/login.component';
+import { adminGuard } from './core/admin.guard';
+import { loginGuard } from './core/login.guard';
+import { VideoLessonComponent } from './features/english/video-lesson.component';
+import { SpeakingRouterComponent } from './features/english/speaking-router.component';
 
 const routes: Routes = [
-  { path: '', redirectTo: 'angular/change-detection/theory', pathMatch: 'full' },
+  { path: '', component: HomeComponent, pathMatch: 'full', title: 'Trang chủ | Dev Internals' },
+  { path: 'login', component: LoginComponent, title: 'Đăng nhập | Dev Internals' },
+  {
+    path: 'admin/content',
+    component: ContentEditorComponent,
+    canActivate: [adminGuard],
+    title: 'Soạn bài học | Dev Internals',
+  },
+  {
+    path: 'english',
+    children: [
+      { path: '', redirectTo: 'words', pathMatch: 'full' },
+      {
+        path: 'video-lesson/:id',
+        component: VideoLessonComponent,
+        title: 'Xem video | Học tiếng Anh',
+      },
+      { path: 'lesson/:id', component: LessonPlayerComponent, title: 'Bài học | Học tiếng Anh' },
+      {
+        path: 'speaking-lesson/:id',
+        component: SpeakingRouterComponent,
+        title: 'Luyện nói | Học tiếng Anh',
+      },
+      {
+        path: 'review',
+        component: EnglishReviewComponent,
+        canActivate: [loginGuard],
+        title: 'Ôn tập | Học tiếng Anh',
+      },
+      {
+        path: 'word-garden',
+        component: WordGardenComponent,
+        canActivate: [loginGuard],
+        title: 'Vườn từ | Học tiếng Anh',
+      },
+      // Xem video có danh sách riêng theo chủ đề và ảnh xem trước, không theo lộ trình band.
+      { path: 'video', component: VideoLibraryComponent, title: 'Xem video | Học tiếng Anh' },
+      ...ENGLISH_FEATURES.filter(
+        feature => !['review', 'word-garden', 'video'].includes(feature.slug),
+      ).map(feature => ({
+        path: feature.slug,
+        component: feature.skill ? EnglishSkillComponent : EnglishFeatureComponent,
+        data: { slug: feature.slug },
+      })),
+    ],
+  },
   {
     path: 'angular/modules',
     children: [
@@ -328,11 +387,28 @@ const routes: Routes = [
         },
       },
       {
-        path: 'food-ordering-correctness',
+        path: 'top-k-leaderboard',
         component: MarkdownDocComponent,
         data: {
-          docSrc: 'assets/docs/system-design/case-studies/food-ordering-correctness.md',
+          docSrc: 'assets/docs/system-design/case-studies/top-k-leaderboard.md',
         },
+      },
+      {
+        path: 'cloud-storage-sync',
+        component: MarkdownDocComponent,
+        data: {
+          docSrc: 'assets/docs/system-design/case-studies/cloud-storage-sync.md',
+        },
+      },
+      {
+        path: 'messaging-app',
+        component: MarkdownDocComponent,
+        data: { docSrc: 'assets/docs/system-design/case-studies/messaging-app.md' },
+      },
+      {
+        path: 'news-feed',
+        component: MarkdownDocComponent,
+        data: { docSrc: 'assets/docs/system-design/case-studies/news-feed.md' },
       },
     ],
   },
@@ -587,6 +663,16 @@ const routes: Routes = [
         path: 'rabbitmq-reliable-messaging',
         component: MarkdownDocComponent,
         data: { docSrc: 'assets/docs/dotnet-core/rabbitmq-reliable-messaging.md' },
+      },
+      {
+        path: 'rabbitmq-worker-backpressure',
+        component: MarkdownDocComponent,
+        data: { docSrc: 'assets/docs/dotnet-core/rabbitmq-worker-backpressure.md' },
+      },
+      {
+        path: 'elasticsearch-search-engine',
+        component: MarkdownDocComponent,
+        data: { docSrc: 'assets/docs/dotnet-core/elasticsearch-search-engine.md' },
       },
       {
         path: 'dependency-injection',

@@ -1,0 +1,435 @@
+<section class="editor">
+  <header>
+    <h1>Soạn bài học</h1>
+    <p>Nhập nội dung rồi bấm lưu. Bài sẽ xuất hiện trong lộ trình ngay.</p>
+  </header>
+
+  <div class="notice notice--warn" *ngIf="!checking && blocked">
+    <strong>{{ blockedReason }}</strong>
+  </div>
+
+  <div
+    class="notice"
+    [class.notice--ok]="message.type === 'ok'"
+    [class.notice--error]="message.type === 'error'"
+    *ngIf="message as m"
+  >
+    <strong>{{ m.text }}</strong>
+    <ul *ngIf="m.details?.length">
+      <li *ngFor="let item of m.details">Bỏ qua: {{ item }}</li>
+    </ul>
+  </div>
+
+  <!-- Loại bài -->
+  <div class="kinds" role="tablist" aria-label="Loại bài học">
+    <button
+      *ngFor="let item of kinds"
+      type="button"
+      role="tab"
+      [class.is-active]="item.kind === draft.kind"
+      [attr.aria-selected]="item.kind === draft.kind"
+      (click)="setKind(item.kind)"
+    >
+      {{ item.label }}
+    </button>
+  </div>
+
+  <form (ngSubmit)="submit()" novalidate>
+    <!-- Vị trí -->
+    <fieldset class="card">
+      <legend>Vị trí trong lộ trình</legend>
+      <div class="grid">
+        <label class="field">
+          <span>Band</span>
+          <select name="band" [(ngModel)]="draft.band">
+            <option *ngFor="let band of bands" [value]="band.id">
+              {{ band.label }} · {{ band.level }}
+            </option>
+          </select>
+        </label>
+        <label class="field field--wide">
+          <span>Tên unit / chặng</span>
+          <input
+            name="unitTitle"
+            [(ngModel)]="draft.unitTitle"
+            (ngModelChange)="onUnitTitleChange()"
+            placeholder="Ví dụ: Unit 1 · Giới thiệu về bản thân"
+          />
+          <small>Các bài cùng tên unit sẽ được gom chung một nhóm.</small>
+        </label>
+      </div>
+      <label class="field field--code">
+        <span>Mã unit</span>
+        <input
+          name="unitId"
+          [(ngModel)]="draft.unitId"
+          (input)="touchUnitId()"
+          placeholder="tự tạo từ tên unit"
+          autocomplete="off"
+        />
+      </label>
+    </fieldset>
+
+    <!-- Thông tin bài -->
+    <fieldset class="card">
+      <legend>Thông tin bài</legend>
+      <label class="field">
+        <span>Tên bài</span>
+        <input
+          name="title"
+          [(ngModel)]="draft.title"
+          (ngModelChange)="onTitleChange()"
+          placeholder="Ví dụ: Chào hỏi làm quen"
+        />
+      </label>
+      <label class="field field--code">
+        <span>Mã bài</span>
+        <input
+          name="lessonId"
+          [(ngModel)]="draft.lessonId"
+          (input)="touchLessonId()"
+          placeholder="tự tạo từ tên bài"
+          autocomplete="off"
+        />
+        <small>Dùng làm đường dẫn. Nạp lại cùng mã sẽ cập nhật bài cũ thay vì tạo thêm.</small>
+      </label>
+
+      <label class="field" *ngIf="draft.kind === 'speaking' || draft.kind === 'listening'">
+        <span>Tình huống</span>
+        <textarea
+          name="situation"
+          rows="2"
+          [(ngModel)]="draft.situation"
+          placeholder="Mô tả ngắn bằng tiếng Việt: ai nói chuyện với ai, ở đâu"
+        ></textarea>
+      </label>
+    </fieldset>
+
+    <!-- Từ vựng -->
+    <fieldset class="card" *ngIf="draft.kind === 'vocab'">
+      <legend>Từ vựng</legend>
+      <div class="row" *ngFor="let word of draft.words; let i = index; trackBy: trackByIndex">
+        <div class="row__head">
+          <strong>Từ {{ i + 1 }}</strong>
+          <button
+            type="button"
+            class="link"
+            (click)="removeRow('words', i)"
+            [disabled]="draft.words.length === 1"
+          >
+            Xoá
+          </button>
+        </div>
+        <div class="grid">
+          <label class="field">
+            <span>Từ</span>
+            <input [name]="'w-word-' + i" [(ngModel)]="word.word" placeholder="hello" />
+          </label>
+          <label class="field">
+            <span>Loại từ</span>
+            <input [name]="'w-pos-' + i" [(ngModel)]="word.pos" placeholder="noun" />
+          </label>
+          <label class="field">
+            <span>Phiên âm</span>
+            <input [name]="'w-ipa-' + i" [(ngModel)]="word.ipa" placeholder="/həˈloʊ/" />
+          </label>
+          <label class="field">
+            <span>Nghĩa tiếng Việt</span>
+            <input [name]="'w-meaning-' + i" [(ngModel)]="word.meaning" placeholder="xin chào" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Giải nghĩa bằng tiếng Anh</span>
+          <input
+            [name]="'w-def-' + i"
+            [(ngModel)]="word.definition"
+            placeholder="a word you say when you meet someone"
+          />
+        </label>
+        <div class="grid">
+          <label class="field">
+            <span>Câu ví dụ</span>
+            <input
+              [name]="'w-ex-' + i"
+              [(ngModel)]="word.example"
+              placeholder="I say hello every morning."
+            />
+          </label>
+          <label class="field">
+            <span>Dịch câu ví dụ</span>
+            <input
+              [name]="'w-exvi-' + i"
+              [(ngModel)]="word.exampleVi"
+              placeholder="Sáng nào tôi cũng chào."
+            />
+          </label>
+        </div>
+      </div>
+      <button type="button" class="add" (click)="addRow('words')">+ Thêm từ</button>
+    </fieldset>
+
+    <!-- Luyện nói -->
+    <fieldset class="card" *ngIf="draft.kind === 'speaking'">
+      <legend>Câu luyện nói</legend>
+      <div class="row" *ngFor="let item of draft.sentences; let i = index; trackBy: trackByIndex">
+        <div class="row__head">
+          <strong>Câu {{ i + 1 }}</strong>
+          <button
+            type="button"
+            class="link"
+            (click)="removeRow('sentences', i)"
+            [disabled]="draft.sentences.length === 1"
+          >
+            Xoá
+          </button>
+        </div>
+        <label class="field">
+          <span>Câu tiếng Anh</span>
+          <input
+            [name]="'s-text-' + i"
+            [(ngModel)]="item.text"
+            placeholder="Hello, my name is Lan."
+          />
+        </label>
+        <div class="grid">
+          <label class="field">
+            <span>Bản dịch</span>
+            <input
+              [name]="'s-vi-' + i"
+              [(ngModel)]="item.vi"
+              placeholder="Xin chào, tên mình là Lan."
+            />
+          </label>
+          <label class="field">
+            <span>Phiên âm (không bắt buộc)</span>
+            <input [name]="'s-ipa-' + i" [(ngModel)]="item.ipa" />
+          </label>
+        </div>
+      </div>
+      <button type="button" class="add" (click)="addRow('sentences')">+ Thêm câu</button>
+    </fieldset>
+
+    <!-- Ngữ pháp -->
+    <ng-container *ngIf="draft.kind === 'grammar'">
+      <fieldset class="card">
+        <legend>Quy tắc</legend>
+        <label class="field">
+          <span>Giải thích</span>
+          <textarea
+            name="intro"
+            rows="3"
+            [(ngModel)]="draft.intro"
+            placeholder="Giải thích quy tắc bằng tiếng Việt, ngắn gọn"
+          ></textarea>
+        </label>
+        <div class="row" *ngFor="let rule of draft.rules; let i = index; trackBy: trackByIndex">
+          <div class="row__head">
+            <strong>Mẫu {{ i + 1 }}</strong>
+            <button
+              type="button"
+              class="link"
+              (click)="removeRow('rules', i)"
+              [disabled]="draft.rules.length === 1"
+            >
+              Xoá
+            </button>
+          </div>
+          <div class="grid">
+            <label class="field">
+              <span>Chủ ngữ</span>
+              <input
+                [name]="'r-subject-' + i"
+                [(ngModel)]="rule.subject"
+                placeholder="he / she / it"
+              />
+            </label>
+            <label class="field">
+              <span>Động từ</span>
+              <input [name]="'r-verb-' + i" [(ngModel)]="rule.verb" placeholder="is" />
+            </label>
+            <label class="field">
+              <span>Dạng rút gọn</span>
+              <input [name]="'r-short-' + i" [(ngModel)]="rule.short" placeholder="She's" />
+            </label>
+            <label class="field">
+              <span>Ví dụ</span>
+              <input
+                [name]="'r-example-' + i"
+                [(ngModel)]="rule.example"
+                placeholder="She's a friend."
+              />
+            </label>
+          </div>
+          <label class="field">
+            <span>Ghi chú (không bắt buộc)</span>
+            <input [name]="'r-note-' + i" [(ngModel)]="rule.note" />
+          </label>
+        </div>
+        <button type="button" class="add" (click)="addRow('rules')">+ Thêm mẫu câu</button>
+      </fieldset>
+    </ng-container>
+
+    <!-- Đọc hiểu -->
+    <fieldset class="card" *ngIf="draft.kind === 'reading'">
+      <legend>Bài đọc</legend>
+      <label class="field">
+        <span>Bối cảnh</span>
+        <textarea
+          name="context"
+          rows="2"
+          [(ngModel)]="draft.context"
+          placeholder="Một câu tiếng Việt mô tả bạn đang đọc gì"
+        ></textarea>
+      </label>
+      <label class="field">
+        <span>Thông tin đầu bài (không bắt buộc)</span>
+        <textarea
+          name="meta"
+          rows="3"
+          [(ngModel)]="draft.metaText"
+          placeholder="Mỗi dòng một mục, ví dụ:&#10;Từ: Marta Silva&#10;Đến: Linh Nguyen"
+        ></textarea>
+      </label>
+      <label class="field">
+        <span>Nội dung</span>
+        <textarea
+          name="paragraphs"
+          rows="8"
+          [(ngModel)]="draft.paragraphsText"
+          placeholder="Cách nhau bằng một dòng trống để tạo đoạn mới"
+        ></textarea>
+      </label>
+    </fieldset>
+
+    <!-- Luyện nghe -->
+    <fieldset class="card" *ngIf="draft.kind === 'listening'">
+      <legend>Lời thoại</legend>
+      <div class="row" *ngFor="let line of draft.lines; let i = index; trackBy: trackByIndex">
+        <div class="row__head">
+          <strong>Câu thoại {{ i + 1 }}</strong>
+          <button
+            type="button"
+            class="link"
+            (click)="removeRow('lines', i)"
+            [disabled]="draft.lines.length === 1"
+          >
+            Xoá
+          </button>
+        </div>
+        <div class="grid">
+          <label class="field">
+            <span>Người nói</span>
+            <input [name]="'l-speaker-' + i" [(ngModel)]="line.speaker" placeholder="Sofia" />
+          </label>
+          <label class="field field--wide">
+            <span>Câu tiếng Anh</span>
+            <input [name]="'l-text-' + i" [(ngModel)]="line.text" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Bản dịch</span>
+          <input [name]="'l-vi-' + i" [(ngModel)]="line.vi" />
+        </label>
+      </div>
+      <button type="button" class="add" (click)="addRow('lines')">+ Thêm câu thoại</button>
+    </fieldset>
+
+    <!-- Câu hỏi -->
+    <ng-container
+      *ngFor="
+        let group of [
+          { field: 'practice', label: 'Luyện tập', show: draft.kind === 'grammar' },
+          {
+            field: 'questions',
+            label: 'Câu hỏi',
+            show: draft.kind === 'reading' || draft.kind === 'listening',
+          },
+          { field: 'review', label: 'Ôn lại (điền từ còn thiếu)', show: draft.kind === 'reading' },
+        ]
+      "
+    >
+      <fieldset class="card" *ngIf="group.show">
+        <legend>{{ group.label }}</legend>
+        <div
+          class="row"
+          *ngFor="let quiz of $any(draft)[group.field]; let q = index; trackBy: trackByIndex"
+        >
+          <div class="row__head">
+            <strong>Câu {{ q + 1 }}</strong>
+            <button
+              type="button"
+              class="link"
+              (click)="removeQuiz($any(group.field), q)"
+              [disabled]="$any(draft)[group.field].length === 1"
+            >
+              Xoá
+            </button>
+          </div>
+          <label class="field">
+            <span>Nội dung câu hỏi</span>
+            <input
+              [name]="group.field + '-q-' + q"
+              [(ngModel)]="quiz.question"
+              placeholder="Where is Sofia from?"
+            />
+          </label>
+          <div class="options">
+            <span class="options__label">Các lựa chọn — chọn vòng tròn ở đáp án đúng</span>
+            <div
+              class="option"
+              *ngFor="let option of quiz.options; let o = index; trackBy: trackByIndex"
+            >
+              <input
+                type="radio"
+                [name]="group.field + '-ans-' + q"
+                [value]="o"
+                [(ngModel)]="quiz.answer"
+                [attr.aria-label]="'Đáp án đúng là lựa chọn ' + (o + 1)"
+              />
+              <input
+                class="option__text"
+                [name]="group.field + '-opt-' + q + '-' + o"
+                [(ngModel)]="quiz.options[o]"
+                [placeholder]="'Lựa chọn ' + (o + 1)"
+              />
+              <button
+                type="button"
+                class="link"
+                (click)="removeOption($any(group.field), q, o)"
+                [disabled]="quiz.options.length <= 2"
+                aria-label="Xoá lựa chọn"
+              >
+                ✕
+              </button>
+            </div>
+            <button
+              type="button"
+              class="link"
+              (click)="addOption($any(group.field), q)"
+              [disabled]="quiz.options.length >= 6"
+            >
+              + Thêm lựa chọn
+            </button>
+          </div>
+        </div>
+        <button type="button" class="add" (click)="addQuiz($any(group.field))">
+          + Thêm câu hỏi
+        </button>
+      </fieldset>
+    </ng-container>
+
+    <!-- Lưu -->
+    <section class="card card--save">
+      <div class="errors" *ngIf="showErrors && errors.length" role="alert">
+        <strong>Cần sửa {{ errors.length }} chỗ trước khi lưu:</strong>
+        <ul>
+          <li *ngFor="let error of errors">{{ error }}</li>
+        </ul>
+      </div>
+
+      <button type="submit" class="submit" [disabled]="saving || blocked">
+        {{ saving ? 'Đang lưu...' : 'Lưu bài học' }}
+      </button>
+    </section>
+  </form>
+</section>

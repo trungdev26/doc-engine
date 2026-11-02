@@ -1,9 +1,15 @@
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
+import { LearningProfileService } from '../../core/learning-profile.service';
 import { ShellComponent } from './shell.component';
 
 describe('ShellComponent sidebar resize listeners', () => {
   it('registers pointer listeners only for an active resize', () => {
-    const component = new ShellComponent({} as Router);
+    const component = new ShellComponent(
+      {} as Router,
+      {} as LearningProfileService,
+      {} as AuthService,
+    );
     spyOnProperty(window, 'innerWidth').and.returnValue(1200);
     const addListener = spyOn(document, 'addEventListener');
     const removeListener = spyOn(document, 'removeEventListener');

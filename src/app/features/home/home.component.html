@@ -1,0 +1,58 @@
+<section class="home">
+  <header class="home__hero">
+    <h1>{{ greeting }}, bạn</h1>
+    <p>
+      {{
+        track === 'english'
+          ? 'Đang học tiếng Anh. Mỗi ngày một chút, học đều sẽ nhớ lâu.'
+          : 'Đang học Dev. Đọc lý thuyết rồi thử demo để hiểu cơ chế bên dưới.'
+      }}
+    </p>
+  </header>
+
+  <ng-container *ngIf="recent.length">
+    <div class="home__heading">
+      <h2>Xem tiếp</h2>
+      <span>{{ recent.length }} trang gần đây</span>
+    </div>
+    <div class="home__recent">
+      <a *ngFor="let item of recent" class="card card--link" [routerLink]="item.link">
+        <small>{{ item.section }}</small>
+        <strong>{{ item.context }}</strong>
+        <span>{{ item.label }}</span>
+      </a>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="track === 'dev'; else englishHome">
+    <div class="home__heading">
+      <h2>Chủ đề</h2>
+      <span>{{ sections.length }} mảng kiến thức</span>
+    </div>
+    <div class="home__grid">
+      <a *ngFor="let section of sections" class="card card--link" [routerLink]="section.link">
+        <i nz-icon [nzType]="section.icon" nzTheme="outline" class="card__icon"></i>
+        <strong>{{ section.title }}</strong>
+        <span>{{ section.count }} bài viết</span>
+      </a>
+    </div>
+  </ng-container>
+
+  <ng-template #englishHome>
+    <div class="home__heading">
+      <h2>Học tiếng Anh</h2>
+      <span>{{ englishFeatures.length }} mục</span>
+    </div>
+    <div class="home__grid">
+      <a
+        *ngFor="let feature of englishFeatures"
+        class="card card--link"
+        [routerLink]="['/english', feature.slug]"
+      >
+        <i nz-icon [nzType]="feature.icon" nzTheme="outline" class="card__icon"></i>
+        <strong>{{ feature.label }}</strong>
+        <span>{{ feature.summary }}</span>
+      </a>
+    </div>
+  </ng-template>
+</section>

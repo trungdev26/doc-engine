@@ -1,0 +1,346 @@
+<section class="dlg">
+  <div class="dlg__state" *ngIf="loading">Đang tải bài học...</div>
+  <div class="dlg__state" *ngIf="failed">
+    <strong>Không tải được bài học.</strong>
+    <a routerLink="/english/speaking">Quay lại</a>
+  </div>
+
+  <ng-container *ngIf="lesson && !failed">
+    <header class="dlg__head">
+      <a class="dlg__back" routerLink="/english/speaking" aria-label="Quay lại lộ trình">←</a>
+      <h1>{{ lesson.title }}</h1>
+    </header>
+
+    <ol class="steps" *ngIf="!finished">
+      <li *ngFor="let item of steps; let i = index">
+        <button type="button" [class.is-active]="item.id === step" (click)="go(item.id)">
+          <span class="steps__num">{{ i + 1 }}</span> {{ item.label }}
+        </button>
+      </li>
+    </ol>
+
+    <!-- Hoàn thành -->
+    <div class="card result" *ngIf="finished">
+      <h2>Hoàn thành bài luyện nói</h2>
+      <p class="result__score">{{ score }}<small>/100</small></p>
+      <p class="note" *ngIf="!auth.user()">
+        Bạn chưa đăng nhập nên tiến độ bài này chưa được lưu.
+        <a href="javascript:void(0)" (click)="loginToSave()">Đăng nhập để lưu</a>
+      </p>
+      <p class="note" *ngIf="saveFailed">Chưa lưu được tiến độ bài này.</p>
+      <a class="btn btn--primary" routerLink="/english/speaking">Về lộ trình</a>
+    </div>
+
+    <ng-container *ngIf="!finished">
+      <!-- 1. Bối cảnh -->
+      <ng-container *ngIf="step === 'context'">
+        <div class="card">
+          <p class="eyebrow">Bối cảnh</p>
+          <p>{{ lesson.situation }}</p>
+          <small class="meta"
+            >{{ turns.length }} lượt thoại · {{ lesson.phrases?.length || 0 }} mẫu câu ·
+            {{ lesson.roles?.length || 0 }} vai</small
+          >
+        </div>
+
+        <p class="eyebrow">Chọn vai của bạn</p>
+        <div class="roles">
+          <button
+            *ngFor="let role of lesson.roles"
+            type="button"
+            class="role"
+            [class.is-active]="role.id === roleId"
+            (click)="chooseRole(role.id)"
+          >
+            <span
+              class="role__check"
+              nz-icon
+              [nzType]="role.id === roleId ? 'check-circle' : 'aim'"
+              nzTheme="outline"
+            ></span>
+            <span>
+              <strong>{{ role.name }}</strong>
+              <small>{{ role.description }}</small>
+            </span>
+          </button>
+        </div>
+
+        <ng-container *ngIf="lesson.goals?.length">
+          <p class="eyebrow">Mục tiêu của bạn</p>
+          <ol class="goals">
+            <li *ngFor="let goal of lesson.goals; let i = index">
+              <span>{{ i + 1 }}</span> {{ goal }}
+            </li>
+          </ol>
+        </ng-container>
+
+        <ng-container *ngIf="lesson.phrases?.length">
+          <p class="eyebrow">Mẫu câu chính</p>
+          <ul class="phrases">
+            <li *ngFor="let phrase of lesson.phrases">
+              <div>
+                <strong>{{ phrase.text }}</strong>
+                <small>{{ phrase.vi }}</small>
+              </div>
+              <button
+                type="button"
+                class="icon"
+                (click)="speak(phrase.text)"
+                aria-label="Nghe mẫu câu"
+              >
+                <span nz-icon nzType="sound" nzTheme="outline"></span>
+              </button>
+            </li>
+          </ul>
+        </ng-container>
+
+        <button type="button" class="btn btn--primary" (click)="go('shadowing')">
+          <span nz-icon nzType="audio" nzTheme="outline"></span> Luyện Shadowing
+        </button>
+      </ng-container>
+
+      <!-- 2 và 3. Shadowing và Role-play -->
+      <ng-container *ngIf="step === 'shadowing' || step === 'roleplay'">
+        <p class="eyebrow">
+          {{
+            step === 'shadowing'
+              ? 'Luyện shadowing'
+              : 'Role-play: bạn đóng vai ' + (myRole?.name || '')
+          }}
+        </p>
+        <p class="hint" *ngIf="step === 'roleplay'">
+          Lượt của vai kia sẽ được đọc cho bạn nghe. Đến lượt của bạn, hãy ghi âm câu đáp lại.
+        </p>
+
+        <ol class="chat">
+          <li
+            *ngFor="let t of turns; let i = index"
+            class="bubble"
+            [class.is-mine]="isMine(t)"
+            [class.is-current]="i === turnIndex"
+            [class.is-future]="i > turnIndex"
+          >
+            <div class="bubble__head">
+              <span>{{ roleName(t.role) }} · {{ i + 1 }}</span>
+              <span class="bubble__tools" *ngIf="i <= turnIndex">
+                <button
+                  type="button"
+                  class="icon"
+                  (click)="toggleTranslation(i)"
+                  aria-label="Xem bản dịch"
+                >
+                  <span nz-icon nzType="translation" nzTheme="outline"></span>
+                </button>
+                <button type="button" class="icon" (click)="speak(t.text)" aria-label="Nghe">
+                  <span nz-icon nzType="sound" nzTheme="outline"></span>
+                </button>
+              </span>
+            </div>
+            <p *ngIf="i <= turnIndex || step === 'shadowing'">{{ t.text }}</p>
+            <p class="bubble__hidden" *ngIf="i > turnIndex && step === 'roleplay'">···</p>
+            <small *ngIf="showTranslation.has(i)">{{ t.vi }}</small>
+
+            <div class="bubble__rec" *ngIf="i === turnIndex && needsRecording">
+              <p class="note" *ngIf="recorder.state === 'unsupported'">
+                Trình duyệt này chưa hỗ trợ ghi âm. Bạn vẫn có thể đọc theo.
+              </p>
+              <p class="note" *ngIf="recorder.state === 'denied'">
+                Chưa cấp quyền micro. Hãy cho phép micro rồi thử lại.
+              </p>
+              <ng-container *ngIf="recorder.state !== 'unsupported'">
+                <button
+                  type="button"
+                  class="mic"
+                  [class.is-recording]="recorder.state === 'recording'"
+                  (click)="toggleRecord()"
+                  [attr.aria-label]="recorder.state === 'recording' ? 'Dừng ghi âm' : 'Ghi âm'"
+                >
+                  <span
+                    nz-icon
+                    [nzType]="recorder.state === 'recording' ? 'pause-circle' : 'audio'"
+                    nzTheme="outline"
+                  ></span>
+                </button>
+                <span class="rec-label">{{
+                  recorder.state === 'recording'
+                    ? 'Đang ghi... bấm để dừng'
+                    : recorder.state === 'recorded'
+                      ? 'Ghi lại'
+                      : 'Ghi âm lượt của bạn'
+                }}</span>
+                <audio *ngIf="recorder.url" [src]="recorder.url" controls></audio>
+              </ng-container>
+            </div>
+          </li>
+        </ol>
+
+        <div class="bar">
+          <span>Lượt {{ turnIndex + 1 }}/{{ turns.length }}</span>
+          <div class="bar__track">
+            <i [style.width.%]="((turnIndex + 1) / turns.length) * 100"></i>
+          </div>
+          <button type="button" class="btn btn--ghost" (click)="toggleRate()">
+            {{ rate === 1 ? '1×' : '0.7×' }}
+          </button>
+          <button type="button" class="btn btn--primary" (click)="nextTurn()">Tiếp tục →</button>
+        </div>
+      </ng-container>
+
+      <!-- 4. Dictation -->
+      <ng-container *ngIf="step === 'dictation' && dictationTurn as t">
+        <p class="eyebrow">Dictation · Câu {{ dictationIndex + 1 }}/{{ turns.length }}</p>
+        <div class="card">
+          <p class="hint">Nghe rồi gõ lại điều bạn nghe được.</p>
+          <button type="button" class="btn btn--ghost" (click)="speak(t.text)">
+            <span nz-icon nzType="sound" nzTheme="outline"></span> Nghe
+          </button>
+          <textarea
+            rows="3"
+            [(ngModel)]="dictationInput"
+            [readOnly]="!!dictationResult"
+            placeholder="Gõ lại câu bạn vừa nghe..."
+            aria-label="Gõ lại câu vừa nghe"
+          ></textarea>
+          <div class="dictation" *ngIf="dictationResult as result">
+            <p>
+              <span
+                *ngFor="let item of result.words"
+                class="dword"
+                [class.is-ok]="item.correct"
+                [class.is-miss]="!item.correct"
+                >{{ item.word }}</span
+              >
+            </p>
+            <small>{{
+              result.exact
+                ? 'Chính xác!'
+                : 'Đúng ' + result.correctCount + '/' + result.total + ' từ'
+            }}</small>
+            <small *ngIf="!result.exact">Câu gốc: {{ t.text }}</small>
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            *ngIf="!dictationResult"
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!dictationInput.trim()"
+            (click)="checkDictation()"
+          >
+            Kiểm tra
+          </button>
+          <button
+            *ngIf="dictationResult"
+            type="button"
+            class="btn btn--primary"
+            (click)="nextDictation()"
+          >
+            {{ dictationIndex < turns.length - 1 ? 'Câu tiếp' : 'Sang phần từ vựng' }} →
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- 5. Từ vựng -->
+      <ng-container *ngIf="step === 'vocab'">
+        <p class="eyebrow">Từ vựng</p>
+        <p class="hint">Học các từ chính của bài trước khi nghe hội thoại.</p>
+        <div class="progress">
+          <div class="progress__segs">
+            <i *ngFor="let item of vocab" [class.is-on]="known.has(item.word)"></i>
+          </div>
+          <strong>Đã thuộc {{ known.size }}/{{ vocab.length }}</strong>
+        </div>
+
+        <div class="seg">
+          <button
+            type="button"
+            [class.is-active]="vocabView === 'list'"
+            (click)="vocabView = 'list'"
+          >
+            Danh sách
+          </button>
+          <button
+            type="button"
+            [class.is-active]="vocabView === 'cards'"
+            (click)="vocabView = 'cards'"
+          >
+            Thẻ ghi nhớ
+          </button>
+        </div>
+
+        <p class="note" *ngIf="saveError">{{ saveError }}</p>
+
+        <ul class="vocab" *ngIf="vocabView === 'list'">
+          <li *ngFor="let item of vocab">
+            <div class="vocab__main">
+              <div class="vocab__word">
+                <strong>{{ item.word }}</strong>
+                <button type="button" class="icon" (click)="speak(item.word)" aria-label="Nghe từ">
+                  <span nz-icon nzType="sound" nzTheme="outline"></span>
+                </button>
+              </div>
+              <span
+                >{{ item.meaning }} <em *ngIf="item.pos">· {{ item.pos }}</em></span
+              >
+              <button
+                type="button"
+                class="link"
+                *ngIf="item.example"
+                (click)="toggleExpanded(item.word)"
+              >
+                Xem câu ví dụ
+              </button>
+              <div class="vocab__example" *ngIf="expanded.has(item.word) && item.example">
+                <p>{{ item.example }}</p>
+                <small *ngIf="item.exampleVi">{{ item.exampleVi }}</small>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="check"
+              [class.is-on]="known.has(item.word)"
+              (click)="toggleKnown(item.word)"
+              [attr.aria-label]="'Đã thuộc ' + item.word"
+            >
+              <span nz-icon nzType="check" nzTheme="outline"></span>
+            </button>
+            <button
+              type="button"
+              class="icon icon--save"
+              [class.is-on]="saved.has(item.word)"
+              (click)="saveWord(item)"
+              [attr.aria-label]="'Lưu ' + item.word + ' để ôn tập'"
+              [title]="saved.has(item.word) ? 'Đã lưu' : 'Lưu để ôn tập'"
+            >
+              <span
+                nz-icon
+                [nzType]="saved.has(item.word) ? 'check-circle' : 'star'"
+                nzTheme="outline"
+              ></span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="flash" *ngIf="vocabView === 'cards' && card as c">
+          <button type="button" class="flash__card" (click)="cardFlipped = !cardFlipped">
+            <strong>{{ cardFlipped ? c.meaning : c.word }}</strong>
+            <small>{{ cardFlipped ? c.example || '' : 'Bấm để lật thẻ' }}</small>
+          </button>
+          <div class="actions">
+            <button type="button" class="btn btn--ghost" (click)="speak(c.word)">
+              <span nz-icon nzType="sound" nzTheme="outline"></span> Nghe
+            </button>
+            <button type="button" class="btn btn--ghost" (click)="toggleKnown(c.word)">
+              {{ known.has(c.word) ? 'Bỏ thuộc' : 'Đã thuộc' }}
+            </button>
+            <button type="button" class="btn btn--primary" (click)="nextCard()">Thẻ tiếp →</button>
+          </div>
+        </div>
+
+        <div class="actions actions--end">
+          <button type="button" class="btn btn--primary" (click)="finish()">Hoàn thành bài</button>
+        </div>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</section>

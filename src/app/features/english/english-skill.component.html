@@ -1,0 +1,63 @@
+<section class="skill">
+  <header class="skill__head">
+    <h1>{{ feature.label }}</h1>
+    <p>{{ feature.summary }}</p>
+  </header>
+
+  <div class="skill__state" *ngIf="loading && !failed">Đang tải lộ trình...</div>
+
+  <div class="skill__state skill__state--error" *ngIf="failed">
+    <strong>Không tải được lộ trình.</strong>
+    <span>Kết nối đang gặp sự cố. Bạn thử lại sau ít phút nhé.</span>
+    <button type="button" (click)="retry()">Thử lại</button>
+  </div>
+
+  <ng-container *ngIf="roadmap && !failed">
+    <h2 class="skill__heading">Chọn chặng luyện tập</h2>
+    <div class="bands" role="tablist" aria-label="Chọn band">
+      <button
+        *ngFor="let band of bands"
+        type="button"
+        role="tab"
+        class="band"
+        [class.is-active]="band.id === selectedBand"
+        [attr.aria-selected]="band.id === selectedBand"
+        (click)="selectBand(band.id)"
+      >
+        <strong>{{ band.label }}</strong>
+        <small>{{ band.cefr }}</small>
+        <span>{{ band.level }}</span>
+        <em *ngIf="band.id === selectedBand">Bạn đang ở đây</em>
+      </button>
+    </div>
+
+    <div class="progress" *ngIf="roadmap.totalCount">
+      <span>Đã hoàn thành {{ roadmap.completedCount }}/{{ roadmap.totalCount }} bài</span>
+      <div class="progress__bar"><i [style.width.%]="percent"></i></div>
+    </div>
+
+    <div class="empty" *ngIf="!roadmap.totalCount">
+      <strong>Band này chưa có bài học.</strong>
+      <span>Nội dung đang được bổ sung. Hãy chọn Band 3.0 để bắt đầu.</span>
+    </div>
+
+    <a *ngIf="nextLesson as next" class="next" [routerLink]="lessonLink(next.id)">
+      <span class="next__label">Tiếp theo</span>
+      <strong>{{ next.title }}</strong>
+      <span class="next__cta">Bắt đầu →</span>
+    </a>
+
+    <div class="unit" *ngFor="let unit of roadmap.units">
+      <h3>{{ unit.title }}</h3>
+      <ul>
+        <li *ngFor="let lesson of unit.lessons">
+          <a [routerLink]="lessonLink(lesson.id)" [class.is-done]="lesson.completed">
+            <span class="dot" aria-hidden="true">{{ lesson.completed ? '✓' : '•' }}</span>
+            <span class="title">{{ lesson.title }}</span>
+            <small>{{ lesson.completed ? 'Đã học' : 'Chưa học' }}</small>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+</section>

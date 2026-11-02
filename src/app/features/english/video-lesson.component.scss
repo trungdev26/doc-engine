@@ -1,0 +1,731 @@
+.video {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.video__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.video__head h1 {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.3em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.video__head p {
+  margin: 2px 0 0;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.video__back {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--app-text);
+  text-decoration: none;
+  background: var(--app-chip);
+  border-radius: 50%;
+}
+.video__error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  color: var(--app-text-strong);
+  font-weight: 600;
+  background: color-mix(in oklab, #ef4444 20%, var(--app-surface));
+  border: 1px solid color-mix(in oklab, #f87171 70%, transparent);
+  border-radius: 14px;
+}
+.video__error [nz-icon] {
+  color: #f87171;
+  font-size: 18px;
+}
+.video__error a {
+  margin-left: auto;
+  color: var(--app-accent-strong);
+}
+
+.video__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 18px;
+  align-items: start;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border-radius: 18px;
+}
+.stage__ratio {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+.stage:fullscreen {
+  display: grid;
+  align-items: center;
+  border-radius: 0;
+}
+.stage:fullscreen .stage__ratio {
+  width: min(100vw, 100vh * 16 / 9);
+  margin: 0 auto;
+}
+.stage:fullscreen .stage__caption strong {
+  font-size: clamp(16px, 2.2vw, 28px);
+}
+.stage:fullscreen .stage__caption span {
+  font-size: clamp(14px, 1.8vw, 22px);
+}
+.stage__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+/* Dải dưới của YouTube (chia sẻ, "More videos", logo) cao khoảng 14% khung; chữ đè nằm trên nó. */
+.stage__caption {
+  position: absolute;
+  right: 0;
+  bottom: 14%;
+  left: 0;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  padding: 24px 16px 10px;
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55));
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.stage__caption strong {
+  font-size: clamp(12px, 1.25vw, 15px);
+  font-weight: 650;
+  line-height: 1.35;
+}
+.stage__caption span {
+  color: #e2e8f0;
+  font-size: clamp(11px, 1.05vw, 13px);
+  line-height: 1.35;
+}
+
+.controls {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+}
+.controls.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.controls__bar {
+  height: 8px;
+  overflow: hidden;
+  background: var(--app-chip);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.controls__bar i {
+  display: block;
+  height: 100%;
+  background: var(--app-accent);
+}
+.controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+.controls__spacer {
+  flex: 1;
+}
+/* Trên màn hẹp, phần điều khiển xuống hàng thứ hai; trên màn rộng phần tử này không chiếm chỗ. */
+.controls__break {
+  display: none;
+}
+.controls__time {
+  margin-left: 8px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.ctl {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--app-text);
+  font-size: 18px;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ctl:hover {
+  background: var(--app-chip);
+}
+.ctl--play {
+  width: 44px;
+  height: 44px;
+  color: var(--app-accent-contrast);
+  font-size: 24px;
+  background: var(--app-accent);
+}
+.ctl--play:hover {
+  background: var(--app-accent);
+  filter: brightness(1.08);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  color: var(--app-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.pill.is-on {
+  color: var(--app-accent-strong);
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+}
+.lang {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--app-chip);
+  border-radius: 999px;
+}
+.lang__btn {
+  padding: 4px 12px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.lang__btn.is-on {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.lang__btn:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+/* Ghi nguồn theo giấy phép: nằm ngay dưới tên kênh ở đầu trang, nhỏ và mờ để không tranh chú ý với bài học. */
+.video__credit {
+  margin: 1px 0 0;
+  color: var(--app-text-muted);
+  font-size: 11.5px;
+  opacity: 0.85;
+}
+
+/* Danh sách và thẻ tra từ chung một khung: thẻ nằm đè lên đầu danh sách, không chiếm chỗ trong luồng. */
+.script-wrap {
+  position: relative;
+}
+.dict {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  left: 0;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  max-height: 100%;
+  padding: 12px 14px;
+  overflow-y: auto;
+  background: var(--app-surface);
+  border: 1px solid color-mix(in oklab, var(--app-accent) 40%, var(--app-border));
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  animation: dict-in 0.14s ease-out;
+}
+@keyframes dict-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dict {
+    animation: none;
+  }
+}
+.dict__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.dict__word {
+  color: var(--app-text-strong);
+  font-size: 1.15em;
+  font-weight: 800;
+  line-height: 1;
+}
+.dict__ipa {
+  color: var(--app-accent-strong);
+  font-size: 13px;
+  line-height: 1;
+}
+/* Nguyên âm nổi bật bằng màu nhấn và đậm hơn; phụ âm dịu đi; ký hiệu (gạch, trọng âm) mờ nhất. */
+.ipa--vowel {
+  color: var(--app-accent-strong);
+  font-weight: 700;
+}
+.ipa--consonant {
+  color: var(--app-text);
+}
+.ipa--mark {
+  color: var(--app-text-muted);
+}
+.dict__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--app-text);
+  font-size: 15px;
+  background: var(--app-chip);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.dict__icon:hover {
+  background: var(--app-chip-hover);
+}
+.dict__close {
+  color: var(--app-text-muted);
+  background: transparent;
+}
+.dict__vi {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+/* Cột từ loại có bề rộng cố định để mọi định nghĩa bắt đầu thẳng hàng. */
+.dict__list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dict__list li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+.dict__list em {
+  color: var(--app-text-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.dict__list span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 12.5px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.dict__note {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.dict__example {
+  margin: 0;
+  padding-left: 10px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.45;
+  border-left: 2px solid color-mix(in oklab, var(--app-accent) 55%, transparent);
+}
+.dict__source {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 10.5px;
+  opacity: 0.8;
+}
+.dict__retry {
+  padding: 0;
+  color: var(--app-accent-strong);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.dict__spacer {
+  flex: 1;
+}
+/* Nút lưu là icon nhỏ cạnh nút đóng; lưu xong đổi sang dấu tích màu nhấn. */
+.dict__save {
+  color: var(--app-text);
+}
+.dict__save:disabled {
+  cursor: default;
+}
+.dict__save.is-saved {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.word {
+  border-radius: 3px;
+  cursor: pointer;
+}
+.word:hover {
+  background: var(--app-accent-soft);
+}
+.word.is-picked {
+  color: var(--app-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.side {
+  display: grid;
+  gap: 12px;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  padding: 12px;
+}
+.modes {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--app-chip);
+  border-radius: 12px;
+}
+.modes button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.modes button.is-active {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.side__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  color: var(--app-text-strong);
+}
+.side__head small {
+  color: var(--app-text-muted);
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 3px 4px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.switch:hover {
+  color: var(--app-text);
+}
+.switch__track {
+  display: inline-flex;
+  align-items: center;
+  width: 28px;
+  height: 16px;
+  padding: 2px;
+  background: var(--app-chip-hover);
+  border-radius: 999px;
+  transition: background-color 0.16s ease;
+}
+.switch__track i {
+  width: 12px;
+  height: 12px;
+  background: var(--app-text-muted);
+  border-radius: 50%;
+  transition:
+    transform 0.16s ease,
+    background-color 0.16s ease;
+}
+.switch[aria-checked='true'] {
+  color: var(--app-text);
+}
+.switch[aria-checked='true'] .switch__track {
+  background: var(--app-accent-soft);
+}
+.switch[aria-checked='true'] .switch__track i {
+  background: var(--app-accent);
+  transform: translateX(12px);
+}
+.switch:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.script {
+  position: relative;
+  max-height: 62vh;
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.cue {
+  display: flex;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.cue:hover {
+  background: var(--app-chip);
+}
+.cue:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: -2px;
+}
+.cue.is-active {
+  background: var(--app-accent-soft);
+  border-color: color-mix(in oklab, var(--app-accent) 55%, transparent);
+}
+.cue__time {
+  flex: none;
+  width: 32px;
+  padding-top: 2px;
+  color: var(--app-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.cue.is-active .cue__time {
+  color: var(--app-accent-strong);
+  font-weight: 700;
+}
+.cue__body {
+  min-width: 0;
+}
+/* Mọi câu cùng một cỡ và độ đậm; chỉ câu đang đọc nổi lên để mắt không phải đoán đang ở đâu. */
+.cue__text {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.cue.is-active .cue__text {
+  color: var(--app-text-strong);
+  font-weight: 650;
+}
+/* Từ đã đọc tới chỉ đổi màu trong câu đang đọc, các câu đã qua không tô lại. */
+.cue.is-active .word.is-lit {
+  color: var(--app-accent-strong);
+}
+.cue__vi {
+  margin: 1px 0 0;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.drill {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 6px 4px 4px;
+}
+.drill__count {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+.drill__title {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-weight: 700;
+}
+.drill__text {
+  margin: 0;
+  color: var(--app-text-strong);
+  font-size: 1.35em;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.drill__vi {
+  margin: 0;
+  color: var(--app-accent-strong);
+}
+.drill__note {
+  margin: 0;
+  color: var(--app-text-muted);
+  font-size: 13px;
+}
+.drill__label {
+  color: var(--app-text-muted);
+  font-size: 12.5px;
+}
+.drill textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--app-text-strong);
+  font: inherit;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  resize: vertical;
+}
+.drill textarea:focus {
+  border-color: var(--app-accent);
+  outline: 0;
+}
+.drill audio {
+  width: 100%;
+}
+.drill__nav {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 4px;
+}
+.drill__result {
+  display: grid;
+  gap: 6px;
+}
+.drill__result p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+.drill__result small {
+  color: var(--app-text-muted);
+}
+.dword {
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.dword.is-ok {
+  background: color-mix(in oklab, #22c55e 18%, var(--app-surface));
+}
+.dword.is-miss {
+  background: color-mix(in oklab, #ef4444 18%, var(--app-surface));
+}
+.mic {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--app-accent-contrast);
+  font-size: 26px;
+  background: var(--app-accent);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  /* Vòng sáng vẽ ra ngoài nút nên chừa lề bằng đúng bề dày vòng, để mép vòng thẳng hàng với các khối khác. */
+  margin: 8px;
+  box-shadow: 0 0 0 8px var(--app-accent-soft);
+}
+.mic.is-recording {
+  background: #ef4444;
+  box-shadow: 0 0 0 10px color-mix(in oklab, #ef4444 25%, transparent);
+}
+.drill .drill__label {
+  margin-top: -4px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.btn--primary {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+.btn--ghost {
+  color: var(--app-text);
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+@media (max-width: 1000px) {
+  .video__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .script {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Hai hàng cố định: phát ở hàng trên, các tùy chọn ở hàng dưới, không để nút nào đứng một mình. */
+  .controls__break {
+    display: block;
+    flex-basis: 100%;
+    height: 0;
+  }
+  .controls__spacer {
+    display: none;
+  }
+  .controls__time {
+    margin-left: auto;
+  }
+  /* Thẻ tra từ nổi, nên chừa chỗ để dòng thoại đầu tiên không bị nó che. */
+  .script-wrap:has(.dict) .script {
+    padding-top: 96px;
+  }
+}

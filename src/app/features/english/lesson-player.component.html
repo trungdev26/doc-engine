@@ -1,0 +1,275 @@
+<section class="player">
+  <div class="player__state" *ngIf="loading">Đang tải bài học...</div>
+
+  <div class="player__state" *ngIf="failed">
+    <strong>Không tải được bài học.</strong>
+    <a [routerLink]="'/english'">Quay lại</a>
+  </div>
+
+  <ng-container *ngIf="lesson && !failed">
+    <header class="player__head">
+      <a class="player__back" [routerLink]="backLink" aria-label="Quay lại lộ trình">←</a>
+      <div>
+        <h1>{{ lesson.title }}</h1>
+      </div>
+    </header>
+
+    <ol class="steps" *ngIf="!finished">
+      <li
+        *ngFor="let item of steps; let i = index"
+        [class.is-active]="i === stepIndex"
+        [class.is-done]="i < stepIndex"
+      >
+        <span class="steps__num">{{ i + 1 }}</span>
+        <span class="steps__label">{{ item.label }}</span>
+      </li>
+    </ol>
+
+    <!-- Kết quả -->
+    <div class="result" *ngIf="finished">
+      <h2>Hoàn thành bài học</h2>
+      <p class="result__score">{{ score }}<small>/100</small></p>
+      <p class="result__note" *ngIf="!auth.user()">
+        Bạn chưa đăng nhập nên tiến độ bài này chưa được lưu.
+        <a href="javascript:void(0)" (click)="loginToSave()">Đăng nhập để lưu</a>
+      </p>
+      <p class="result__note" *ngIf="saveFailed">
+        Chưa lưu được tiến độ bài này. Bạn làm lại bài sau để được ghi nhận nhé.
+      </p>
+      <a class="btn btn--primary" [routerLink]="backLink">Về lộ trình</a>
+    </div>
+
+    <ng-container *ngIf="!finished">
+      <!-- Thẻ từ vựng -->
+      <div class="cards" *ngIf="step.type === 'cards' && currentWord as word">
+        <div class="cards__progress">{{ cardIndex + 1 }} / {{ words.length }}</div>
+        <article class="card">
+          <div class="card__top">
+            <h2>{{ word.word }}</h2>
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="speak(word.word)"
+              aria-label="Nghe phát âm"
+            >
+              🔊
+            </button>
+          </div>
+          <p class="card__meta">
+            <span class="pill">{{ word.pos }}</span>
+            <span class="ipa">{{ word.ipa }}</span>
+          </p>
+          <p class="card__meaning">{{ word.meaning }}</p>
+          <p class="card__definition">{{ word.definition }}</p>
+          <div class="card__example">
+            <p>{{ word.example }}</p>
+            <small>{{ word.exampleVi }}</small>
+          </div>
+          <button
+            type="button"
+            class="btn btn--ghost"
+            [disabled]="savedWords.has(word.word)"
+            (click)="saveWord(word)"
+          >
+            {{ savedWords.has(word.word) ? '✓ Đã lưu để ôn tập' : 'Lưu để ôn tập' }}
+          </button>
+          <p class="card__error" *ngIf="saveFailed">Không lưu được từ này. Bạn thử lại nhé.</p>
+        </article>
+        <div class="actions">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            (click)="prevCard()"
+            [disabled]="cardIndex === 0"
+          >
+            Từ trước
+          </button>
+          <button type="button" class="btn btn--primary" (click)="nextCard()">
+            {{ cardIndex < words.length - 1 ? 'Tiếp' : 'Sang phần kiểm tra' }} →
+          </button>
+        </div>
+      </div>
+
+      <!-- Quy tắc ngữ pháp -->
+      <div class="rules" *ngIf="step.type === 'rules' && lesson.kind === 'grammar'">
+        <div class="panel">
+          <h3>Mẫu câu</h3>
+          <p>{{ lesson.intro }}</p>
+          <div class="rule" *ngFor="let rule of lesson.rules">
+            <div class="rule__formula">
+              <span class="pill">{{ rule.subject }}</span> +
+              <span class="pill pill--warm">{{ rule.verb }}</span> →
+              <strong>{{ rule.short }}</strong>
+            </div>
+            <div class="rule__example">
+              <span>{{ rule.example }}</span>
+              <button
+                type="button"
+                class="icon-btn"
+                (click)="speak(rule.example)"
+                aria-label="Nghe"
+              >
+                🔊
+              </button>
+            </div>
+            <small *ngIf="rule.note">{{ rule.note }}</small>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn--primary" (click)="next()">Tiếp: Luyện tập →</button>
+        </div>
+      </div>
+
+      <!-- Bài đọc -->
+      <div class="reading" *ngIf="step.type === 'text' && lesson.kind === 'reading'">
+        <div class="panel panel--soft">
+          <h3>Bối cảnh</h3>
+          <p>{{ lesson.context }}</p>
+        </div>
+        <article class="panel">
+          <p class="reading__meta" *ngFor="let line of lesson.meta">{{ line }}</p>
+          <hr />
+          <p class="reading__text" *ngFor="let paragraph of lesson.paragraphs">{{ paragraph }}</p>
+        </article>
+        <div class="actions">
+          <button type="button" class="btn btn--primary" (click)="next()">Tiếp: Câu hỏi →</button>
+        </div>
+      </div>
+
+      <!-- Lời thoại -->
+      <div class="dialogue" *ngIf="step.type === 'dialogue' && lesson.kind === 'listening'">
+        <div class="panel panel--soft">
+          <h3>Tình huống</h3>
+          <p>{{ lesson.situation }}</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" [(ngModel)]="showTranslation" />
+          Hiện bản dịch
+        </label>
+        <div
+          class="line"
+          *ngFor="let line of lesson.lines"
+          [class.is-right]="line.speaker !== lesson.lines[0].speaker"
+        >
+          <div class="line__head">
+            <strong>{{ line.speaker }}</strong>
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="speak(line.text)"
+              aria-label="Nghe câu này"
+            >
+              🔊
+            </button>
+          </div>
+          <p>{{ line.text }}</p>
+          <small *ngIf="showTranslation">{{ line.vi }}</small>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn--primary" (click)="next()">Tiếp: Câu hỏi →</button>
+        </div>
+      </div>
+
+      <!-- Câu hỏi -->
+      <!-- Nghe chép -->
+      <div class="dictation" *ngIf="step.type === 'dictation' && dictationLine as line">
+        <p class="dictation__count">Câu {{ dictationIndex + 1 }} / {{ dictationTotal }}</p>
+        <div class="panel">
+          <h3>Nghe và gõ lại điều bạn nghe được</h3>
+          <div class="dictation__listen">
+            <button type="button" class="btn btn--ghost" (click)="speak(line.text)">🔊 Nghe</button>
+            <small>Người nói: {{ line.speaker }}</small>
+          </div>
+          <textarea
+            class="dictation__input"
+            rows="2"
+            [(ngModel)]="dictationInput"
+            [readOnly]="!!dictationResult"
+            placeholder="Gõ lại câu bạn vừa nghe..."
+            aria-label="Gõ lại câu vừa nghe"
+          ></textarea>
+
+          <div class="dictation__result" *ngIf="dictationResult as result">
+            <p>
+              <span
+                *ngFor="let item of result.words"
+                class="dword"
+                [class.is-ok]="item.correct"
+                [class.is-miss]="!item.correct"
+                >{{ item.word }}</span
+              >
+            </p>
+            <small>
+              {{
+                result.exact
+                  ? 'Chính xác!'
+                  : 'Đúng ' + result.correctCount + '/' + result.total + ' từ'
+              }}
+            </small>
+            <small class="dictation__original" *ngIf="!result.exact"
+              >Câu gốc: {{ line.text }}</small
+            >
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            *ngIf="!dictationResult"
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!dictationInput.trim()"
+            (click)="checkDictationLine()"
+          >
+            Kiểm tra
+          </button>
+          <button
+            *ngIf="dictationResult"
+            type="button"
+            class="btn btn--primary"
+            [disabled]="saving"
+            (click)="nextDictation()"
+          >
+            {{ dictationIndex < dictationTotal - 1 ? 'Câu tiếp' : 'Hoàn thành' }} →
+          </button>
+        </div>
+      </div>
+
+      <div class="quiz" *ngIf="step.type === 'quiz'">
+        <div class="panel" *ngFor="let quiz of step.quiz; let q = index">
+          <h3>
+            <span class="quiz__num">{{ q + 1 }}</span> {{ quiz.question }}
+          </h3>
+          <button
+            *ngFor="let option of quiz.options; let o = index"
+            type="button"
+            class="option"
+            [ngClass]="optionClass(q, o)"
+            (click)="pick(q, o)"
+          >
+            <span class="option__key">{{ 'ABCD'[o] }}</span>
+            <span>{{ option }}</span>
+          </button>
+        </div>
+        <div class="actions">
+          <button
+            *ngIf="!quizState().checked"
+            type="button"
+            class="btn btn--primary"
+            [disabled]="!canCheck"
+            (click)="check()"
+          >
+            Kiểm tra
+          </button>
+          <button
+            *ngIf="quizState().checked"
+            type="button"
+            class="btn btn--primary"
+            [disabled]="saving"
+            (click)="next()"
+          >
+            {{ isLastStep ? 'Hoàn thành' : 'Tiếp' }} →
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</section>

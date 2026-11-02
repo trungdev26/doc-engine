@@ -1,0 +1,51 @@
+<section class="garden">
+  <header>
+    <h1>Vườn từ</h1>
+    <p>Mỗi từ bạn lưu là một cái cây. Ôn đúng hạn thì cây lớn lên.</p>
+  </header>
+
+  <div class="state" *ngIf="loading">Đang tải vườn từ...</div>
+
+  <div class="state" *ngIf="failed && !loading">
+    <strong>Không tải được vườn từ.</strong>
+    <button type="button" (click)="load()">Thử lại</button>
+  </div>
+
+  <ng-container *ngIf="!loading && !failed">
+    <div class="state" *ngIf="!words.length">
+      <strong>Vườn của bạn còn trống</strong>
+      <span>Khi học từ vựng, bấm "Lưu để ôn tập" để gieo hạt giống đầu tiên.</span>
+      <a routerLink="/english/words">Đi học từ vựng</a>
+    </div>
+
+    <ng-container *ngIf="words.length">
+      <div class="stats">
+        <div>
+          <strong>{{ words.length }}</strong>
+          <span>cây trong vườn</span>
+        </div>
+        <div>
+          <strong>{{ thirstyCount }}</strong>
+          <span>cây đang khát</span>
+        </div>
+        <div>
+          <strong>{{ bloomCount }}</strong>
+          <span>cây đã nở hoa</span>
+        </div>
+      </div>
+
+      <a class="water" routerLink="/english/review" *ngIf="thirstyCount">
+        Tưới nước cho {{ thirstyCount }} cây (ôn tập) →
+      </a>
+
+      <ul class="plants">
+        <li *ngFor="let word of words" [class.is-thirsty]="isThirsty(word)">
+          <span class="plant__emoji" aria-hidden="true">{{ stage(word).emoji }}</span>
+          <strong>{{ word.word }}</strong>
+          <small>{{ word.meaning }}</small>
+          <em>{{ isThirsty(word) ? 'Đang khát' : stage(word).label }}</em>
+        </li>
+      </ul>
+    </ng-container>
+  </ng-container>
+</section>

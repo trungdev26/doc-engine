@@ -1,0 +1,247 @@
+.editor {
+  max-width: 760px;
+  margin: 0 auto;
+}
+header h1 {
+  margin: 0 0 6px;
+  color: var(--app-text-strong);
+  font-size: 2em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+header p {
+  margin: 0 0 20px;
+  color: var(--app-text-muted);
+}
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 4px;
+  background: var(--app-chip);
+  border-radius: 14px;
+}
+.kinds button {
+  flex: 1 1 auto;
+  padding: 9px 14px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.kinds button.is-active {
+  color: var(--app-accent-contrast);
+  background: var(--app-accent);
+}
+
+.notice {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  color: var(--app-text);
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+}
+.notice ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.notice--ok {
+  background: color-mix(in oklab, #22c55e 14%, var(--app-surface));
+  border-color: #22c55e;
+}
+.notice--error {
+  background: color-mix(in oklab, #ef4444 12%, var(--app-surface));
+  border-color: #ef4444;
+}
+.notice--warn {
+  border-color: var(--app-warm);
+}
+
+.card {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+}
+legend {
+  padding: 0 8px;
+  color: var(--app-text-strong);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.field {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.field--wide {
+  grid-column: span 2;
+}
+.field span {
+  color: var(--app-text);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.field small {
+  color: var(--app-text-muted);
+  font-size: 12px;
+}
+.field--code input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+input:not([type='radio']),
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--app-text-strong);
+  font: inherit;
+  font-size: 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--app-accent);
+  outline: 0;
+  box-shadow: 0 0 0 3px var(--app-accent-soft);
+}
+::placeholder {
+  color: var(--app-text-muted);
+  opacity: 0.7;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+}
+.row__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.row__head strong {
+  color: var(--app-text-strong);
+  font-size: 13px;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+.options__label {
+  color: var(--app-text);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.option input[type='radio'] {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--app-accent);
+}
+
+.link {
+  justify-self: start;
+  padding: 2px 4px;
+  color: var(--app-accent-strong);
+  font-size: 12.5px;
+  font-weight: 650;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.link:disabled {
+  color: var(--app-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.add {
+  padding: 10px 14px;
+  color: var(--app-accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--app-accent-soft);
+  border: 1px dashed var(--app-accent);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.card--save {
+  position: sticky;
+  bottom: 12px;
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+}
+.errors {
+  padding: 12px 14px;
+  color: var(--app-text);
+  background: color-mix(in oklab, #ef4444 12%, var(--app-surface));
+  border: 1px solid #ef4444;
+  border-radius: 12px;
+}
+.errors ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.submit {
+  padding: 13px 22px;
+  color: var(--app-accent-contrast);
+  font-size: 15px;
+  font-weight: 800;
+  background: var(--app-accent);
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 560px) {
+  .field--wide {
+    grid-column: auto;
+  }
+  .card {
+    padding: 14px;
+  }
+}

@@ -1,0 +1,91 @@
+<section class="speak">
+  <div class="speak__state" *ngIf="loading">Đang tải bài học...</div>
+  <div class="speak__state" *ngIf="failed">
+    <strong>Không tải được bài học.</strong>
+    <a routerLink="/english/speaking">Quay lại</a>
+  </div>
+
+  <ng-container *ngIf="lesson && !failed">
+    <header class="speak__head">
+      <a class="speak__back" routerLink="/english/speaking" aria-label="Quay lại lộ trình">←</a>
+      <h1>{{ lesson.title }}</h1>
+    </header>
+
+    <div class="result" *ngIf="finished">
+      <h2>Hoàn thành bài luyện nói</h2>
+      <p class="result__score">
+        {{ practiced.size }}<small>/{{ lesson.sentences.length }} câu đã luyện</small>
+      </p>
+      <p class="result__note" *ngIf="!auth.user()">
+        Bạn chưa đăng nhập nên tiến độ bài này chưa được lưu.
+        <a href="javascript:void(0)" (click)="loginToSave()">Đăng nhập để lưu</a>
+      </p>
+      <p class="result__note" *ngIf="saveFailed">
+        Chưa lưu được tiến độ bài này. Bạn làm lại bài sau để được ghi nhận nhé.
+      </p>
+      <a class="btn btn--primary" routerLink="/english/speaking">Về lộ trình</a>
+    </div>
+
+    <ng-container *ngIf="!finished && sentence as s">
+      <p class="speak__situation">{{ lesson.situation }}</p>
+
+      <div class="speak__progress">
+        <span>Câu {{ index + 1 }} / {{ lesson.sentences.length }}</span>
+        <div class="bar"><i [style.width.%]="percent"></i></div>
+      </div>
+
+      <article class="sentence">
+        <p class="sentence__text">{{ s.text }}</p>
+        <p class="sentence__ipa" *ngIf="s.ipa">{{ s.ipa }}</p>
+        <p class="sentence__vi">{{ s.vi }}</p>
+
+        <div class="sentence__row">
+          <button type="button" class="chip" (click)="listen()">🔊 Nghe mẫu</button>
+          <button type="button" class="chip" (click)="toggleRate()">
+            {{ rate === 1 ? 'Tốc độ thường' : 'Nghe chậm' }}
+          </button>
+        </div>
+      </article>
+
+      <div class="recorder">
+        <p class="recorder__note" *ngIf="recorder.state === 'unsupported'">
+          Trình duyệt này chưa hỗ trợ ghi âm. Bạn vẫn có thể nghe mẫu và đọc theo.
+        </p>
+        <p class="recorder__note" *ngIf="recorder.state === 'denied'">
+          Chưa cấp quyền micro. Hãy cho phép micro trong cài đặt trình duyệt rồi thử lại.
+        </p>
+
+        <ng-container *ngIf="recorder.state !== 'unsupported'">
+          <button
+            type="button"
+            class="mic"
+            [class.is-recording]="recorder.state === 'recording'"
+            (click)="toggleRecord()"
+            [attr.aria-label]="recorder.state === 'recording' ? 'Dừng ghi âm' : 'Bắt đầu ghi âm'"
+          >
+            {{ recorder.state === 'recording' ? '■' : '🎤' }}
+          </button>
+          <span class="recorder__label">
+            {{
+              recorder.state === 'recording'
+                ? 'Đang ghi âm... bấm để dừng'
+                : recorder.state === 'recorded'
+                  ? 'Ghi lại'
+                  : 'Bấm để ghi âm'
+            }}
+          </span>
+          <audio *ngIf="recorder.url" [src]="recorder.url" controls></audio>
+        </ng-container>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn--ghost" (click)="previous()" [disabled]="index === 0">
+          Câu trước
+        </button>
+        <button type="button" class="btn btn--primary" (click)="next()">
+          {{ isLast ? 'Hoàn thành' : 'Câu tiếp' }} →
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+</section>

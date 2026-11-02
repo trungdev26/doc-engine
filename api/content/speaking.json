@@ -1,0 +1,212 @@
+[
+  {
+    "skill": "speaking",
+    "band": "3.0",
+    "unit": { "id": "stage-2", "title": "Chặng 2 · Nói chuyện hằng ngày" },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-30-ordering-coffee",
+        "title": "Gọi đồ uống ở quán cà phê",
+        "situation": "Bạn vào một quán cà phê và gọi đồ uống cho mình.",
+        "sentences": [
+          { "text": "Hi, can I have a coffee, please?", "vi": "Chào bạn, cho mình một ly cà phê nhé." },
+          { "text": "Small, please.", "vi": "Cỡ nhỏ nhé." },
+          { "text": "With milk, no sugar.", "vi": "Có sữa, không đường." },
+          { "text": "How much is it?", "vi": "Hết bao nhiêu tiền vậy?" },
+          { "text": "Thank you. Have a nice day!", "vi": "Cảm ơn bạn. Chúc bạn một ngày tốt lành!" }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-30-asking-help",
+        "title": "Nhờ người khác giúp",
+        "situation": "Bạn cần hỏi đường hoặc nhờ một người lạ giúp đỡ.",
+        "sentences": [
+          { "text": "Excuse me, can you help me?", "vi": "Xin lỗi, bạn giúp mình được không?" },
+          { "text": "Where is the bus stop?", "vi": "Trạm xe buýt ở đâu vậy?" },
+          { "text": "Is it far from here?", "vi": "Chỗ đó có xa đây không?" },
+          { "text": "Sorry, can you say that again?", "vi": "Xin lỗi, bạn nói lại được không?" },
+          { "text": "Thanks a lot for your help.", "vi": "Cảm ơn bạn đã giúp nhiều." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-30-talking-about-day",
+        "title": "Kể về một ngày của bạn",
+        "situation": "Một người bạn hỏi bạn thường làm gì mỗi ngày.",
+        "sentences": [
+          { "text": "I wake up at six every day.", "vi": "Ngày nào mình cũng dậy lúc sáu giờ." },
+          { "text": "I have breakfast at home.", "vi": "Mình ăn sáng ở nhà." },
+          { "text": "I go to work by bus.", "vi": "Mình đi làm bằng xe buýt." },
+          { "text": "I get home at about six.", "vi": "Mình về nhà vào khoảng sáu giờ." },
+          { "text": "I usually watch TV at night.", "vi": "Buổi tối mình thường xem ti vi." }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "speaking",
+    "band": "3.5",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Làm quen và trò chuyện" },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-35-small-talk",
+        "title": "Trò chuyện xã giao",
+        "situation": "Bạn gặp đồng nghiệp mới ở bếp công ty và bắt chuyện.",
+        "sentences": [
+          { "text": "Hi, I'm new here. What's your name?", "vi": "Chào bạn, mình mới đến. Bạn tên gì?" },
+          { "text": "How long have you worked here?", "vi": "Bạn làm ở đây được bao lâu rồi?" },
+          { "text": "What do you do on weekends?", "vi": "Cuối tuần bạn thường làm gì?" },
+          { "text": "That sounds fun. I'd like to try it.", "vi": "Nghe vui đấy. Mình muốn thử." },
+          { "text": "It was nice talking to you.", "vi": "Nói chuyện với bạn vui lắm." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-35-shopping",
+        "title": "Mua sắm quần áo",
+        "situation": "Bạn đang chọn một chiếc áo trong cửa hàng và hỏi nhân viên.",
+        "sentences": [
+          { "text": "Do you have this in a bigger size?", "vi": "Mẫu này có cỡ lớn hơn không?" },
+          { "text": "Can I try it on?", "vi": "Mình mặc thử được không?" },
+          { "text": "It's a little too tight.", "vi": "Nó hơi chật một chút." },
+          { "text": "Do you have it in blue?", "vi": "Mẫu này có màu xanh không?" },
+          { "text": "I'll take it. Can I pay by card?", "vi": "Mình lấy cái này. Mình trả bằng thẻ được không?" }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-35-phone-call",
+        "title": "Gọi điện đặt lịch",
+        "situation": "Bạn gọi điện cho phòng khám để đặt lịch hẹn.",
+        "sentences": [
+          { "text": "Hello, I'd like to make an appointment.", "vi": "Xin chào, mình muốn đặt một lịch hẹn." },
+          { "text": "Do you have anything on Friday morning?", "vi": "Sáng thứ Sáu còn lịch trống không?" },
+          { "text": "Could you spell your name, please?", "vi": "Bạn đánh vần tên giúp mình được không?" },
+          { "text": "Can you repeat the time, please?", "vi": "Bạn nhắc lại giờ giúp mình nhé." },
+          { "text": "Great, see you then. Thank you.", "vi": "Tốt quá, hẹn gặp lúc đó. Cảm ơn bạn." }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "speaking",
+    "band": "4.0-5.0",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Diễn đạt ý kiến và kế hoạch" },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-45-opinions",
+        "title": "Nói ý kiến của mình",
+        "situation": "Bạn và bạn bè đang bàn nên xem phim gì vào cuối tuần.",
+        "sentences": [
+          { "text": "I think we should watch a comedy.", "vi": "Mình nghĩ chúng ta nên xem phim hài." },
+          { "text": "In my opinion, it's better than the last one.", "vi": "Theo mình thì nó hay hơn phim trước." },
+          { "text": "I don't really agree, to be honest.", "vi": "Thật lòng thì mình không hẳn đồng ý." },
+          { "text": "That's a good point, but it's too long.", "vi": "Bạn nói có lý, nhưng phim dài quá." },
+          { "text": "Why don't we decide after dinner?", "vi": "Sao mình không quyết định sau bữa tối nhỉ?" }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-45-plans",
+        "title": "Nói về kế hoạch",
+        "situation": "Đồng nghiệp hỏi bạn sẽ làm gì vào kỳ nghỉ sắp tới.",
+        "sentences": [
+          { "text": "I'm going to visit my family next week.", "vi": "Tuần sau mình sẽ về thăm gia đình." },
+          { "text": "We're planning to stay for five days.", "vi": "Bọn mình định ở lại năm ngày." },
+          { "text": "If the weather is good, we'll go to the beach.", "vi": "Nếu trời đẹp, bọn mình sẽ ra biển." },
+          { "text": "I haven't booked the tickets yet.", "vi": "Mình vẫn chưa đặt vé." },
+          { "text": "I'll let you know when I get back.", "vi": "Mình sẽ báo bạn khi mình về." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-45-past-experience",
+        "title": "Kể chuyện đã xảy ra",
+        "situation": "Bạn kể cho bạn nghe về chuyến đi gần đây nhất của mình.",
+        "sentences": [
+          { "text": "Last month I went to Hue with my friends.", "vi": "Tháng trước mình đi Huế với bạn bè." },
+          { "text": "We stayed in a small hotel near the river.", "vi": "Bọn mình ở một khách sạn nhỏ gần sông." },
+          { "text": "The food was amazing, but it rained a lot.", "vi": "Đồ ăn tuyệt vời, nhưng trời mưa nhiều." },
+          { "text": "I've never been to such a beautiful place.", "vi": "Mình chưa từng đến nơi nào đẹp như vậy." },
+          { "text": "I'd love to go back someday.", "vi": "Mình rất muốn quay lại một ngày nào đó." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-45-complaint",
+        "title": "Phàn nàn một cách lịch sự",
+        "situation": "Món ăn bạn gọi ở nhà hàng bị nguội và bạn muốn nói với nhân viên.",
+        "sentences": [
+          { "text": "Excuse me, there seems to be a problem with my order.", "vi": "Xin lỗi, hình như có vấn đề với món của mình." },
+          { "text": "The soup is cold. Could you heat it up, please?", "vi": "Súp bị nguội. Bạn hâm lại giúp mình được không?" },
+          { "text": "I ordered the chicken, not the fish.", "vi": "Mình gọi món gà chứ không phải món cá." },
+          { "text": "I understand, thank you for fixing it.", "vi": "Mình hiểu rồi, cảm ơn bạn đã xử lý." },
+          { "text": "No worries, these things happen.", "vi": "Không sao đâu, chuyện này cũng hay xảy ra." }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "speaking",
+    "band": "5.5-6.5",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Nói trôi chảy và có lập luận" },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-65-explaining",
+        "title": "Giải thích một vấn đề",
+        "situation": "Bạn giải thích cho đồng nghiệp vì sao dự án bị chậm tiến độ.",
+        "sentences": [
+          { "text": "The main reason for the delay is that we changed the design.", "vi": "Lý do chính khiến dự án chậm là chúng ta đã đổi thiết kế." },
+          { "text": "As a result, we had to redo most of the work.", "vi": "Kết quả là chúng ta phải làm lại phần lớn công việc." },
+          { "text": "What I mean is, we need a few more days.", "vi": "Ý mình là chúng ta cần thêm vài ngày." },
+          { "text": "On the other hand, the quality will be much better.", "vi": "Mặt khác, chất lượng sẽ tốt hơn nhiều." },
+          { "text": "To sum up, I'd suggest moving the deadline.", "vi": "Tóm lại, mình đề nghị dời hạn chót." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-65-debate",
+        "title": "Tranh luận và phản biện",
+        "situation": "Bạn thảo luận với bạn về việc làm việc từ xa có tốt hơn đi làm văn phòng không.",
+        "sentences": [
+          { "text": "I see where you're coming from, but I see it differently.", "vi": "Mình hiểu ý bạn, nhưng mình nhìn khác." },
+          { "text": "It depends on the kind of job you do.", "vi": "Còn tùy vào loại công việc bạn làm." },
+          { "text": "Not only is it cheaper, but it also saves time.", "vi": "Nó không chỉ rẻ hơn mà còn tiết kiệm thời gian." },
+          { "text": "That said, some people feel isolated at home.", "vi": "Tuy vậy, một số người cảm thấy cô đơn khi ở nhà." },
+          { "text": "Overall, I think a mix of both works best.", "vi": "Nhìn chung, mình nghĩ kết hợp cả hai là tốt nhất." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-65-describe-person",
+        "title": "Miêu tả một người quan trọng với bạn",
+        "situation": "Bạn miêu tả một người đã ảnh hưởng đến bạn, kiểu câu hỏi hay gặp trong phần nói của IELTS.",
+        "sentences": [
+          { "text": "The person I'd like to talk about is my old teacher.", "vi": "Người mình muốn nói đến là cô giáo cũ của mình." },
+          { "text": "She taught me how to believe in myself.", "vi": "Cô dạy mình cách tin vào bản thân." },
+          { "text": "What stands out about her is her patience.", "vi": "Điều nổi bật ở cô là sự kiên nhẫn." },
+          { "text": "Looking back, I realise how much she helped me.", "vi": "Nhìn lại, mình mới nhận ra cô đã giúp mình nhiều thế nào." },
+          { "text": "That's why she means so much to me.", "vi": "Đó là lý do cô có ý nghĩa rất lớn với mình." }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-65-hypothetical",
+        "title": "Nói về điều giả định",
+        "situation": "Giám khảo hỏi bạn sẽ làm gì nếu có thêm thời gian rảnh, một dạng câu hỏi quen thuộc ở phần 3 của IELTS.",
+        "sentences": [
+          { "text": "If I had more free time, I'd learn to play the guitar.", "vi": "Nếu có thêm thời gian rảnh, mình sẽ học chơi guitar." },
+          { "text": "I wish I had started earlier.", "vi": "Giá mà mình đã bắt đầu sớm hơn." },
+          { "text": "Had I known, I would have chosen a different course.", "vi": "Nếu biết trước, mình đã chọn một khóa học khác." },
+          { "text": "Frankly, it's hard to say, but I'd probably travel more.", "vi": "Nói thật thì khó nói lắm, nhưng có lẽ mình sẽ đi du lịch nhiều hơn." },
+          { "text": "I suppose that's what most people would do.", "vi": "Mình đoán đó là điều đa số mọi người sẽ làm." }
+        ]
+      }
+    ]
+  }
+]

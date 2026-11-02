@@ -1,0 +1,554 @@
+[
+  {
+    "skill": "words",
+    "band": "3.5",
+    "unit": {
+      "id": "unit-2",
+      "title": "Unit 2 · Cụm từ giao tiếp hằng ngày"
+    },
+    "lessons": [
+      {
+        "kind": "vocab",
+        "id": "wd-35-shopping",
+        "title": "Mua sắm",
+        "words": [
+          {
+            "word": "price",
+            "pos": "noun",
+            "ipa": "/praɪs/",
+            "meaning": "giá",
+            "definition": "how much something costs",
+            "example": "What is the price of this bag?",
+            "exampleVi": "Cái túi này giá bao nhiêu?"
+          },
+          {
+            "word": "cheap",
+            "pos": "adjective",
+            "ipa": "/tʃiːp/",
+            "meaning": "rẻ",
+            "definition": "not costing much money",
+            "example": "This shirt is cheap.",
+            "exampleVi": "Cái áo này rẻ."
+          },
+          {
+            "word": "expensive",
+            "pos": "adjective",
+            "ipa": "/ɪkˈspen.sɪv/",
+            "meaning": "đắt",
+            "definition": "costing a lot of money",
+            "example": "That phone is too expensive.",
+            "exampleVi": "Cái điện thoại đó đắt quá."
+          },
+          {
+            "word": "discount",
+            "pos": "noun",
+            "ipa": "/ˈdɪs.kaʊnt/",
+            "meaning": "giảm giá",
+            "definition": "a lower price than usual",
+            "example": "There is a ten percent discount today.",
+            "exampleVi": "Hôm nay có giảm giá mười phần trăm."
+          },
+          {
+            "word": "receipt",
+            "pos": "noun",
+            "ipa": "/rɪˈsiːt/",
+            "meaning": "hóa đơn",
+            "definition": "a paper that shows what you paid for",
+            "example": "Can I have the receipt, please?",
+            "exampleVi": "Cho mình xin hóa đơn nhé."
+          },
+          {
+            "word": "size",
+            "pos": "noun",
+            "ipa": "/saɪz/",
+            "meaning": "cỡ, kích cỡ",
+            "definition": "how big or small something is",
+            "example": "Do you have a smaller size?",
+            "exampleVi": "Bạn có cỡ nhỏ hơn không?"
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-35-health",
+        "title": "Sức khỏe",
+        "words": [
+          {
+            "word": "headache",
+            "pos": "noun",
+            "ipa": "/ˈhed.eɪk/",
+            "meaning": "đau đầu",
+            "definition": "a pain in your head",
+            "example": "I have a headache today.",
+            "exampleVi": "Hôm nay mình bị đau đầu."
+          },
+          {
+            "word": "medicine",
+            "pos": "noun",
+            "ipa": "/ˈmed.ɪ.sən/",
+            "meaning": "thuốc",
+            "definition": "something you take to feel better",
+            "example": "Take this medicine twice a day.",
+            "exampleVi": "Uống thuốc này hai lần mỗi ngày."
+          },
+          {
+            "word": "rest",
+            "pos": "verb",
+            "ipa": "/rest/",
+            "meaning": "nghỉ ngơi",
+            "definition": "to relax and stop working",
+            "example": "You should rest at home.",
+            "exampleVi": "Bạn nên nghỉ ngơi ở nhà."
+          },
+          {
+            "word": "fever",
+            "pos": "noun",
+            "ipa": "/ˈfiː.vɚ/",
+            "meaning": "sốt",
+            "definition": "when your body is too hot because you are ill",
+            "example": "She has a fever.",
+            "exampleVi": "Cô ấy bị sốt."
+          },
+          {
+            "word": "cough",
+            "pos": "noun",
+            "ipa": "/kɑːf/",
+            "meaning": "ho",
+            "definition": "the sound you make to clear your throat",
+            "example": "I've had a bad cough for a week.",
+            "exampleVi": "Mình ho nặng cả tuần nay."
+          },
+          {
+            "word": "appointment",
+            "pos": "noun",
+            "ipa": "/əˈpɔɪnt.mənt/",
+            "meaning": "lịch hẹn",
+            "definition": "a planned time to meet someone",
+            "example": "I have a doctor's appointment at ten.",
+            "exampleVi": "Mình có lịch hẹn bác sĩ lúc mười giờ."
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-35-directions",
+        "title": "Hỏi đường",
+        "words": [
+          {
+            "word": "straight",
+            "pos": "adverb",
+            "ipa": "/streɪt/",
+            "meaning": "thẳng",
+            "definition": "in a line without turning",
+            "example": "Go straight for two blocks.",
+            "exampleVi": "Đi thẳng hai dãy nhà."
+          },
+          {
+            "word": "corner",
+            "pos": "noun",
+            "ipa": "/ˈkɔːr.nɚ/",
+            "meaning": "góc phố",
+            "definition": "the place where two streets meet",
+            "example": "The bank is on the corner.",
+            "exampleVi": "Ngân hàng nằm ở góc phố."
+          },
+          {
+            "word": "opposite",
+            "pos": "preposition",
+            "ipa": "/ˈɑː.pə.zɪt/",
+            "meaning": "đối diện",
+            "definition": "on the other side of",
+            "example": "The café is opposite the station.",
+            "exampleVi": "Quán cà phê đối diện nhà ga."
+          },
+          {
+            "word": "near",
+            "pos": "adjective",
+            "ipa": "/nɪr/",
+            "meaning": "gần",
+            "definition": "not far away",
+            "example": "Is there a bank near here?",
+            "exampleVi": "Gần đây có ngân hàng không?"
+          },
+          {
+            "word": "traffic light",
+            "pos": "noun",
+            "ipa": "/ˈtræf.ɪk laɪt/",
+            "meaning": "đèn giao thông",
+            "definition": "a light that tells cars when to stop or go",
+            "example": "Turn left at the traffic light.",
+            "exampleVi": "Rẽ trái ở chỗ đèn giao thông."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "words",
+    "band": "4.0-5.0",
+    "unit": {
+      "id": "unit-1",
+      "title": "Unit 1 · Diễn đạt cảm xúc và ý kiến"
+    },
+    "lessons": [
+      {
+        "kind": "vocab",
+        "id": "wd-45-feelings",
+        "title": "Cảm xúc",
+        "words": [
+          {
+            "word": "annoyed",
+            "pos": "adjective",
+            "ipa": "/əˈnɔɪd/",
+            "meaning": "bực mình",
+            "definition": "a little angry",
+            "example": "I was annoyed when the bus was late.",
+            "exampleVi": "Mình bực khi xe buýt đến trễ."
+          },
+          {
+            "word": "anxious",
+            "pos": "adjective",
+            "ipa": "/ˈæŋk.ʃəs/",
+            "meaning": "lo lắng",
+            "definition": "worried and nervous",
+            "example": "She felt anxious before the exam.",
+            "exampleVi": "Cô ấy lo lắng trước kỳ thi."
+          },
+          {
+            "word": "relieved",
+            "pos": "adjective",
+            "ipa": "/rɪˈliːvd/",
+            "meaning": "nhẹ nhõm",
+            "definition": "happy because a problem is over",
+            "example": "I was so relieved to pass.",
+            "exampleVi": "Mình nhẹ nhõm vì đã đậu."
+          },
+          {
+            "word": "disappointed",
+            "pos": "adjective",
+            "ipa": "/ˌdɪs.əˈpɔɪn.tɪd/",
+            "meaning": "thất vọng",
+            "definition": "sad because something was not as good as you hoped",
+            "example": "We were disappointed with the hotel.",
+            "exampleVi": "Bọn mình thất vọng về khách sạn."
+          },
+          {
+            "word": "embarrassed",
+            "pos": "adjective",
+            "ipa": "/ɪmˈber.əst/",
+            "meaning": "xấu hổ",
+            "definition": "feeling shy or uncomfortable",
+            "example": "He felt embarrassed about his mistake.",
+            "exampleVi": "Anh ấy xấu hổ vì lỗi của mình."
+          },
+          {
+            "word": "thrilled",
+            "pos": "adjective",
+            "ipa": "/θrɪld/",
+            "meaning": "rất phấn khích",
+            "definition": "extremely happy and excited",
+            "example": "They were thrilled to win.",
+            "exampleVi": "Họ rất phấn khích khi thắng."
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-45-opinions",
+        "title": "Nêu ý kiến",
+        "words": [
+          {
+            "word": "agree",
+            "pos": "verb",
+            "ipa": "/əˈɡriː/",
+            "meaning": "đồng ý",
+            "definition": "to have the same opinion",
+            "example": "I agree with you.",
+            "exampleVi": "Mình đồng ý với bạn."
+          },
+          {
+            "word": "prefer",
+            "pos": "verb",
+            "ipa": "/prɪˈfɝː/",
+            "meaning": "thích hơn",
+            "definition": "to like one thing more than another",
+            "example": "I prefer tea to coffee.",
+            "exampleVi": "Mình thích trà hơn cà phê."
+          },
+          {
+            "word": "suggest",
+            "pos": "verb",
+            "ipa": "/səˈdʒest/",
+            "meaning": "đề nghị, gợi ý",
+            "definition": "to give an idea for someone to consider",
+            "example": "I suggest we leave early.",
+            "exampleVi": "Mình đề nghị chúng ta đi sớm."
+          },
+          {
+            "word": "argue",
+            "pos": "verb",
+            "ipa": "/ˈɑːr.ɡjuː/",
+            "meaning": "tranh cãi, lập luận",
+            "definition": "to give reasons for or against something",
+            "example": "Some people argue that it is too expensive.",
+            "exampleVi": "Một số người cho rằng nó quá đắt."
+          },
+          {
+            "word": "convince",
+            "pos": "verb",
+            "ipa": "/kənˈvɪns/",
+            "meaning": "thuyết phục",
+            "definition": "to make someone believe something",
+            "example": "She convinced me to try it.",
+            "exampleVi": "Cô ấy thuyết phục mình thử."
+          },
+          {
+            "word": "honestly",
+            "pos": "adverb",
+            "ipa": "/ˈɑː.nɪst.li/",
+            "meaning": "thật lòng mà nói",
+            "definition": "used to say what you really think",
+            "example": "Honestly, I didn't enjoy the film.",
+            "exampleVi": "Thật lòng thì mình không thích bộ phim."
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-45-work",
+        "title": "Công việc hằng ngày",
+        "words": [
+          {
+            "word": "deadline",
+            "pos": "noun",
+            "ipa": "/ˈded.laɪn/",
+            "meaning": "hạn chót",
+            "definition": "the time by which something must be finished",
+            "example": "The deadline is on Friday.",
+            "exampleVi": "Hạn chót là thứ Sáu."
+          },
+          {
+            "word": "colleague",
+            "pos": "noun",
+            "ipa": "/ˈkɑː.liːɡ/",
+            "meaning": "đồng nghiệp",
+            "definition": "a person you work with",
+            "example": "My colleague is very helpful.",
+            "exampleVi": "Đồng nghiệp của mình rất hay giúp đỡ."
+          },
+          {
+            "word": "meeting",
+            "pos": "noun",
+            "ipa": "/ˈmiː.t̬ɪŋ/",
+            "meaning": "cuộc họp",
+            "definition": "an event where people talk about work",
+            "example": "I have a meeting at nine.",
+            "exampleVi": "Mình có cuộc họp lúc chín giờ."
+          },
+          {
+            "word": "schedule",
+            "pos": "noun",
+            "ipa": "/ˈskedʒ.uːl/",
+            "meaning": "lịch trình",
+            "definition": "a plan of when things will happen",
+            "example": "My schedule is very busy this week.",
+            "exampleVi": "Tuần này lịch của mình rất bận."
+          },
+          {
+            "word": "manage",
+            "pos": "verb",
+            "ipa": "/ˈmæn.ɪdʒ/",
+            "meaning": "xoay xở, quản lý",
+            "definition": "to succeed in doing something difficult",
+            "example": "I managed to finish on time.",
+            "exampleVi": "Mình xoay xở xong đúng hạn."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "words",
+    "band": "5.5-6.5",
+    "unit": {
+      "id": "unit-1",
+      "title": "Unit 1 · Từ và cụm từ để nói trôi chảy"
+    },
+    "lessons": [
+      {
+        "kind": "vocab",
+        "id": "wd-65-linking",
+        "title": "Từ nối để nói mạch lạc",
+        "words": [
+          {
+            "word": "however",
+            "pos": "adverb",
+            "ipa": "/haʊˈev.ɚ/",
+            "meaning": "tuy nhiên",
+            "definition": "used to add a contrasting idea",
+            "example": "It's cheap. However, the quality is poor.",
+            "exampleVi": "Nó rẻ. Tuy nhiên, chất lượng kém."
+          },
+          {
+            "word": "therefore",
+            "pos": "adverb",
+            "ipa": "/ˈðer.fɔːr/",
+            "meaning": "vì vậy",
+            "definition": "used to show a result",
+            "example": "It rained, therefore we stayed in.",
+            "exampleVi": "Trời mưa, vì vậy bọn mình ở nhà."
+          },
+          {
+            "word": "although",
+            "pos": "conjunction",
+            "ipa": "/ɔːlˈðoʊ/",
+            "meaning": "mặc dù",
+            "definition": "used to show a contrast within a sentence",
+            "example": "Although it was late, we kept working.",
+            "exampleVi": "Mặc dù đã muộn, bọn mình vẫn làm tiếp."
+          },
+          {
+            "word": "in addition",
+            "pos": "phrase",
+            "ipa": "/ɪn əˈdɪʃ.ən/",
+            "meaning": "ngoài ra",
+            "definition": "used to add more information",
+            "example": "In addition, the staff were friendly.",
+            "exampleVi": "Ngoài ra, nhân viên rất thân thiện."
+          },
+          {
+            "word": "as a result",
+            "pos": "phrase",
+            "ipa": "/æz ə rɪˈzʌlt/",
+            "meaning": "kết quả là",
+            "definition": "used to introduce a consequence",
+            "example": "As a result, sales went up.",
+            "exampleVi": "Kết quả là doanh số tăng."
+          },
+          {
+            "word": "on the whole",
+            "pos": "phrase",
+            "ipa": "/ɑːn ðə hoʊl/",
+            "meaning": "nhìn chung",
+            "definition": "used to give a general view",
+            "example": "On the whole, I enjoyed the trip.",
+            "exampleVi": "Nhìn chung mình thích chuyến đi."
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-65-speaking-fillers",
+        "title": "Cụm từ câu giờ khi suy nghĩ",
+        "words": [
+          {
+            "word": "well",
+            "pos": "discourse marker",
+            "ipa": "/wel/",
+            "meaning": "à thì",
+            "definition": "used when you pause to think",
+            "example": "Well, it depends on the situation.",
+            "exampleVi": "À thì, còn tùy tình huống."
+          },
+          {
+            "word": "to be honest",
+            "pos": "phrase",
+            "ipa": "/tə bi ˈɑː.nɪst/",
+            "meaning": "thật lòng mà nói",
+            "definition": "used to say what you really think",
+            "example": "To be honest, I'm not sure.",
+            "exampleVi": "Thật lòng thì mình không chắc."
+          },
+          {
+            "word": "let me think",
+            "pos": "phrase",
+            "ipa": "/let mi θɪŋk/",
+            "meaning": "để mình nghĩ đã",
+            "definition": "used to buy time before answering",
+            "example": "Let me think... I'd say about ten.",
+            "exampleVi": "Để mình nghĩ đã... chắc khoảng mười."
+          },
+          {
+            "word": "what I mean is",
+            "pos": "phrase",
+            "ipa": "/wʌt aɪ miːn ɪz/",
+            "meaning": "ý mình là",
+            "definition": "used to explain more clearly",
+            "example": "What I mean is, it's too risky.",
+            "exampleVi": "Ý mình là nó quá rủi ro."
+          },
+          {
+            "word": "it's hard to say",
+            "pos": "phrase",
+            "ipa": "/ɪts hɑːrd tə seɪ/",
+            "meaning": "khó nói lắm",
+            "definition": "used when you are not certain",
+            "example": "It's hard to say, but I think so.",
+            "exampleVi": "Khó nói lắm, nhưng mình nghĩ vậy."
+          },
+          {
+            "word": "come to think of it",
+            "pos": "phrase",
+            "ipa": "/kʌm tə θɪŋk əv ɪt/",
+            "meaning": "nghĩ lại thì",
+            "definition": "used when you suddenly remember something",
+            "example": "Come to think of it, I saw him yesterday.",
+            "exampleVi": "Nghĩ lại thì hôm qua mình có gặp anh ấy."
+          }
+        ]
+      },
+      {
+        "kind": "vocab",
+        "id": "wd-65-collocations",
+        "title": "Cụm từ đi chung hay gặp",
+        "words": [
+          {
+            "word": "make an effort",
+            "pos": "collocation",
+            "ipa": "/meɪk ən ˈef.ɚt/",
+            "meaning": "nỗ lực",
+            "definition": "to try hard to do something",
+            "example": "She made an effort to speak English every day.",
+            "exampleVi": "Cô ấy nỗ lực nói tiếng Anh mỗi ngày."
+          },
+          {
+            "word": "take advantage of",
+            "pos": "collocation",
+            "ipa": "/teɪk ədˈvæn.tɪdʒ əv/",
+            "meaning": "tận dụng",
+            "definition": "to use an opportunity well",
+            "example": "Take advantage of free practice.",
+            "exampleVi": "Hãy tận dụng buổi luyện tập miễn phí."
+          },
+          {
+            "word": "keep in touch",
+            "pos": "collocation",
+            "ipa": "/kiːp ɪn tʌtʃ/",
+            "meaning": "giữ liên lạc",
+            "definition": "to stay in contact with someone",
+            "example": "Let's keep in touch.",
+            "exampleVi": "Mình giữ liên lạc nhé."
+          },
+          {
+            "word": "run out of",
+            "pos": "collocation",
+            "ipa": "/rʌn aʊt əv/",
+            "meaning": "hết, cạn",
+            "definition": "to have none left",
+            "example": "We ran out of time.",
+            "exampleVi": "Bọn mình hết thời gian."
+          },
+          {
+            "word": "get used to",
+            "pos": "collocation",
+            "ipa": "/ɡet juːst tuː/",
+            "meaning": "quen với",
+            "definition": "to become familiar with something",
+            "example": "I'm getting used to the new job.",
+            "exampleVi": "Mình đang quen dần với công việc mới."
+          }
+        ]
+      }
+    ]
+  }
+]

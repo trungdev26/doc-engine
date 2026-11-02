@@ -1,0 +1,736 @@
+[
+  {
+    "skill": "reading",
+    "band": "3.5",
+    "unit": {
+      "id": "stage-1",
+      "title": "Chặng 1 · Đọc thông tin hằng ngày"
+    },
+    "lessons": [
+      {
+        "kind": "reading",
+        "id": "rd-35-notice",
+        "title": "Thông báo của tòa nhà",
+        "context": "Bạn đọc một thông báo dán ở sảnh chung cư.",
+        "meta": [
+          "Từ: Ban quản lý",
+          "Đến: Tất cả cư dân",
+          "Chủ đề: Cắt nước ngày thứ Tư"
+        ],
+        "paragraphs": [
+          "Dear residents,",
+          "Please note that the water will be turned off on Wednesday, 14 May, from 9 a.m. to 1 p.m. because we need to repair a pipe on the roof.",
+          "We suggest you store some water in advance for cooking and drinking. The lifts will work as usual.",
+          "If you have any questions, please call the office on 555 0142. Thank you for your understanding."
+        ],
+        "questions": [
+          {
+            "question": "Why will the water be turned off?",
+            "options": [
+              "To clean the lifts",
+              "To repair a pipe",
+              "To check the meters"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "How long will the water be off?",
+            "options": [
+              "Two hours",
+              "Four hours",
+              "All day"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What do the managers suggest?",
+            "options": [
+              "Leave the building",
+              "Store some water",
+              "Use the lifts less"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "The lifts will not work on Wednesday.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "The water will be off on ___.",
+            "options": [
+              "Monday",
+              "Wednesday",
+              "Friday"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "It will be off from 9 a.m. to ___.",
+            "options": [
+              "11 a.m.",
+              "1 p.m.",
+              "5 p.m."
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Residents can call ___ for questions.",
+            "options": [
+              "the office",
+              "the police",
+              "the shop"
+            ],
+            "answer": 0
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-35-menu-review",
+        "title": "Đánh giá một quán ăn",
+        "context": "Bạn đọc một bài đánh giá ngắn trên mạng về một quán ăn mới.",
+        "meta": [
+          "Đăng bởi: Linh",
+          "Đánh giá: 4 trên 5 sao"
+        ],
+        "paragraphs": [
+          "We went to Green Garden last Saturday with my parents. It is a small vegetarian restaurant near the park.",
+          "The food was fresh and cheap. I had the mushroom soup, and my father loved the tofu curry. The only problem was the waiting time: we waited about thirty minutes for our food.",
+          "The staff were very friendly and the restaurant was clean. I will definitely go again, but I will book a table first."
+        ],
+        "questions": [
+          {
+            "question": "What kind of restaurant is Green Garden?",
+            "options": [
+              "Seafood",
+              "Vegetarian",
+              "Fast food"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What was the problem?",
+            "options": [
+              "The price",
+              "The waiting time",
+              "The staff"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What will Linh do next time?",
+            "options": [
+              "Book a table",
+              "Order less",
+              "Go alone"
+            ],
+            "answer": 0
+          }
+        ],
+        "review": [
+          {
+            "question": "Linh went with her ___.",
+            "options": [
+              "friends",
+              "parents",
+              "colleagues"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Her father loved the ___.",
+            "options": [
+              "soup",
+              "tofu curry",
+              "salad"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "They waited about ___ minutes.",
+            "options": [
+              "ten",
+              "thirty",
+              "sixty"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-35-timetable-email",
+        "title": "Thư xin đổi lịch học",
+        "context": "Bạn đọc một email của bạn học nhờ đổi giờ học tiếng Anh.",
+        "meta": [
+          "Từ: Nam",
+          "Đến: Cô Hạnh",
+          "Chủ đề: Đổi lịch học thứ Năm"
+        ],
+        "paragraphs": [
+          "Dear Ms Hanh,",
+          "I am sorry, but I cannot come to class on Thursday at six o'clock because I have to work late. Could we move the lesson to Friday at the same time?",
+          "If Friday is not possible, I can come on Saturday morning. Please let me know which day is better for you.",
+          "Thank you very much. Best wishes, Nam"
+        ],
+        "questions": [
+          {
+            "question": "Why can't Nam come on Thursday?",
+            "options": [
+              "He is ill",
+              "He has to work late",
+              "He is travelling"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What new day does Nam suggest first?",
+            "options": [
+              "Friday",
+              "Saturday",
+              "Sunday"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What does Nam ask the teacher to do?",
+            "options": [
+              "Send homework",
+              "Tell him which day is better",
+              "Call him"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "The lesson is usually on ___.",
+            "options": [
+              "Thursday",
+              "Friday",
+              "Saturday"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "The lesson starts at ___.",
+            "options": [
+              "five",
+              "six",
+              "seven"
+            ],
+            "answer": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "reading",
+    "band": "4.0-5.0",
+    "unit": {
+      "id": "stage-1",
+      "title": "Chặng 1 · Đọc bài ngắn và nắm ý chính"
+    },
+    "lessons": [
+      {
+        "kind": "reading",
+        "id": "rd-45-remote-work",
+        "title": "Làm việc từ xa: lợi và hại",
+        "context": "Bạn đọc một bài viết ngắn về làm việc tại nhà.",
+        "meta": [
+          "Chuyên mục: Đời sống",
+          "Thời gian đọc: khoảng 2 phút"
+        ],
+        "paragraphs": [
+          "More and more people now work from home at least two days a week. For many, the biggest advantage is saving time: there is no long journey to the office, so they have more time for family and exercise.",
+          "However, working at home is not always easy. Some people find it hard to separate work from free time, and they end up answering emails late at night. Others miss talking to colleagues face to face.",
+          "Experts suggest setting clear working hours and using a separate room, if possible. A short walk before and after work can also help your brain to switch on and off."
+        ],
+        "questions": [
+          {
+            "question": "What is the main advantage mentioned?",
+            "options": [
+              "Higher salary",
+              "Saving travel time",
+              "Free food"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What problem do some people have?",
+            "options": [
+              "Separating work and free time",
+              "Finding a job",
+              "Using computers"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What do experts suggest?",
+            "options": [
+              "Working at night",
+              "Setting clear working hours",
+              "Avoiding exercise"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Everyone enjoys working from home.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "Many people work from home at least ___ days a week.",
+            "options": [
+              "one",
+              "two",
+              "five"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Some people miss talking to ___ face to face.",
+            "options": [
+              "family",
+              "colleagues",
+              "neighbours"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "A short ___ before work can help.",
+            "options": [
+              "nap",
+              "walk",
+              "meeting"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-45-learning-english",
+        "title": "Cách học nói tiếng Anh hằng ngày",
+        "context": "Bạn đọc một bài chia sẻ kinh nghiệm luyện nói tiếng Anh.",
+        "meta": [
+          "Tác giả: Một người học tiếng Anh",
+          "Chủ đề: Luyện nói"
+        ],
+        "paragraphs": [
+          "When I started learning English, I understood a lot but I could hardly speak. I was afraid of making mistakes, so I stayed silent in class.",
+          "Everything changed when I began to talk to myself for ten minutes every evening. I described my day, what I ate and what I planned for tomorrow. At first it felt strange, but after a month I noticed that I was finding words much faster.",
+          "I also record myself once a week and listen again. It is not pleasant to hear your own mistakes, but it is the quickest way to improve."
+        ],
+        "questions": [
+          {
+            "question": "What was the writer's problem at the beginning?",
+            "options": [
+              "Could not understand",
+              "Could hardly speak",
+              "Could not read"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What did the writer do every evening?",
+            "options": [
+              "Talked to himself for ten minutes",
+              "Wrote an essay",
+              "Watched films"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What is the benefit of recording yourself?",
+            "options": [
+              "It is pleasant",
+              "It is the quickest way to improve",
+              "It saves time"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "The writer felt afraid of making ___.",
+            "options": [
+              "noise",
+              "mistakes",
+              "friends"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "After a month, he found words much ___.",
+            "options": [
+              "slower",
+              "faster",
+              "later"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "He records himself once a ___.",
+            "options": [
+              "day",
+              "week",
+              "year"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-45-city-guide",
+        "title": "Hướng dẫn thăm một thành phố nhỏ",
+        "context": "Bạn đọc một đoạn giới thiệu du lịch.",
+        "meta": [
+          "Nguồn: Cẩm nang du lịch"
+        ],
+        "paragraphs": [
+          "Hoi An is a small town on the central coast of Vietnam, famous for its old buildings and lanterns. Most visitors spend two or three days there.",
+          "The best time to visit is between February and April, when the weather is warm and dry. In autumn, heavy rain can cause floods, so many hotels offer lower prices.",
+          "You can rent a bicycle for a dollar a day and ride to the beach, which is only four kilometres from the centre. Do not forget to try the local noodles, which are cheap and delicious."
+        ],
+        "questions": [
+          {
+            "question": "What is Hoi An famous for?",
+            "options": [
+              "Modern towers",
+              "Old buildings and lanterns",
+              "Mountains"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "When is the best time to visit?",
+            "options": [
+              "February to April",
+              "June to August",
+              "October to December"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "Why are hotels cheaper in autumn?",
+            "options": [
+              "Fewer tourists want rain and floods",
+              "The beach is closed",
+              "The town is empty"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "The beach is far from the town centre.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "Most visitors stay ___ days.",
+            "options": [
+              "one",
+              "two or three",
+              "ten"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "A bicycle costs about ___ a day.",
+            "options": [
+              "a dollar",
+              "ten dollars",
+              "five dollars"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "The local ___ are cheap and delicious.",
+            "options": [
+              "noodles",
+              "cakes",
+              "drinks"
+            ],
+            "answer": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "reading",
+    "band": "5.5-6.5",
+    "unit": {
+      "id": "stage-1",
+      "title": "Chặng 1 · Đọc hiểu theo dạng IELTS"
+    },
+    "lessons": [
+      {
+        "kind": "reading",
+        "id": "rd-65-urban-bikes",
+        "title": "Xe đạp công cộng trong thành phố",
+        "context": "Bạn đọc một bài báo ngắn, dạng bài đọc phần 1 của IELTS.",
+        "meta": [
+          "Nguồn: Bài báo về giao thông đô thị"
+        ],
+        "paragraphs": [
+          "Over the past decade, bicycle-sharing schemes have spread to more than a thousand cities worldwide. Supporters claim that they reduce traffic and pollution, while also encouraging people to exercise.",
+          "Critics, however, point out that the bikes are often left on pavements, which causes problems for pedestrians. In several cities, thousands of damaged bikes have ended up in landfills.",
+          "A recent study in Paris found that the schemes mainly replaced walking and public transport rather than car journeys. This suggests that the environmental benefits may be smaller than originally believed.",
+          "Despite this, many city councils remain optimistic and are investing in protected cycle lanes, hoping that safer roads will persuade more drivers to switch."
+        ],
+        "questions": [
+          {
+            "question": "What do supporters of bike-sharing claim?",
+            "options": [
+              "It reduces traffic and pollution",
+              "It is cheaper than buses",
+              "It replaces taxis"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What do critics complain about?",
+            "options": [
+              "Bikes left on pavements",
+              "High prices",
+              "Slow speeds"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What did the Paris study find?",
+            "options": [
+              "Most users had previously driven",
+              "The schemes mainly replaced walking and public transport",
+              "Pollution fell sharply"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "City councils are completely discouraged by the study.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "Bike-sharing has spread to more than a ___ cities.",
+            "options": [
+              "hundred",
+              "thousand",
+              "million"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Damaged bikes have ended up in ___.",
+            "options": [
+              "rivers",
+              "landfills",
+              "shops"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Councils are investing in protected ___.",
+            "options": [
+              "car parks",
+              "cycle lanes",
+              "bus stops"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-65-sleep-habits",
+        "title": "Thói quen ngủ của người trẻ",
+        "context": "Bạn đọc một bài nghiên cứu ngắn và tìm ý chính từng đoạn.",
+        "meta": [
+          "Nguồn: Bản tin sức khỏe"
+        ],
+        "paragraphs": [
+          "Sleep specialists have long warned that teenagers need between eight and ten hours of sleep a night, yet surveys suggest that fewer than a third actually achieve this.",
+          "One major cause is the use of screens late in the evening. The blue light they emit can delay the release of melatonin, the hormone that makes us feel sleepy.",
+          "Some schools have responded by starting lessons an hour later. In one trial, students at these schools not only slept longer but also reported feeling less anxious and performed better in exams.",
+          "Nevertheless, critics argue that later start times simply push the problem to the evening, when students go to bed even later."
+        ],
+        "questions": [
+          {
+            "question": "How many teenagers get enough sleep, according to surveys?",
+            "options": [
+              "More than half",
+              "Fewer than a third",
+              "Nearly all"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Why can screens affect sleep?",
+            "options": [
+              "They delay the release of melatonin",
+              "They make rooms hot",
+              "They cause headaches"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "What happened in the school trial?",
+            "options": [
+              "Students slept longer and performed better",
+              "Students failed exams",
+              "No change was noticed"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "All experts agree that later school start times solve the problem.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "Teenagers need between eight and ___ hours of sleep.",
+            "options": [
+              "nine",
+              "ten",
+              "twelve"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Melatonin is a ___.",
+            "options": [
+              "vitamin",
+              "hormone",
+              "drug"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "Some schools started lessons an ___ later.",
+            "options": [
+              "hour",
+              "day",
+              "week"
+            ],
+            "answer": 0
+          }
+        ]
+      },
+      {
+        "kind": "reading",
+        "id": "rd-65-language-learning",
+        "title": "Học ngôn ngữ ở người trưởng thành",
+        "context": "Bạn đọc một bài phân tích và tìm quan điểm của tác giả.",
+        "meta": [
+          "Nguồn: Tạp chí giáo dục"
+        ],
+        "paragraphs": [
+          "It is commonly assumed that children learn languages more easily than adults. While young learners often develop a more natural accent, research indicates that adults can in fact progress faster in the early stages, thanks to their ability to analyse grammar and use learning strategies.",
+          "The key difference lies in consistency. Children are usually surrounded by the language for many hours a day, whereas most adults can only dedicate a short time to study.",
+          "Consequently, the most effective approach for adults is not longer study sessions, but frequent short ones. Fifteen minutes of speaking practice every day, for example, tends to produce better results than a three-hour session once a week."
+        ],
+        "questions": [
+          {
+            "question": "What do adults often do better than children at first?",
+            "options": [
+              "Develop a natural accent",
+              "Progress faster in the early stages",
+              "Remember more words"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What is the key difference between children and adults?",
+            "options": [
+              "Intelligence",
+              "Consistency of exposure",
+              "Motivation"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "What does the writer recommend for adults?",
+            "options": [
+              "Long weekly sessions",
+              "Frequent short sessions",
+              "Studying only grammar"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "The writer believes children never have an advantage.",
+            "options": [
+              "Đúng",
+              "Sai",
+              "Không có thông tin"
+            ],
+            "answer": 1
+          }
+        ],
+        "review": [
+          {
+            "question": "Young learners often have a more natural ___.",
+            "options": [
+              "accent",
+              "memory",
+              "schedule"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "Adults can use learning ___.",
+            "options": [
+              "strategies",
+              "games",
+              "tests"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "Fifteen minutes of speaking practice every ___ works well.",
+            "options": [
+              "month",
+              "day",
+              "year"
+            ],
+            "answer": 1
+          }
+        ]
+      }
+    ]
+  }
+]

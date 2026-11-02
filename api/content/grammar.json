@@ -1,0 +1,581 @@
+[
+  {
+    "skill": "grammar",
+    "band": "3.5",
+    "unit": {
+      "id": "chapter-1",
+      "title": "Chương 1 · Nói về thói quen và việc đang diễn ra"
+    },
+    "lessons": [
+      {
+        "kind": "grammar",
+        "id": "gr-35-present-simple",
+        "title": "Thì hiện tại đơn: thói quen hằng ngày",
+        "intro": "Dùng thì hiện tại đơn để nói về thói quen và sự thật. Với he, she, it thì động từ thêm s.",
+        "rules": [
+          {
+            "subject": "I / you / we / they",
+            "verb": "work",
+            "short": "I work",
+            "example": "I work in a bank.",
+            "note": "Giữ nguyên động từ."
+          },
+          {
+            "subject": "he / she / it",
+            "verb": "works",
+            "short": "She works",
+            "example": "She works in a bank.",
+            "note": "Thêm s hoặc es vào động từ."
+          },
+          {
+            "subject": "phủ định",
+            "verb": "don't / doesn't",
+            "short": "doesn't work",
+            "example": "He doesn't work on Sundays.",
+            "note": "Sau doesn't, động từ trở về nguyên mẫu."
+          }
+        ],
+        "practice": [
+          {
+            "question": "She ___ to school by bus.",
+            "options": [
+              "go",
+              "goes",
+              "going"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "They ___ coffee in the morning.",
+            "options": [
+              "drinks",
+              "drink",
+              "drinking"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "He ___ like spicy food.",
+            "options": [
+              "don't",
+              "doesn't",
+              "isn't"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "My brother ___ football every weekend.",
+            "options": [
+              "play",
+              "plays",
+              "playing"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-35-present-continuous",
+        "title": "Thì hiện tại tiếp diễn: việc đang xảy ra",
+        "intro": "Dùng am, is, are cộng động từ thêm ing để nói về việc đang diễn ra ngay lúc nói hoặc kế hoạch gần.",
+        "rules": [
+          {
+            "subject": "I",
+            "verb": "am + V-ing",
+            "short": "I'm working",
+            "example": "I'm working now.",
+            "note": ""
+          },
+          {
+            "subject": "he / she / it",
+            "verb": "is + V-ing",
+            "short": "She's cooking",
+            "example": "She's cooking dinner.",
+            "note": ""
+          },
+          {
+            "subject": "you / we / they",
+            "verb": "are + V-ing",
+            "short": "We're waiting",
+            "example": "We're waiting for the bus.",
+            "note": ""
+          }
+        ],
+        "practice": [
+          {
+            "question": "Look! It ___ outside.",
+            "options": [
+              "rains",
+              "is raining",
+              "rain"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "I ___ for a taxi right now.",
+            "options": [
+              "wait",
+              "waits",
+              "am waiting"
+            ],
+            "answer": 2
+          },
+          {
+            "question": "They ___ TV at the moment.",
+            "options": [
+              "are watching",
+              "watches",
+              "watch"
+            ],
+            "answer": 0
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-35-can-requests",
+        "title": "Can và could: nhờ vả và xin phép",
+        "intro": "Dùng can và could để hỏi xin hoặc nhờ ai đó. Could lịch sự hơn can.",
+        "rules": [
+          {
+            "subject": "xin phép",
+            "verb": "Can I ...?",
+            "short": "Can I sit here?",
+            "example": "Can I open the window?",
+            "note": "Dùng với bạn bè và người quen."
+          },
+          {
+            "subject": "nhờ vả",
+            "verb": "Could you ...?",
+            "short": "Could you help me?",
+            "example": "Could you repeat that, please?",
+            "note": "Lịch sự hơn, hợp với người lạ."
+          },
+          {
+            "subject": "khả năng",
+            "verb": "can / can't",
+            "short": "I can swim",
+            "example": "I can't speak French.",
+            "note": ""
+          }
+        ],
+        "practice": [
+          {
+            "question": "___ you help me with this bag, please?",
+            "options": [
+              "Could",
+              "Do",
+              "Are"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "___ I use your phone? Mine is broken.",
+            "options": [
+              "Can",
+              "Am",
+              "Do"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "She ___ speak three languages.",
+            "options": [
+              "cans",
+              "can",
+              "is can"
+            ],
+            "answer": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "grammar",
+    "band": "4.0-5.0",
+    "unit": {
+      "id": "chapter-1",
+      "title": "Chương 1 · Kể chuyện và nói về kế hoạch"
+    },
+    "lessons": [
+      {
+        "kind": "grammar",
+        "id": "gr-45-past-simple",
+        "title": "Thì quá khứ đơn: kể chuyện đã xảy ra",
+        "intro": "Dùng quá khứ đơn cho việc đã xong ở một thời điểm trong quá khứ. Động từ có quy tắc thêm ed, động từ bất quy tắc có dạng riêng.",
+        "rules": [
+          {
+            "subject": "có quy tắc",
+            "verb": "V + ed",
+            "short": "worked",
+            "example": "I worked late yesterday.",
+            "note": ""
+          },
+          {
+            "subject": "bất quy tắc",
+            "verb": "go / went",
+            "short": "went",
+            "example": "We went to the beach last week.",
+            "note": "Cần học thuộc: go-went, see-saw, buy-bought."
+          },
+          {
+            "subject": "phủ định và câu hỏi",
+            "verb": "didn't / Did",
+            "short": "didn't go",
+            "example": "Did you go? No, I didn't go.",
+            "note": "Sau did và didn't, động từ trở về nguyên mẫu."
+          }
+        ],
+        "practice": [
+          {
+            "question": "We ___ a great film last night.",
+            "options": [
+              "see",
+              "saw",
+              "seen"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "She ___ come to the party.",
+            "options": [
+              "didn't",
+              "doesn't",
+              "wasn't"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "___ you enjoy the trip?",
+            "options": [
+              "Do",
+              "Did",
+              "Were"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "I ___ my keys yesterday and I couldn't get in.",
+            "options": [
+              "lose",
+              "lost",
+              "losed"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-45-future-forms",
+        "title": "Will và going to: nói về tương lai",
+        "intro": "Dùng going to cho kế hoạch đã định, và will cho quyết định ngay lúc nói hoặc dự đoán.",
+        "rules": [
+          {
+            "subject": "kế hoạch đã định",
+            "verb": "be going to + V",
+            "short": "I'm going to study",
+            "example": "I'm going to study abroad next year.",
+            "note": ""
+          },
+          {
+            "subject": "quyết định tức thì",
+            "verb": "will + V",
+            "short": "I'll help",
+            "example": "It's heavy. I'll help you.",
+            "note": ""
+          },
+          {
+            "subject": "dự đoán",
+            "verb": "will + V",
+            "short": "It will rain",
+            "example": "I think it will rain later.",
+            "note": "Thường đi với I think, probably."
+          }
+        ],
+        "practice": [
+          {
+            "question": "Look at those clouds! It ___ rain.",
+            "options": [
+              "will",
+              "is going to",
+              "is"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "The phone is ringing. I ___ answer it.",
+            "options": [
+              "will",
+              "am going to",
+              "go to"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "We ___ visit my aunt this weekend. We've already bought tickets.",
+            "options": [
+              "will",
+              "are going to",
+              "visit"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-45-comparatives",
+        "title": "So sánh hơn và so sánh nhất",
+        "intro": "Tính từ ngắn thêm er và est. Tính từ dài dùng more và most. Dùng than để so sánh hai thứ.",
+        "rules": [
+          {
+            "subject": "tính từ ngắn",
+            "verb": "adj + er",
+            "short": "cheaper",
+            "example": "This one is cheaper than that one.",
+            "note": ""
+          },
+          {
+            "subject": "tính từ dài",
+            "verb": "more + adj",
+            "short": "more expensive",
+            "example": "The hotel is more expensive than the hostel.",
+            "note": ""
+          },
+          {
+            "subject": "nhất",
+            "verb": "the + adj + est / the most + adj",
+            "short": "the best",
+            "example": "It's the most interesting book I've read.",
+            "note": ""
+          }
+        ],
+        "practice": [
+          {
+            "question": "This phone is ___ than mine.",
+            "options": [
+              "more good",
+              "better",
+              "best"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "She is the ___ person I know.",
+            "options": [
+              "kinder",
+              "kindest",
+              "most kind than"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "English is ___ than I expected.",
+            "options": [
+              "more difficult",
+              "difficulter",
+              "most difficult"
+            ],
+            "answer": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "grammar",
+    "band": "5.5-6.5",
+    "unit": {
+      "id": "chapter-1",
+      "title": "Chương 1 · Nói linh hoạt và chính xác hơn"
+    },
+    "lessons": [
+      {
+        "kind": "grammar",
+        "id": "gr-65-conditionals",
+        "title": "Câu điều kiện loại 1 và loại 2",
+        "intro": "Loại 1 nói về khả năng có thật ở tương lai. Loại 2 nói về điều giả định, ít có khả năng xảy ra.",
+        "rules": [
+          {
+            "subject": "loại 1",
+            "verb": "If + hiện tại, will + V",
+            "short": "If it rains, we'll stay in",
+            "example": "If I have time, I'll call you.",
+            "note": "Khả năng có thật."
+          },
+          {
+            "subject": "loại 2",
+            "verb": "If + quá khứ, would + V",
+            "short": "If I had time, I'd call",
+            "example": "If I won the lottery, I would travel the world.",
+            "note": "Giả định, không có thật ở hiện tại."
+          },
+          {
+            "subject": "lưu ý với be",
+            "verb": "If I were",
+            "short": "If I were you",
+            "example": "If I were you, I'd take the job.",
+            "note": "Dùng were cho mọi ngôi khi khuyên nhủ."
+          }
+        ],
+        "practice": [
+          {
+            "question": "If I ___ more free time, I would learn the piano.",
+            "options": [
+              "have",
+              "had",
+              "will have"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "If you study hard, you ___ the exam.",
+            "options": [
+              "would pass",
+              "will pass",
+              "passed"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "If I ___ you, I would apologise.",
+            "options": [
+              "am",
+              "was",
+              "were"
+            ],
+            "answer": 2
+          },
+          {
+            "question": "What ___ you do if you lost your passport abroad?",
+            "options": [
+              "will",
+              "would",
+              "do"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-65-present-perfect",
+        "title": "Hiện tại hoàn thành: kinh nghiệm và kết quả",
+        "intro": "Dùng have hoặc has cộng quá khứ phân từ để nói về kinh nghiệm sống, hoặc việc đã xong nhưng còn liên quan hiện tại.",
+        "rules": [
+          {
+            "subject": "kinh nghiệm",
+            "verb": "have / has + V3",
+            "short": "I've been",
+            "example": "I've been to Japan twice.",
+            "note": "Không nói rõ thời điểm."
+          },
+          {
+            "subject": "kết quả",
+            "verb": "have / has + V3",
+            "short": "I've lost",
+            "example": "I've lost my keys, so I can't get in.",
+            "note": ""
+          },
+          {
+            "subject": "for và since",
+            "verb": "for + khoảng, since + mốc",
+            "short": "for five years",
+            "example": "I've lived here for five years.",
+            "note": "Since dùng với mốc thời gian: since 2020."
+          }
+        ],
+        "practice": [
+          {
+            "question": "I ___ never ___ sushi.",
+            "options": [
+              "have / eaten",
+              "did / eat",
+              "am / eating"
+            ],
+            "answer": 0
+          },
+          {
+            "question": "She has worked here ___ 2019.",
+            "options": [
+              "for",
+              "since",
+              "from"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "We ___ here for three hours.",
+            "options": [
+              "are",
+              "have been",
+              "were"
+            ],
+            "answer": 1
+          }
+        ]
+      },
+      {
+        "kind": "grammar",
+        "id": "gr-65-relative-clauses",
+        "title": "Mệnh đề quan hệ: nối ý cho câu dài hơn",
+        "intro": "Dùng who cho người, which cho vật, where cho nơi chốn để thêm thông tin vào câu mà không phải tách câu.",
+        "rules": [
+          {
+            "subject": "người",
+            "verb": "who",
+            "short": "who lives",
+            "example": "The man who lives next door is a doctor.",
+            "note": ""
+          },
+          {
+            "subject": "vật",
+            "verb": "which / that",
+            "short": "which I bought",
+            "example": "The book which I bought is excellent.",
+            "note": ""
+          },
+          {
+            "subject": "nơi chốn",
+            "verb": "where",
+            "short": "where we met",
+            "example": "That's the café where we first met.",
+            "note": ""
+          }
+        ],
+        "practice": [
+          {
+            "question": "The woman ___ called you is my aunt.",
+            "options": [
+              "which",
+              "who",
+              "where"
+            ],
+            "answer": 1
+          },
+          {
+            "question": "This is the restaurant ___ we had dinner.",
+            "options": [
+              "who",
+              "which",
+              "where"
+            ],
+            "answer": 2
+          },
+          {
+            "question": "I lost the phone ___ my brother gave me.",
+            "options": [
+              "who",
+              "which",
+              "where"
+            ],
+            "answer": 1
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,242 @@
+[
+  {
+    "skill": "listening",
+    "band": "3.0",
+    "unit": { "id": "stage-2", "title": "Chặng 2 · Nghe trong đời sống" },
+    "lessons": [
+      {
+        "kind": "listening",
+        "id": "li-30-cafe",
+        "title": "Ở quán cà phê",
+        "situation": "Một khách hàng gọi đồ uống ở quầy.",
+        "lines": [
+          { "speaker": "Barista", "text": "Hi, what would you like?", "vi": "Chào bạn, bạn muốn dùng gì?" },
+          { "speaker": "Customer", "text": "A large latte, please.", "vi": "Cho mình một ly latte lớn." },
+          { "speaker": "Barista", "text": "Anything to eat?", "vi": "Bạn có dùng gì để ăn không?" },
+          { "speaker": "Customer", "text": "Yes, one chocolate cake.", "vi": "Có, một cái bánh sô cô la." },
+          { "speaker": "Barista", "text": "That's six dollars.", "vi": "Tổng cộng sáu đô." }
+        ],
+        "questions": [
+          { "question": "What drink does the customer order?", "options": ["A large latte", "A small tea", "An orange juice"], "answer": 0 },
+          { "question": "What does the customer want to eat?", "options": ["A sandwich", "A chocolate cake", "Nothing"], "answer": 1 },
+          { "question": "How much is the total?", "options": ["Four dollars", "Six dollars", "Sixteen dollars"], "answer": 1 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-30-bus",
+        "title": "Hỏi giờ xe buýt",
+        "situation": "Một người hỏi nhân viên nhà ga về chuyến xe đi trung tâm.",
+        "lines": [
+          { "speaker": "Man", "text": "Excuse me, when is the next bus to the city centre?", "vi": "Xin lỗi, bao giờ có chuyến xe tiếp theo vào trung tâm?" },
+          { "speaker": "Clerk", "text": "It leaves at half past three.", "vi": "Xe rời bến lúc ba giờ rưỡi." },
+          { "speaker": "Man", "text": "Which stop is it?", "vi": "Xe đỗ ở trạm nào vậy?" },
+          { "speaker": "Clerk", "text": "Stop number five, on your right.", "vi": "Trạm số năm, bên tay phải của bạn." }
+        ],
+        "questions": [
+          { "question": "What time does the bus leave?", "options": ["3:15", "3:30", "4:30"], "answer": 1 },
+          { "question": "Which stop does the bus use?", "options": ["Stop 3", "Stop 5", "Stop 15"], "answer": 1 },
+          { "question": "Where is the man going?", "options": ["The airport", "The city centre", "The beach"], "answer": 1 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-30-weekend",
+        "title": "Kế hoạch cuối tuần",
+        "situation": "Hai người bạn nói về những gì họ sẽ làm vào cuối tuần.",
+        "lines": [
+          { "speaker": "Anna", "text": "What are you doing this weekend?", "vi": "Cuối tuần này bạn làm gì?" },
+          { "speaker": "Ben", "text": "I'm visiting my grandparents on Saturday.", "vi": "Thứ Bảy mình đi thăm ông bà." },
+          { "speaker": "Anna", "text": "That's nice. What about Sunday?", "vi": "Thích nhỉ. Còn Chủ nhật thì sao?" },
+          { "speaker": "Ben", "text": "I'll stay home and cook.", "vi": "Mình ở nhà nấu ăn." }
+        ],
+        "questions": [
+          { "question": "What does Ben do on Saturday?", "options": ["Cooks at home", "Visits his grandparents", "Goes shopping"], "answer": 1 },
+          { "question": "What does Ben do on Sunday?", "options": ["Stays home and cooks", "Plays football", "Goes to work"], "answer": 0 }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "listening",
+    "band": "3.5",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Nghe thông tin cụ thể" },
+    "lessons": [
+      {
+        "kind": "listening",
+        "id": "li-35-hotel",
+        "title": "Nhận phòng khách sạn",
+        "situation": "Một du khách nhận phòng ở quầy lễ tân.",
+        "lines": [
+          { "speaker": "Receptionist", "text": "Good evening. Do you have a reservation?", "vi": "Chào buổi tối. Bạn có đặt phòng trước không?" },
+          { "speaker": "Guest", "text": "Yes, under the name Tran, for three nights.", "vi": "Có, tên Trần, đặt ba đêm." },
+          { "speaker": "Receptionist", "text": "Your room is on the fourth floor. Breakfast is from seven to ten.", "vi": "Phòng của bạn ở tầng bốn. Bữa sáng từ bảy đến mười giờ." },
+          { "speaker": "Guest", "text": "Is there Wi-Fi in the room?", "vi": "Trong phòng có Wi-Fi không?" },
+          { "speaker": "Receptionist", "text": "Yes, the password is on the card.", "vi": "Có, mật khẩu ở trên tấm thẻ." }
+        ],
+        "questions": [
+          { "question": "How many nights is the guest staying?", "options": ["Two", "Three", "Four"], "answer": 1 },
+          { "question": "Which floor is the room on?", "options": ["The third", "The fourth", "The fifth"], "answer": 1 },
+          { "question": "When is breakfast served?", "options": ["6 to 9", "7 to 10", "8 to 11"], "answer": 1 },
+          { "question": "Where is the Wi-Fi password?", "options": ["On the card", "On the wall", "At the desk"], "answer": 0 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-35-doctor",
+        "title": "Khám bệnh nhẹ",
+        "situation": "Một bệnh nhân nói với bác sĩ về triệu chứng của mình.",
+        "lines": [
+          { "speaker": "Doctor", "text": "What seems to be the problem?", "vi": "Bạn thấy không khỏe ở đâu?" },
+          { "speaker": "Patient", "text": "I've had a sore throat for two days.", "vi": "Mình bị đau họng hai ngày rồi." },
+          { "speaker": "Doctor", "text": "Do you have a fever?", "vi": "Bạn có sốt không?" },
+          { "speaker": "Patient", "text": "A little, yes. I feel tired too.", "vi": "Có hơi sốt. Mình cũng thấy mệt." },
+          { "speaker": "Doctor", "text": "Rest, drink lots of water and take these tablets twice a day.", "vi": "Hãy nghỉ ngơi, uống nhiều nước và uống thuốc này hai lần mỗi ngày." }
+        ],
+        "questions": [
+          { "question": "How long has the patient had a sore throat?", "options": ["One day", "Two days", "A week"], "answer": 1 },
+          { "question": "How often should the patient take the tablets?", "options": ["Once a day", "Twice a day", "Three times a day"], "answer": 1 },
+          { "question": "Which is NOT advice from the doctor?", "options": ["Rest", "Drink water", "Go to work"], "answer": 2 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-35-announcement",
+        "title": "Thông báo ở sân bay",
+        "situation": "Một thông báo trên loa của sân bay về thay đổi chuyến bay.",
+        "lines": [
+          { "speaker": "Announcer", "text": "Attention, please. Flight 208 to Singapore is delayed by forty minutes.", "vi": "Xin chú ý. Chuyến bay 208 đi Singapore bị hoãn bốn mươi phút." },
+          { "speaker": "Announcer", "text": "The new boarding time is a quarter past six at gate twelve.", "vi": "Giờ lên máy bay mới là sáu giờ mười lăm tại cổng mười hai." },
+          { "speaker": "Announcer", "text": "We are sorry for the inconvenience.", "vi": "Chúng tôi xin lỗi vì sự bất tiện này." }
+        ],
+        "questions": [
+          { "question": "Where is the flight going?", "options": ["Sydney", "Singapore", "Seoul"], "answer": 1 },
+          { "question": "How long is the delay?", "options": ["Fourteen minutes", "Forty minutes", "Fifty minutes"], "answer": 1 },
+          { "question": "What is the new boarding time?", "options": ["6:15", "6:45", "7:15"], "answer": 0 }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "listening",
+    "band": "4.0-5.0",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Nghe hội thoại dài hơn" },
+    "lessons": [
+      {
+        "kind": "listening",
+        "id": "li-45-flatmates",
+        "title": "Bàn chuyện chia việc nhà",
+        "situation": "Hai bạn cùng phòng bàn cách chia việc nhà trong tuần.",
+        "lines": [
+          { "speaker": "Mai", "text": "We really need to sort out the housework. The kitchen's a mess.", "vi": "Mình thật sự cần chia việc nhà. Bếp bừa quá." },
+          { "speaker": "Tom", "text": "You're right. I could do the dishes if you take out the rubbish.", "vi": "Bạn nói đúng. Mình rửa chén nếu bạn đổ rác." },
+          { "speaker": "Mai", "text": "Fine, but I'd rather cook than clean the bathroom.", "vi": "Được, nhưng mình thích nấu ăn hơn là dọn nhà tắm." },
+          { "speaker": "Tom", "text": "Then I'll take the bathroom. Shall we swap every two weeks?", "vi": "Vậy mình dọn nhà tắm. Hai tuần mình đổi nhau nhé?" },
+          { "speaker": "Mai", "text": "Sounds fair. Let's write it on a chart.", "vi": "Nghe công bằng đấy. Mình ghi vào một bảng nhé." }
+        ],
+        "questions": [
+          { "question": "What does Tom offer to do first?", "options": ["Cook dinner", "Do the dishes", "Clean the bathroom"], "answer": 1 },
+          { "question": "What does Mai prefer?", "options": ["Cooking", "Cleaning the bathroom", "Washing the floor"], "answer": 0 },
+          { "question": "How often will they swap jobs?", "options": ["Every week", "Every two weeks", "Every month"], "answer": 1 },
+          { "question": "What will they do to remember the plan?", "options": ["Write a chart", "Send a text", "Ask a neighbour"], "answer": 0 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-45-job-interview",
+        "title": "Phỏng vấn xin việc",
+        "situation": "Một ứng viên trả lời câu hỏi trong buổi phỏng vấn cho vị trí hỗ trợ khách hàng.",
+        "lines": [
+          { "speaker": "Interviewer", "text": "Tell me a little about your last job.", "vi": "Hãy kể một chút về công việc trước của bạn." },
+          { "speaker": "Candidate", "text": "I worked in a shop for two years, helping customers and handling complaints.", "vi": "Tôi làm ở một cửa hàng hai năm, hỗ trợ khách và xử lý phàn nàn." },
+          { "speaker": "Interviewer", "text": "What was the hardest part?", "vi": "Phần khó nhất là gì?" },
+          { "speaker": "Candidate", "text": "Staying calm when customers were angry, but I learned to listen first.", "vi": "Giữ bình tĩnh khi khách giận, nhưng tôi học cách lắng nghe trước." },
+          { "speaker": "Interviewer", "text": "Good. Can you start next Monday?", "vi": "Tốt. Bạn bắt đầu vào thứ Hai tới được không?" }
+        ],
+        "questions": [
+          { "question": "How long did the candidate work in the shop?", "options": ["One year", "Two years", "Five years"], "answer": 1 },
+          { "question": "What was the hardest part of the job?", "options": ["Long hours", "Staying calm with angry customers", "Carrying boxes"], "answer": 1 },
+          { "question": "What does the interviewer ask at the end?", "options": ["About the salary", "If the candidate can start Monday", "For a reference"], "answer": 1 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-45-travel-plans",
+        "title": "Lên kế hoạch đi du lịch",
+        "situation": "Hai người bạn bàn xem nên đi đâu vào kỳ nghỉ hè.",
+        "lines": [
+          { "speaker": "Lan", "text": "I was thinking of Da Lat this summer. It's cooler there.", "vi": "Mình đang nghĩ tới Đà Lạt mùa hè này. Ở đó mát hơn." },
+          { "speaker": "Huy", "text": "I'd prefer the beach, to be honest. Da Lat can be crowded.", "vi": "Thật lòng mình thích biển hơn. Đà Lạt có thể đông." },
+          { "speaker": "Lan", "text": "True, but the hotels by the beach are more expensive.", "vi": "Đúng, nhưng khách sạn ven biển đắt hơn." },
+          { "speaker": "Huy", "text": "How about Quy Nhon? It's cheaper and much quieter.", "vi": "Hay là Quy Nhơn? Rẻ hơn và yên tĩnh hơn nhiều." },
+          { "speaker": "Lan", "text": "That could work. Let's check the prices tonight.", "vi": "Cũng được đấy. Tối nay mình xem giá nhé." }
+        ],
+        "questions": [
+          { "question": "Why does Lan like Da Lat?", "options": ["It is cooler", "It is cheaper", "It is by the sea"], "answer": 0 },
+          { "question": "What is Huy's concern about Da Lat?", "options": ["It can be crowded", "It is too far", "It is too hot"], "answer": 0 },
+          { "question": "What do they decide to do tonight?", "options": ["Book the tickets", "Check the prices", "Call the hotel"], "answer": 1 }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "listening",
+    "band": "5.5-6.5",
+    "unit": { "id": "stage-1", "title": "Chặng 1 · Nghe ý chính và quan điểm" },
+    "lessons": [
+      {
+        "kind": "listening",
+        "id": "li-65-lecture",
+        "title": "Bài giảng ngắn về giấc ngủ",
+        "situation": "Một giảng viên nói về ảnh hưởng của giấc ngủ lên khả năng học tập.",
+        "lines": [
+          { "speaker": "Lecturer", "text": "Today I'd like to talk about why sleep matters for learning.", "vi": "Hôm nay tôi muốn nói về lý do giấc ngủ quan trọng với việc học." },
+          { "speaker": "Lecturer", "text": "When we sleep, the brain sorts the information we collected during the day.", "vi": "Khi ngủ, não sắp xếp lại thông tin ta thu nhận trong ngày." },
+          { "speaker": "Lecturer", "text": "Studies show that students who sleep less than six hours remember about a third less.", "vi": "Các nghiên cứu cho thấy học sinh ngủ dưới sáu tiếng nhớ ít hơn khoảng một phần ba." },
+          { "speaker": "Lecturer", "text": "So rather than studying all night, a short review followed by a full night's sleep is far more effective.", "vi": "Vì vậy, thay vì học thâu đêm, ôn ngắn rồi ngủ đủ giấc hiệu quả hơn nhiều." }
+        ],
+        "questions": [
+          { "question": "What is the main idea of the talk?", "options": ["Sleep supports learning", "Students study too little", "Brains work better at night"], "answer": 0 },
+          { "question": "How much less do students who sleep under six hours remember?", "options": ["About a half", "About a third", "About a quarter"], "answer": 1 },
+          { "question": "What does the lecturer recommend?", "options": ["Studying all night", "A short review then a full night's sleep", "Sleeping during the day"], "answer": 1 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-65-discussion",
+        "title": "Thảo luận về mạng xã hội",
+        "situation": "Hai sinh viên bàn về việc mạng xã hội ảnh hưởng thế nào đến việc học.",
+        "lines": [
+          { "speaker": "Nora", "text": "I'd argue that social media does more harm than good for students.", "vi": "Mình cho rằng mạng xã hội gây hại nhiều hơn lợi cho sinh viên." },
+          { "speaker": "Paul", "text": "I'm not so sure. It's how you use it. I follow several science channels that really help me.", "vi": "Mình không chắc vậy. Quan trọng là cách dùng. Mình theo dõi vài kênh khoa học giúp mình rất nhiều." },
+          { "speaker": "Nora", "text": "That's fair, but most of my friends end up scrolling for hours instead of studying.", "vi": "Cũng đúng, nhưng phần lớn bạn mình cuối cùng lướt hàng giờ thay vì học." },
+          { "speaker": "Paul", "text": "Then the problem is self-control, not the technology itself.", "vi": "Vậy vấn đề là sự tự chủ, không phải bản thân công nghệ." }
+        ],
+        "questions": [
+          { "question": "What is Nora's opinion at the start?", "options": ["Social media is mostly harmful", "Social media is useful", "She never uses it"], "answer": 0 },
+          { "question": "How does Paul use social media?", "options": ["To follow science channels", "To chat with friends", "To play games"], "answer": 0 },
+          { "question": "What does Paul think the real problem is?", "options": ["Poor self-control", "Slow internet", "Lack of time"], "answer": 0 }
+        ]
+      },
+      {
+        "kind": "listening",
+        "id": "li-65-ielts-section",
+        "title": "Đăng ký câu lạc bộ (dạng IELTS Listening phần 1)",
+        "situation": "Một sinh viên gọi điện đăng ký vào câu lạc bộ leo núi. Hãy chú ý các chi tiết như tên, ngày và số tiền.",
+        "lines": [
+          { "speaker": "Staff", "text": "Hiking Club, how can I help?", "vi": "Câu lạc bộ leo núi xin nghe, tôi giúp gì được ạ?" },
+          { "speaker": "Student", "text": "I'd like to join. My name is Khanh Pham, that's K-H-A-N-H.", "vi": "Mình muốn tham gia. Tên mình là Khánh Phạm, K-H-A-N-H." },
+          { "speaker": "Staff", "text": "Thanks. Membership is forty-five pounds a year, and the first trip is on the twelfth of October.", "vi": "Cảm ơn bạn. Phí thành viên là bốn mươi lăm bảng một năm, và chuyến đi đầu tiên vào ngày mười hai tháng Mười." },
+          { "speaker": "Student", "text": "Do I need to bring anything?", "vi": "Mình có cần mang gì không?" },
+          { "speaker": "Staff", "text": "Just waterproof boots and lunch. We meet outside the library at eight.", "vi": "Chỉ cần giày chống nước và bữa trưa. Chúng ta gặp nhau trước thư viện lúc tám giờ." }
+        ],
+        "questions": [
+          { "question": "How is the student's first name spelt?", "options": ["K-H-A-N-H", "K-A-N-H", "C-H-A-N-H"], "answer": 0 },
+          { "question": "How much is the yearly membership?", "options": ["£14", "£45", "£54"], "answer": 1 },
+          { "question": "When is the first trip?", "options": ["12 October", "2 October", "20 October"], "answer": 0 },
+          { "question": "Where do they meet?", "options": ["Outside the library", "At the station", "In the café"], "answer": 0 }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,521 @@
+[
+  {
+    "skill": "speaking",
+    "band": "3.0",
+    "unit": {
+      "id": "stage-1",
+      "title": "Chặng 1 · Giao tiếp cơ bản hằng ngày"
+    },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-30-greetings",
+        "title": "Chào hỏi & lời chào đầu tiên",
+        "situation": "Tại buổi giao lưu ngôn ngữ, một người địa phương chào đón khách lần đầu trước khi hoạt động bắt đầu.",
+        "roles": [
+          {
+            "id": "host",
+            "name": "Người địa phương",
+            "description": "Chào đón khách, trao đổi tên và giúp khách thấy thoải mái."
+          },
+          {
+            "id": "guest",
+            "name": "Khách tham dự",
+            "description": "Giới thiệu bản thân, trả lời câu hỏi thân thiện rồi chào tạm biệt."
+          }
+        ],
+        "goals": [
+          "Chào hỏi và trao đổi tên.",
+          "Hỏi và trả lời cảm giác hôm nay.",
+          "Nói một sở thích đơn giản rồi chào tạm biệt."
+        ],
+        "phrases": [
+          {
+            "text": "What's your name?",
+            "vi": "Bạn tên gì?"
+          },
+          {
+            "text": "How are you today?",
+            "vi": "Hôm nay bạn thế nào?"
+          },
+          {
+            "text": "Nice to meet you.",
+            "vi": "Rất vui được gặp bạn."
+          }
+        ],
+        "turns": [
+          {
+            "role": "host",
+            "text": "Hi! Welcome to the language exchange. I'm Mai. What's your name?",
+            "vi": "Chào bạn! Chào mừng đến buổi giao lưu ngôn ngữ. Mình là Mai. Bạn tên gì?"
+          },
+          {
+            "role": "guest",
+            "text": "Hi, Mai. I'm Linh. Nice to meet you.",
+            "vi": "Chào Mai. Mình là Linh. Rất vui được gặp bạn."
+          },
+          {
+            "role": "host",
+            "text": "Nice to meet you too, Linh. How are you today?",
+            "vi": "Mình cũng rất vui được gặp bạn, Linh. Hôm nay bạn thế nào?"
+          },
+          {
+            "role": "guest",
+            "text": "I'm good, thanks. How are you?",
+            "vi": "Mình khỏe, cảm ơn bạn. Còn bạn thì sao?"
+          },
+          {
+            "role": "host",
+            "text": "I'm good too. What do you like?",
+            "vi": "Mình cũng khỏe. Bạn thích gì?"
+          },
+          {
+            "role": "guest",
+            "text": "I like English and music. What do you like?",
+            "vi": "Mình thích tiếng Anh và âm nhạc. Còn bạn thích gì?"
+          },
+          {
+            "role": "host",
+            "text": "I like music too! The activity starts now. See you inside!",
+            "vi": "Mình cũng thích âm nhạc! Hoạt động bắt đầu rồi. Hẹn gặp bạn bên trong!"
+          },
+          {
+            "role": "guest",
+            "text": "See you inside, Mai. Goodbye!",
+            "vi": "Hẹn gặp bên trong nhé, Mai. Tạm biệt!"
+          }
+        ],
+        "vocab": [
+          {
+            "word": "hi",
+            "meaning": "chào (thân mật)",
+            "pos": "interjection",
+            "example": "Hi! How are you?",
+            "exampleVi": "Chào! Bạn khỏe không?"
+          },
+          {
+            "word": "name",
+            "meaning": "tên",
+            "pos": "noun",
+            "example": "My name is Linh.",
+            "exampleVi": "Tên mình là Linh."
+          },
+          {
+            "word": "nice to meet you",
+            "meaning": "rất vui được gặp bạn",
+            "pos": "expression",
+            "example": "Nice to meet you, Mai.",
+            "exampleVi": "Rất vui được gặp bạn, Mai."
+          },
+          {
+            "word": "today",
+            "meaning": "hôm nay",
+            "pos": "adverb",
+            "example": "How are you today?",
+            "exampleVi": "Hôm nay bạn thế nào?"
+          },
+          {
+            "word": "good",
+            "meaning": "khỏe, tốt",
+            "pos": "adjective",
+            "example": "I'm good, thanks.",
+            "exampleVi": "Mình khỏe, cảm ơn."
+          },
+          {
+            "word": "thanks",
+            "meaning": "cảm ơn (thân mật)",
+            "pos": "interjection",
+            "example": "Thanks for your help.",
+            "exampleVi": "Cảm ơn bạn đã giúp."
+          },
+          {
+            "word": "like",
+            "meaning": "thích",
+            "pos": "verb",
+            "example": "I like music.",
+            "exampleVi": "Mình thích âm nhạc."
+          },
+          {
+            "word": "too",
+            "meaning": "cũng",
+            "pos": "adverb",
+            "example": "I like it too.",
+            "exampleVi": "Mình cũng thích nó."
+          }
+        ]
+      },
+      {
+        "kind": "speaking",
+        "id": "sp-30-cafe-order",
+        "title": "Gọi đồ uống ở quán cà phê",
+        "situation": "Bạn vào một quán cà phê nhỏ và gọi đồ uống với nhân viên quầy.",
+        "roles": [
+          {
+            "id": "host",
+            "name": "Nhân viên quầy",
+            "description": "Chào khách, hỏi khách muốn dùng gì và báo giá."
+          },
+          {
+            "id": "guest",
+            "name": "Khách hàng",
+            "description": "Gọi đồ uống, chọn cỡ và hỏi giá."
+          }
+        ],
+        "goals": [
+          "Chào và gọi một món đồ uống.",
+          "Chọn cỡ và nói thêm yêu cầu.",
+          "Hỏi giá rồi cảm ơn."
+        ],
+        "phrases": [
+          {
+            "text": "Can I have a coffee, please?",
+            "vi": "Cho mình một ly cà phê nhé."
+          },
+          {
+            "text": "How much is it?",
+            "vi": "Hết bao nhiêu tiền?"
+          },
+          {
+            "text": "Have a nice day!",
+            "vi": "Chúc bạn một ngày tốt lành!"
+          }
+        ],
+        "turns": [
+          {
+            "role": "host",
+            "text": "Hi! What would you like today?",
+            "vi": "Chào bạn! Hôm nay bạn muốn dùng gì?"
+          },
+          {
+            "role": "guest",
+            "text": "Hi. Can I have a coffee, please?",
+            "vi": "Chào bạn. Cho mình một ly cà phê nhé."
+          },
+          {
+            "role": "host",
+            "text": "Sure. What size would you like?",
+            "vi": "Được ạ. Bạn muốn cỡ nào?"
+          },
+          {
+            "role": "guest",
+            "text": "Small, please. With milk, no sugar.",
+            "vi": "Cỡ nhỏ nhé. Có sữa, không đường."
+          },
+          {
+            "role": "host",
+            "text": "Okay. That's three dollars.",
+            "vi": "Vâng. Tổng cộng ba đô."
+          },
+          {
+            "role": "guest",
+            "text": "Here you are. Thank you!",
+            "vi": "Của bạn đây. Cảm ơn bạn!"
+          },
+          {
+            "role": "host",
+            "text": "Thank you. Have a nice day!",
+            "vi": "Cảm ơn bạn. Chúc bạn một ngày tốt lành!"
+          },
+          {
+            "role": "guest",
+            "text": "You too. Goodbye!",
+            "vi": "Bạn cũng vậy. Tạm biệt!"
+          }
+        ],
+        "vocab": [
+          {
+            "word": "coffee",
+            "meaning": "cà phê",
+            "pos": "noun",
+            "example": "I drink coffee every morning.",
+            "exampleVi": "Sáng nào mình cũng uống cà phê."
+          },
+          {
+            "word": "size",
+            "meaning": "cỡ",
+            "pos": "noun",
+            "example": "What size would you like?",
+            "exampleVi": "Bạn muốn cỡ nào?"
+          },
+          {
+            "word": "small",
+            "meaning": "nhỏ",
+            "pos": "adjective",
+            "example": "A small coffee, please.",
+            "exampleVi": "Cho mình một ly cà phê nhỏ."
+          },
+          {
+            "word": "milk",
+            "meaning": "sữa",
+            "pos": "noun",
+            "example": "With milk, please.",
+            "exampleVi": "Cho mình thêm sữa."
+          },
+          {
+            "word": "sugar",
+            "meaning": "đường",
+            "pos": "noun",
+            "example": "No sugar, thanks.",
+            "exampleVi": "Không đường, cảm ơn."
+          },
+          {
+            "word": "dollar",
+            "meaning": "đô la",
+            "pos": "noun",
+            "example": "It's three dollars.",
+            "exampleVi": "Giá ba đô."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "speaking",
+    "band": "3.5",
+    "unit": {
+      "id": "stage-2",
+      "title": "Chặng 2 · Nói chuyện trong tình huống quen thuộc"
+    },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-35-directions",
+        "title": "Hỏi đường đến nhà ga",
+        "situation": "Bạn là du khách và hỏi một người địa phương cách đi đến nhà ga.",
+        "roles": [
+          {
+            "id": "host",
+            "name": "Người địa phương",
+            "description": "Nghe câu hỏi và chỉ đường rõ ràng."
+          },
+          {
+            "id": "guest",
+            "name": "Du khách",
+            "description": "Lịch sự hỏi đường và xác nhận lại hướng đi."
+          }
+        ],
+        "goals": [
+          "Lịch sự hỏi đường.",
+          "Hiểu và nhắc lại hướng đi.",
+          "Cảm ơn người chỉ đường."
+        ],
+        "phrases": [
+          {
+            "text": "Excuse me, where is the station?",
+            "vi": "Xin lỗi, nhà ga ở đâu vậy?"
+          },
+          {
+            "text": "Turn left at the corner.",
+            "vi": "Rẽ trái ở góc phố."
+          },
+          {
+            "text": "Thanks a lot for your help.",
+            "vi": "Cảm ơn bạn đã giúp nhiều."
+          }
+        ],
+        "turns": [
+          {
+            "role": "guest",
+            "text": "Excuse me, where is the station?",
+            "vi": "Xin lỗi, nhà ga ở đâu vậy?"
+          },
+          {
+            "role": "host",
+            "text": "Go straight, then turn left at the corner.",
+            "vi": "Đi thẳng rồi rẽ trái ở góc phố."
+          },
+          {
+            "role": "guest",
+            "text": "Straight, then left. Is it far?",
+            "vi": "Đi thẳng rồi rẽ trái. Chỗ đó có xa không?"
+          },
+          {
+            "role": "host",
+            "text": "No, it's about five minutes on foot.",
+            "vi": "Không xa, đi bộ khoảng năm phút."
+          },
+          {
+            "role": "guest",
+            "text": "Great. Is it next to the bank?",
+            "vi": "Tuyệt. Nó nằm cạnh ngân hàng đúng không?"
+          },
+          {
+            "role": "host",
+            "text": "Yes, the station is opposite the bank.",
+            "vi": "Đúng rồi, nhà ga nằm đối diện ngân hàng."
+          },
+          {
+            "role": "guest",
+            "text": "Thanks a lot for your help.",
+            "vi": "Cảm ơn bạn đã giúp nhiều."
+          },
+          {
+            "role": "host",
+            "text": "You're welcome. Have a good trip!",
+            "vi": "Không có gì. Chúc bạn đi vui vẻ!"
+          }
+        ],
+        "vocab": [
+          {
+            "word": "straight",
+            "meaning": "thẳng",
+            "pos": "adverb",
+            "example": "Go straight for two blocks.",
+            "exampleVi": "Đi thẳng hai dãy nhà."
+          },
+          {
+            "word": "corner",
+            "meaning": "góc phố",
+            "pos": "noun",
+            "example": "Turn left at the corner.",
+            "exampleVi": "Rẽ trái ở góc phố."
+          },
+          {
+            "word": "opposite",
+            "meaning": "đối diện",
+            "pos": "preposition",
+            "example": "The bank is opposite the station.",
+            "exampleVi": "Ngân hàng đối diện nhà ga."
+          },
+          {
+            "word": "far",
+            "meaning": "xa",
+            "pos": "adjective",
+            "example": "Is it far from here?",
+            "exampleVi": "Chỗ đó có xa đây không?"
+          },
+          {
+            "word": "on foot",
+            "meaning": "đi bộ",
+            "pos": "phrase",
+            "example": "It's five minutes on foot.",
+            "exampleVi": "Đi bộ mất năm phút."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "skill": "speaking",
+    "band": "5.5-6.5",
+    "unit": {
+      "id": "stage-1",
+      "title": "Chặng 1 · Trao đổi ý kiến và lập luận"
+    },
+    "lessons": [
+      {
+        "kind": "speaking",
+        "id": "sp-65-remote-work",
+        "title": "Bàn về làm việc từ xa",
+        "situation": "Hai đồng nghiệp trao đổi xem làm việc từ xa có tốt hơn đi làm văn phòng không.",
+        "roles": [
+          {
+            "id": "host",
+            "name": "Đồng nghiệp ủng hộ",
+            "description": "Bảo vệ ý kiến làm việc từ xa có nhiều lợi ích."
+          },
+          {
+            "id": "guest",
+            "name": "Đồng nghiệp phản biện",
+            "description": "Đưa ra lo ngại và đề xuất phương án dung hòa."
+          }
+        ],
+        "goals": [
+          "Nêu ý kiến và đưa lý do.",
+          "Phản biện lịch sự bằng cụm từ nối.",
+          "Kết luận bằng một đề xuất dung hòa."
+        ],
+        "phrases": [
+          {
+            "text": "In my opinion, it saves a lot of time.",
+            "vi": "Theo mình, nó tiết kiệm rất nhiều thời gian."
+          },
+          {
+            "text": "I see your point, but I see it differently.",
+            "vi": "Mình hiểu ý bạn, nhưng mình nhìn khác."
+          },
+          {
+            "text": "Overall, a mix of both works best.",
+            "vi": "Nhìn chung, kết hợp cả hai là tốt nhất."
+          }
+        ],
+        "turns": [
+          {
+            "role": "host",
+            "text": "In my opinion, working from home saves a lot of time and money.",
+            "vi": "Theo mình, làm việc ở nhà tiết kiệm rất nhiều thời gian và tiền bạc."
+          },
+          {
+            "role": "guest",
+            "text": "I see your point, but some people feel isolated at home.",
+            "vi": "Mình hiểu ý bạn, nhưng một số người cảm thấy cô đơn khi ở nhà."
+          },
+          {
+            "role": "host",
+            "text": "That's true. However, video calls make it easier to stay in touch.",
+            "vi": "Đúng vậy. Tuy nhiên, gọi video giúp giữ liên lạc dễ hơn."
+          },
+          {
+            "role": "guest",
+            "text": "Not always. Face-to-face talks build trust much faster.",
+            "vi": "Không phải lúc nào cũng vậy. Nói chuyện trực tiếp xây dựng lòng tin nhanh hơn nhiều."
+          },
+          {
+            "role": "host",
+            "text": "Fair enough. It depends on the kind of job, I suppose.",
+            "vi": "Cũng có lý. Mình đoán còn tùy vào loại công việc."
+          },
+          {
+            "role": "guest",
+            "text": "Exactly. Overall, I think a mix of both works best.",
+            "vi": "Chính xác. Nhìn chung, mình nghĩ kết hợp cả hai là tốt nhất."
+          }
+        ],
+        "vocab": [
+          {
+            "word": "in my opinion",
+            "meaning": "theo ý kiến của mình",
+            "pos": "phrase",
+            "example": "In my opinion, it's a great idea.",
+            "exampleVi": "Theo mình, đó là ý tưởng hay."
+          },
+          {
+            "word": "isolated",
+            "meaning": "cô lập, cô đơn",
+            "pos": "adjective",
+            "example": "She felt isolated at home.",
+            "exampleVi": "Cô ấy thấy cô đơn khi ở nhà."
+          },
+          {
+            "word": "however",
+            "meaning": "tuy nhiên",
+            "pos": "adverb",
+            "example": "It's cheap. However, it's slow.",
+            "exampleVi": "Nó rẻ. Tuy nhiên, nó chậm."
+          },
+          {
+            "word": "face-to-face",
+            "meaning": "trực tiếp",
+            "pos": "adjective",
+            "example": "A face-to-face meeting is better.",
+            "exampleVi": "Họp trực tiếp thì tốt hơn."
+          },
+          {
+            "word": "fair enough",
+            "meaning": "cũng có lý",
+            "pos": "expression",
+            "example": "Fair enough, I agree.",
+            "exampleVi": "Cũng có lý, mình đồng ý."
+          },
+          {
+            "word": "it depends on",
+            "meaning": "còn tùy vào",
+            "pos": "phrase",
+            "example": "It depends on the job.",
+            "exampleVi": "Còn tùy vào công việc."
+          }
+        ]
+      }
+    ]
+  }
+]

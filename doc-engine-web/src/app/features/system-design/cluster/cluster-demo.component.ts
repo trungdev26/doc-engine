@@ -32,9 +32,33 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
   readonly loadBalancer: ClusterEntity = { x: 390, y: 252, radius: 62, label: 'Load Balancer' };
 
   nodes: AppNode[] = [
-    { id: 1, active: true, requestCount: 0, x: NODE_CENTER_X, y: 0, radius: MAX_NODE_RADIUS, label: '' },
-    { id: 2, active: true, requestCount: 0, x: NODE_CENTER_X, y: 0, radius: MAX_NODE_RADIUS, label: '' },
-    { id: 3, active: true, requestCount: 0, x: NODE_CENTER_X, y: 0, radius: MAX_NODE_RADIUS, label: '' },
+    {
+      id: 1,
+      active: true,
+      requestCount: 0,
+      x: NODE_CENTER_X,
+      y: 0,
+      radius: MAX_NODE_RADIUS,
+      label: '',
+    },
+    {
+      id: 2,
+      active: true,
+      requestCount: 0,
+      x: NODE_CENTER_X,
+      y: 0,
+      radius: MAX_NODE_RADIUS,
+      label: '',
+    },
+    {
+      id: 3,
+      active: true,
+      requestCount: 0,
+      x: NODE_CENTER_X,
+      y: 0,
+      radius: MAX_NODE_RADIUS,
+      label: '',
+    },
   ];
   inFlightRequests: Node[] = [];
 
@@ -171,7 +195,12 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
     const graphEdges = [
       this.createEdgeConfig('cluster-client', 'cluster-lb', '#64748b', 'cluster-client-edge'),
       ...this.nodes.map(node =>
-        this.createEdgeConfig('cluster-lb', `cluster-app-node-${node.id}`, node.active ? '#64748b' : '#fecaca', `cluster-node-edge-${node.id}`),
+        this.createEdgeConfig(
+          'cluster-lb',
+          `cluster-app-node-${node.id}`,
+          node.active ? '#64748b' : '#fecaca',
+          `cluster-node-edge-${node.id}`,
+        ),
       ),
     ];
 
@@ -206,7 +235,13 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
 
   private routeRequest(): void {
     const targetNode = this.getNextActiveNode();
-    if (!targetNode || !this.graph || !this.clientNode || !this.loadBalancerNode || !targetNode.graphNode) {
+    if (
+      !targetNode ||
+      !this.graph ||
+      !this.clientNode ||
+      !this.loadBalancerNode ||
+      !targetNode.graphNode
+    ) {
       return;
     }
 
@@ -259,7 +294,10 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
 
   private animateToken(token: Node, target: ClusterEntity, duration: number): void {
     const pos = this.tokenPosition(target);
-    token.animate({ 'position/x': pos.x, 'position/y': pos.y }, { duration, easing: 'ease-in-out-quad' });
+    token.animate(
+      { 'position/x': pos.x, 'position/y': pos.y },
+      { duration, easing: 'ease-in-out-quad' },
+    );
   }
 
   private updateNodePositions(): void {
@@ -321,10 +359,23 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      node.graphNode.attr(this.entityAttrs(node.active ? '#22a06b' : '#d9363e', node.label, `Reqs: ${node.requestCount}`, node.active));
+      node.graphNode.attr(
+        this.entityAttrs(
+          node.active ? '#22a06b' : '#d9363e',
+          node.label,
+          `Reqs: ${node.requestCount}`,
+          node.active,
+        ),
+      );
 
       if (!node.edge) {
-        node.edge = this.graph!.addEdge(this.createEdgeConfig(this.loadBalancerNode!, node.graphNode, node.active ? '#64748b' : '#fecaca'));
+        node.edge = this.graph!.addEdge(
+          this.createEdgeConfig(
+            this.loadBalancerNode!,
+            node.graphNode,
+            node.active ? '#64748b' : '#fecaca',
+          ),
+        );
       } else {
         node.edge.attr('line/stroke', node.active ? '#64748b' : '#fecaca');
         node.edge.attr('line/strokeWidth', node.active ? 2 : 1.5);
@@ -338,11 +389,21 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
       shape: 'circle',
       ...this.circleBounds(node),
       zIndex: 10,
-      attrs: this.entityAttrs(node.active ? '#22a06b' : '#d9363e', `Node ${node.id}`, 'Reqs: 0', node.active),
+      attrs: this.entityAttrs(
+        node.active ? '#22a06b' : '#d9363e',
+        `Node ${node.id}`,
+        'Reqs: 0',
+        node.active,
+      ),
     };
   }
 
-  private circleBounds(entity: ClusterEntity): { x: number; y: number; width: number; height: number } {
+  private circleBounds(entity: ClusterEntity): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
     return {
       x: entity.x - entity.radius,
       y: entity.y - entity.radius,
@@ -351,7 +412,12 @@ export class ClusterDemoComponent implements AfterViewInit, OnDestroy {
     };
   }
 
-  private createEdgeConfig(source: Node | string, target: Node | string, color: string, id?: string) {
+  private createEdgeConfig(
+    source: Node | string,
+    target: Node | string,
+    color: string,
+    id?: string,
+  ) {
     return {
       id,
       source,

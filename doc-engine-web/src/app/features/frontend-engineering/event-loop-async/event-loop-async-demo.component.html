@@ -3,10 +3,7 @@
     <div>
       <p class="visualizer-header__eyebrow">Event loop visualizer</p>
       <h2>Theo dõi từng job trong JavaScript Runtime</h2>
-      <p>
-        Job card di chuyển qua Call Stack, Web APIs và các queue theo đúng từng bước
-        thực thi.
-      </p>
+      <p>Job card di chuyển qua Call Stack, Web APIs và các queue theo đúng từng bước thực thi.</p>
     </div>
     <div class="visualizer-header__status">
       <span>{{ currentStepIndex + 1 }}/{{ selectedScenario.steps.length }}</span>
@@ -37,10 +34,7 @@
       {{ currentStep?.path || 'Source Code → Call Stack' }}
     </div>
     <p>
-      {{
-        currentStep?.detail ||
-          'Nhấn “Bước tiếp” để đưa global script vào Call Stack.'
-      }}
+      {{ currentStep?.detail || 'Nhấn “Bước tiếp” để đưa global script vào Call Stack.' }}
     </p>
   </div>
 
@@ -69,12 +63,11 @@
           <span>Console output</span>
           <small>{{ output.length }} values</small>
         </div>
-        <div class="console-panel__empty" *ngIf="output.length === 0">
-          Chưa có output
-        </div>
+        <div class="console-panel__empty" *ngIf="output.length === 0">Chưa có output</div>
         <div class="console-values" *ngIf="output.length > 0">
           <code *ngFor="let value of output; let index = index">
-            <span>{{ index + 1 }}</span>{{ value }}
+            <span>{{ index + 1 }}</span
+            >{{ value }}
           </code>
         </div>
       </div>
@@ -131,7 +124,9 @@
         >
           <rect x="80" y="144" width="790" height="104" rx="14"></rect>
           <text class="stage-card__title" x="104" y="173">MICROTASK QUEUE</text>
-          <text class="stage-card__hint" x="104" y="195">Promise.then, await continuation, queueMicrotask</text>
+          <text class="stage-card__hint" x="104" y="195">
+            Promise.then, await continuation, queueMicrotask
+          </text>
           <g class="stage-count" transform="translate(816 163)">
             <rect x="0" y="-15" width="35" height="24" rx="12"></rect>
             <text x="17.5" y="2">{{ getStageCount('microtask') }}</text>
@@ -170,11 +165,7 @@
           </g>
         </g>
 
-        <g
-          data-stage="done"
-          class="event-loop-card"
-          [class.is-active]="isStageActive('done')"
-        >
+        <g data-stage="done" class="event-loop-card" [class.is-active]="isStageActive('done')">
           <rect x="326" y="440" width="240" height="140" rx="14"></rect>
           <text class="stage-card__title" x="350" y="474">EVENT LOOP</text>
           <g class="loop-orbit" transform="translate(446 522)">
@@ -182,7 +173,9 @@
             <path d="M -7 -30 L 4 -36 L 2 -24 Z"></path>
             <circle cx="0" cy="0" r="6"></circle>
           </g>
-          <text class="event-loop-card__label" x="446" y="569">Stack rỗng → drain microtask → lấy task</text>
+          <text class="event-loop-card__label" x="446" y="569">
+            Stack rỗng → drain microtask → lấy task
+          </text>
         </g>
 
         <g
@@ -234,11 +227,7 @@
   </div>
 
   <div class="visualizer-controls">
-    <button
-      type="button"
-      [disabled]="isAnimating || currentStepIndex < 0"
-      (click)="previous()"
-    >
+    <button type="button" [disabled]="isAnimating || currentStepIndex < 0" (click)="previous()">
       ← Bước trước
     </button>
     <button

@@ -3,7 +3,8 @@
     <p class="lp__eyebrow">Minh họa tương tác</p>
     <h2 id="lp-title">Load Parameter &amp; Capacity</h2>
     <p class="lp__desc">
-      Bắt đầu từ tải thực tế hoặc một kịch bản nghiệp vụ. Công cụ quy đổi sang peak RPS, áp headroom và kiểm tra hạ tầng.
+      Bắt đầu từ tải thực tế hoặc một kịch bản nghiệp vụ. Công cụ quy đổi sang peak RPS, áp headroom
+      và kiểm tra hạ tầng.
     </p>
   </header>
 
@@ -28,9 +29,13 @@
   >
     <div class="statusbar__verdict">
       <span class="statusbar__pill">
-        {{ verdictStatus === 'ok' ? 'ĐẠT' : verdictStatus === 'warn' ? 'CẦN CHÚ Ý' : 'KHÔNG ĐÁP ỨNG' }}
+        {{
+          verdictStatus === 'ok' ? 'ĐẠT' : verdictStatus === 'warn' ? 'CẦN CHÚ Ý' : 'KHÔNG ĐÁP ỨNG'
+        }}
       </span>
-      <span class="statusbar__note" *ngIf="verdictStatus !== 'ok'">{{ critCount }} nghiêm trọng · {{ warnCount }} cảnh báo</span>
+      <span class="statusbar__note" *ngIf="verdictStatus !== 'ok'"
+        >{{ critCount }} nghiêm trọng · {{ warnCount }} cảnh báo</span
+      >
       <span class="statusbar__note" *ngIf="verdictStatus === 'ok'">Trong vùng an toàn</span>
     </div>
 
@@ -124,7 +129,11 @@
 
     <div class="tab-body" *ngIf="activeInputTab === 'load'">
       <div class="load-mode" role="group" aria-label="Cách nhập tải">
-        <button type="button" [class.load-mode__button--active]="loadInputMode === 'rps'" (click)="switchLoadInputMode('rps')">
+        <button
+          type="button"
+          [class.load-mode__button--active]="loadInputMode === 'rps'"
+          (click)="switchLoadInputMode('rps')"
+        >
           Đã có số đo RPS
         </button>
         <button
@@ -150,7 +159,13 @@
                 [(ngModel)]="directAvgRps"
                 (ngModelChange)="onRpsInputsChanged()"
               />
-              <input type="number" min="0" step="0.001" [(ngModel)]="directAvgRps" (ngModelChange)="onRpsInputsChanged()" />
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                [(ngModel)]="directAvgRps"
+                (ngModelChange)="onRpsInputsChanged()"
+              />
             </div>
           </label>
 
@@ -166,7 +181,13 @@
                 [(ngModel)]="directPeakRps"
                 (ngModelChange)="onRpsInputsChanged()"
               />
-              <input type="number" min="0" step="0.001" [(ngModel)]="directPeakRps" (ngModelChange)="onRpsInputsChanged()" />
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                [(ngModel)]="directPeakRps"
+                (ngModelChange)="onRpsInputsChanged()"
+              />
             </div>
           </label>
 
@@ -182,7 +203,12 @@
                 [(ngModel)]="trafficWindowHours"
                 (ngModelChange)="onRpsInputsChanged()"
               />
-              <input type="number" min="1" [(ngModel)]="trafficWindowHours" (ngModelChange)="onRpsInputsChanged()" />
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="trafficWindowHours"
+                (ngModelChange)="onRpsInputsChanged()"
+              />
             </div>
           </label>
         </div>
@@ -210,7 +236,12 @@
                 [(ngModel)]="expectedClients"
                 (ngModelChange)="onTrafficModelChanged()"
               />
-              <input type="number" min="0" [(ngModel)]="expectedClients" (ngModelChange)="onTrafficModelChanged()" />
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="expectedClients"
+                (ngModelChange)="onTrafficModelChanged()"
+              />
             </div>
           </label>
 
@@ -226,7 +257,12 @@
                 [(ngModel)]="avgRequestsPerClientPerDay"
                 (ngModelChange)="onTrafficModelChanged()"
               />
-              <input type="number" min="0" [(ngModel)]="avgRequestsPerClientPerDay" (ngModelChange)="onTrafficModelChanged()" />
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="avgRequestsPerClientPerDay"
+                (ngModelChange)="onTrafficModelChanged()"
+              />
             </div>
           </label>
 
@@ -239,7 +275,6 @@
             </div>
           </div>
         </div>
-
       </ng-container>
 
       <div class="control-grid">
@@ -255,7 +290,12 @@
               [(ngModel)]="trafficWindowHours"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="trafficWindowHours" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="trafficWindowHours"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -271,7 +311,13 @@
               [(ngModel)]="peakTrafficPercent"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" max="100" [(ngModel)]="peakTrafficPercent" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              max="100"
+              [(ngModel)]="peakTrafficPercent"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -287,7 +333,12 @@
               [(ngModel)]="peakWindowMinutes"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="peakWindowMinutes" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="peakWindowMinutes"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -303,7 +354,12 @@
               [(ngModel)]="avgRequestSizeKB"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="avgRequestSizeKB" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="avgRequestSizeKB"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -319,7 +375,13 @@
               [(ngModel)]="writePercent"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" max="100" [(ngModel)]="writePercent" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              max="100"
+              [(ngModel)]="writePercent"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
       </div>
@@ -328,7 +390,10 @@
         <div class="stat">
           <span>Request trong window</span>
           <strong>{{ modeledRequestsPerDay | number: '1.0-0' }}</strong>
-          <small>{{ expectedClients | number: '1.0-0' }} lượt × {{ avgRequestsPerClientPerDay | number: '1.0-0' }} call</small>
+          <small
+            >{{ expectedClients | number: '1.0-0' }} lượt ×
+            {{ avgRequestsPerClientPerDay | number: '1.0-0' }} call</small
+          >
         </div>
         <div class="stat">
           <span>RPS bình quân</span>
@@ -338,7 +403,9 @@
         <div class="stat">
           <span>Peak RPS</span>
           <strong>{{ peakRps | number: '1.0-3' }}</strong>
-          <small>hệ thống tự tính từ {{ peakTrafficPercent }}% / {{ peakWindowMinutes }} phút</small>
+          <small
+            >hệ thống tự tính từ {{ peakTrafficPercent }}% / {{ peakWindowMinutes }} phút</small
+          >
         </div>
       </div>
     </div>
@@ -357,7 +424,12 @@
               [(ngModel)]="queriesPerRequest"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" [(ngModel)]="queriesPerRequest" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="queriesPerRequest"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -373,7 +445,12 @@
               [(ngModel)]="avgRowsScannedPerQuery"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" [(ngModel)]="avgRowsScannedPerQuery" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="avgRowsScannedPerQuery"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -389,7 +466,13 @@
               [(ngModel)]="cacheHitRatioPercent"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" max="99" [(ngModel)]="cacheHitRatioPercent" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              max="99"
+              [(ngModel)]="cacheHitRatioPercent"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -405,7 +488,12 @@
               [(ngModel)]="cacheTtlSeconds"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="cacheTtlSeconds" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="cacheTtlSeconds"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -421,7 +509,12 @@
               [(ngModel)]="p95LatencyMs"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="p95LatencyMs" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="p95LatencyMs"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -437,7 +530,12 @@
               [(ngModel)]="safetyMarginPercent"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="0" [(ngModel)]="safetyMarginPercent" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="safetyMarginPercent"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
       </div>
@@ -463,7 +561,9 @@
         </div>
         <div class="need">
           <span>DB connection cần</span>
-          <strong>{{ requiredDbConnections }} <small>~{{ poolPerInstance }}/inst</small></strong>
+          <strong
+            >{{ requiredDbConnections }} <small>~{{ poolPerInstance }}/inst</small></strong
+          >
         </div>
         <div class="need" *ngIf="cacheHitRatioPercent > 0">
           <span>Redis RAM cần</span>
@@ -484,7 +584,12 @@
               [(ngModel)]="appInstanceCount"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="appInstanceCount" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="appInstanceCount"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -500,7 +605,12 @@
               [(ngModel)]="appCpuCoresPerInstance"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="appCpuCoresPerInstance" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="appCpuCoresPerInstance"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -516,23 +626,54 @@
               [(ngModel)]="appRamGbPerInstance"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="appRamGbPerInstance" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="appRamGbPerInstance"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
         <label class="control-field" for="lp-db-cpu">
           <span>DB CPU</span>
           <div class="input-row">
-            <input id="lp-db-cpu" type="range" min="1" max="64" step="1" [(ngModel)]="dbCpuCores" (ngModelChange)="onInputsChanged()" />
-            <input type="number" min="1" [(ngModel)]="dbCpuCores" (ngModelChange)="onInputsChanged()" />
+            <input
+              id="lp-db-cpu"
+              type="range"
+              min="1"
+              max="64"
+              step="1"
+              [(ngModel)]="dbCpuCores"
+              (ngModelChange)="onInputsChanged()"
+            />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="dbCpuCores"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
         <label class="control-field" for="lp-db-ram">
           <span>DB RAM (GB)</span>
           <div class="input-row">
-            <input id="lp-db-ram" type="range" min="1" max="256" step="1" [(ngModel)]="dbRamGb" (ngModelChange)="onInputsChanged()" />
-            <input type="number" min="1" [(ngModel)]="dbRamGb" (ngModelChange)="onInputsChanged()" />
+            <input
+              id="lp-db-ram"
+              type="range"
+              min="1"
+              max="256"
+              step="1"
+              [(ngModel)]="dbRamGb"
+              (ngModelChange)="onInputsChanged()"
+            />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="dbRamGb"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -548,7 +689,12 @@
               [(ngModel)]="dbMaxConnections"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="dbMaxConnections" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="dbMaxConnections"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
 
@@ -564,7 +710,12 @@
               [(ngModel)]="redisMaxMemoryGb"
               (ngModelChange)="onInputsChanged()"
             />
-            <input type="number" min="1" [(ngModel)]="redisMaxMemoryGb" (ngModelChange)="onInputsChanged()" />
+            <input
+              type="number"
+              min="1"
+              [(ngModel)]="redisMaxMemoryGb"
+              (ngModelChange)="onInputsChanged()"
+            />
           </div>
         </label>
       </div>
@@ -584,7 +735,12 @@
                 [(ngModel)]="rpsPerCpuCore"
                 (ngModelChange)="onInputsChanged()"
               />
-              <input type="number" min="1" [(ngModel)]="rpsPerCpuCore" (ngModelChange)="onInputsChanged()" />
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="rpsPerCpuCore"
+                (ngModelChange)="onInputsChanged()"
+              />
             </div>
           </label>
 
@@ -600,7 +756,12 @@
                 [(ngModel)]="avgMemPerRequestMb"
                 (ngModelChange)="onInputsChanged()"
               />
-              <input type="number" min="1" [(ngModel)]="avgMemPerRequestMb" (ngModelChange)="onInputsChanged()" />
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="avgMemPerRequestMb"
+                (ngModelChange)="onInputsChanged()"
+              />
             </div>
           </label>
 
@@ -616,7 +777,12 @@
                 [(ngModel)]="queriesPerSecondPerDbCore"
                 (ngModelChange)="onInputsChanged()"
               />
-              <input type="number" min="1" [(ngModel)]="queriesPerSecondPerDbCore" (ngModelChange)="onInputsChanged()" />
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="queriesPerSecondPerDbCore"
+                (ngModelChange)="onInputsChanged()"
+              />
             </div>
           </label>
         </div>
@@ -639,7 +805,9 @@
       </div>
 
       <div class="actions" role="group" aria-label="Tự động đề xuất">
-        <button type="button" class="actions__primary" (click)="applyRecommendedInfrastructure()">Auto-fit hạ tầng</button>
+        <button type="button" class="actions__primary" (click)="applyRecommendedInfrastructure()">
+          Auto-fit hạ tầng
+        </button>
         <button type="button" (click)="applyWhatIf('cache')">What-if cache 70%</button>
         <button type="button" (click)="applyWhatIf('index')">Giảm rows scan 10x</button>
         <button type="button" (click)="applyWhatIf('latency')">p95 về 120ms</button>
@@ -651,7 +819,9 @@
     <footer class="step-navigation" aria-label="Điều hướng các bước phân tích">
       <span>Bước {{ activeInputStep }} / {{ inputTabOrder.length }}</span>
       <div>
-        <button type="button" [disabled]="activeInputStep === 1" (click)="moveInputStep(-1)">Quay lại</button>
+        <button type="button" [disabled]="activeInputStep === 1" (click)="moveInputStep(-1)">
+          Quay lại
+        </button>
         <button
           type="button"
           class="step-navigation__next"
@@ -702,7 +872,8 @@
           ></div>
         </div>
         <p class="util__meta">
-          {{ row.required | number: '1.0-1' }} / {{ row.provisioned | number: '1.0-1' }} {{ row.unit }} — {{ row.hint }}
+          {{ row.required | number: '1.0-1' }} / {{ row.provisioned | number: '1.0-1' }}
+          {{ row.unit }} — {{ row.hint }}
         </p>
       </div>
 
@@ -754,7 +925,10 @@
   <details class="card card--fold">
     <summary>Gợi ý kiến trúc ({{ recommendations.length }})</summary>
     <ul class="recs">
-      <li *ngFor="let item of recommendations; trackBy: trackByIndex" [class.recs__item--warn]="item.type === 'warn'">
+      <li
+        *ngFor="let item of recommendations; trackBy: trackByIndex"
+        [class.recs__item--warn]="item.type === 'warn'"
+      >
         {{ item.text }}
       </li>
     </ul>
@@ -773,7 +947,12 @@
 
   <details class="card card--fold">
     <summary>Design note — copy vào tài liệu thiết kế</summary>
-    <textarea class="design-note" readonly [value]="designSummary" aria-label="Design summary"></textarea>
+    <textarea
+      class="design-note"
+      readonly
+      [value]="designSummary"
+      aria-label="Design summary"
+    ></textarea>
   </details>
 
   <section class="card lp__glossary" aria-label="Khái niệm nhanh">

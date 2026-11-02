@@ -94,10 +94,38 @@ interface ScenarioPreset {
 }
 
 const INSTANCE_PROFILES: InstanceProfile[] = [
-  { id: 'small', label: 'Small', subtitle: '2 vCPU / 4 GB', cpuCores: 2, ramGb: 4, rpsPerCore: 100 },
-  { id: 'medium', label: 'Medium', subtitle: '4 vCPU / 8 GB', cpuCores: 4, ramGb: 8, rpsPerCore: 130 },
-  { id: 'large', label: 'Large', subtitle: '8 vCPU / 16 GB', cpuCores: 8, ramGb: 16, rpsPerCore: 160 },
-  { id: 'compute', label: 'Compute', subtitle: '16 vCPU / 32 GB', cpuCores: 16, ramGb: 32, rpsPerCore: 190 },
+  {
+    id: 'small',
+    label: 'Small',
+    subtitle: '2 vCPU / 4 GB',
+    cpuCores: 2,
+    ramGb: 4,
+    rpsPerCore: 100,
+  },
+  {
+    id: 'medium',
+    label: 'Medium',
+    subtitle: '4 vCPU / 8 GB',
+    cpuCores: 4,
+    ramGb: 8,
+    rpsPerCore: 130,
+  },
+  {
+    id: 'large',
+    label: 'Large',
+    subtitle: '8 vCPU / 16 GB',
+    cpuCores: 8,
+    ramGb: 16,
+    rpsPerCore: 160,
+  },
+  {
+    id: 'compute',
+    label: 'Compute',
+    subtitle: '16 vCPU / 32 GB',
+    cpuCores: 16,
+    ramGb: 32,
+    rpsPerCore: 190,
+  },
 ];
 
 const PRESETS: ScenarioPreset[] = [
@@ -481,7 +509,10 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
   }
 
   get storagePerWindowGB(): number {
-    return (this.effectiveRequestsPerDay * (this.writePercent / 100) * this.avgRequestSizeKB) / (1024 * 1024);
+    return (
+      (this.effectiveRequestsPerDay * (this.writePercent / 100) * this.avgRequestSizeKB) /
+      (1024 * 1024)
+    );
   }
 
   // ===== Cache =====
@@ -492,7 +523,9 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
 
   // Ước tính thô working set: read được cache giữ trong RAM suốt 1 TTL window.
   get estimatedCacheMemoryGb(): number {
-    return (this.cachedReadsPerSecond * this.cacheTtlSeconds * this.avgRequestSizeKB) / (1024 * 1024);
+    return (
+      (this.cachedReadsPerSecond * this.cacheTtlSeconds * this.avgRequestSizeKB) / (1024 * 1024)
+    );
   }
 
   // ===== Thiết kế (đã cộng headroom) =====
@@ -546,13 +579,18 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
   }
 
   get minInstancesNeeded(): number {
-    const byCpu = this.appCpuCoresPerInstance > 0 ? this.requiredAppCores / this.appCpuCoresPerInstance : 0;
-    const byRam = this.appRamGbPerInstance > 0 ? this.requiredRamGbTotal / this.appRamGbPerInstance : 0;
+    const byCpu =
+      this.appCpuCoresPerInstance > 0 ? this.requiredAppCores / this.appCpuCoresPerInstance : 0;
+    const byRam =
+      this.appRamGbPerInstance > 0 ? this.requiredRamGbTotal / this.appRamGbPerInstance : 0;
     return Math.max(1, Math.ceil(Math.max(byCpu, byRam)));
   }
 
   get selectedProfile(): InstanceProfile {
-    return this.instanceProfiles.find(profile => profile.id === this.activeProfileId) ?? this.instanceProfiles[0];
+    return (
+      this.instanceProfiles.find(profile => profile.id === this.activeProfileId) ??
+      this.instanceProfiles[0]
+    );
   }
 
   get autosizedInstanceCount(): number {
@@ -604,7 +642,10 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
   }
 
   get primaryRisk(): string {
-    return this.bottlenecks.find(item => item.status !== 'ok')?.label ?? 'Sai số của benchmark và traffic model';
+    return (
+      this.bottlenecks.find(item => item.status !== 'ok')?.label ??
+      'Sai số của benchmark và traffic model'
+    );
   }
 
   get nextDecisionAction(): string {
@@ -725,7 +766,10 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
   onInputsChanged(): void {
     this.activePresetId = null;
     this.trafficWindowHours = Math.max(1, this.trafficWindowHours || 1);
-    this.peakWindowMinutes = Math.min(Math.max(1, this.peakWindowMinutes || 1), this.trafficWindowHours * 60);
+    this.peakWindowMinutes = Math.min(
+      Math.max(1, this.peakWindowMinutes || 1),
+      this.trafficWindowHours * 60,
+    );
     if (this.loadInputMode === 'scenario') {
       this.syncPeakHoursFromMinutes();
     }
@@ -750,7 +794,10 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
 
   moveInputStep(direction: -1 | 1): void {
     const currentIndex = this.inputTabOrder.indexOf(this.activeInputTab);
-    const nextIndex = Math.min(this.inputTabOrder.length - 1, Math.max(0, currentIndex + direction));
+    const nextIndex = Math.min(
+      this.inputTabOrder.length - 1,
+      Math.max(0, currentIndex + direction),
+    );
     this.activeInputTab = this.inputTabOrder[nextIndex];
   }
 
@@ -1026,7 +1073,8 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
       options.push({
         title: 'Giảm áp lực connection pool',
         impact: `Đặt max_connections khoảng ${this.recommendedDbMaxConnections} hoặc dùng pooler/proxy.`,
-        tradeoff: 'Tăng max_connections cần RAM DB; pooler cần cấu hình transaction/session mode đúng.',
+        tradeoff:
+          'Tăng max_connections cần RAM DB; pooler cần cấu hình transaction/session mode đúng.',
         priority: 'medium',
       });
     }
@@ -1084,9 +1132,13 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
       'Recommended sizing:',
       `- App: ${this.autosizedInstanceCount} x ${this.selectedProfile.label} (${this.selectedProfile.cpuCores} vCPU / ${this.selectedProfile.ramGb} GB).`,
       `- DB: ~${this.recommendedDbCores} vCPU, ~${this.recommendedDbRamGb} GB RAM, max_connections ~${this.recommendedDbMaxConnections}.`,
-      this.cacheHitRatioPercent > 0 ? `- Redis: ~${this.recommendedRedisMemoryGb} GB maxmemory.` : '- Redis: chưa bắt buộc nếu chưa dùng cache.',
+      this.cacheHitRatioPercent > 0
+        ? `- Redis: ~${this.recommendedRedisMemoryGb} GB maxmemory.`
+        : '- Redis: chưa bắt buộc nếu chưa dùng cache.',
       '',
-      topBottlenecks ? `Bottlenecks:\n${topBottlenecks}` : 'Bottlenecks:\n- Chưa thấy bottleneck cứng.',
+      topBottlenecks
+        ? `Bottlenecks:\n${topBottlenecks}`
+        : 'Bottlenecks:\n- Chưa thấy bottleneck cứng.',
       '',
       `Recommended actions:\n${optionText}`,
     ].join('\n');
@@ -1255,7 +1307,8 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
 
   private syncActiveProfileFromCurrentShape(): void {
     const profile = this.instanceProfiles.find(
-      item => item.cpuCores === this.appCpuCoresPerInstance && item.ramGb === this.appRamGbPerInstance,
+      item =>
+        item.cpuCores === this.appCpuCoresPerInstance && item.ramGb === this.appRamGbPerInstance,
     );
     this.activeProfileId = profile?.id ?? this.activeProfileId;
   }
@@ -1341,8 +1394,12 @@ export class LoadParameterDemoComponent implements OnInit, AfterViewInit, OnDest
 
   private buildChartData(): number[] {
     const chartHours = this.chartWindowHours;
-    const peakStart = this.loadInputMode === 'scenario' ? Math.min(Math.max(0, this.peakStartHour), chartHours - 1) : 0;
-    const peakDurationHours = this.loadInputMode === 'scenario' ? Math.max(1, Math.ceil(this.peakWindowMinutes / 60)) : 1;
+    const peakStart =
+      this.loadInputMode === 'scenario'
+        ? Math.min(Math.max(0, this.peakStartHour), chartHours - 1)
+        : 0;
+    const peakDurationHours =
+      this.loadInputMode === 'scenario' ? Math.max(1, Math.ceil(this.peakWindowMinutes / 60)) : 1;
     const peakEnd = Math.min(chartHours, peakStart + peakDurationHours);
 
     return Array.from({ length: chartHours }, (_, hour) => {

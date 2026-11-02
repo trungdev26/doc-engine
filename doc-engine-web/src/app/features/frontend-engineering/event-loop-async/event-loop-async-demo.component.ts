@@ -1,10 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  OnDestroy,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { gsap } from 'gsap';
 
@@ -580,8 +574,7 @@ export class EventLoopAsyncDemoComponent implements OnDestroy {
 
   get selectedScenario(): SimulationScenario {
     return (
-      this.scenarios.find(scenario => scenario.id === this.selectedScenarioId) ??
-      this.scenarios[0]
+      this.scenarios.find(scenario => scenario.id === this.selectedScenarioId) ?? this.scenarios[0]
     );
   }
 
@@ -792,11 +785,7 @@ export class EventLoopAsyncDemoComponent implements OnDestroy {
     return token;
   }
 
-  private getTokenPosition(
-    stage: FlowStage,
-    tokenId: string,
-    codeLine = 0,
-  ): Point {
+  private getTokenPosition(stage: FlowStage, tokenId: string, codeLine = 0): Point {
     if (stage === 'source') {
       return { x: FLOW_POINTS.source.x, y: 282 + Math.min(codeLine, 6) * 20 };
     }
@@ -805,9 +794,7 @@ export class EventLoopAsyncDemoComponent implements OnDestroy {
       return { ...FLOW_POINTS.done };
     }
 
-    const peers = this.tokens.filter(
-      token => token.stage === stage && token.id !== tokenId,
-    );
+    const peers = this.tokens.filter(token => token.stage === stage && token.id !== tokenId);
     const slot = peers.length;
 
     if (stage === 'task' || stage === 'microtask') {

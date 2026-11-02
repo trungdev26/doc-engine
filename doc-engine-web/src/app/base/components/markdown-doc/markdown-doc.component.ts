@@ -68,17 +68,21 @@ export class MarkdownDocComponent implements AfterViewInit, OnDestroy {
       });
     });
 
-    const headingEls = this.el.nativeElement.querySelectorAll<HTMLElement>('.markdown-body h2, .markdown-body h3');
+    const headingEls = this.el.nativeElement.querySelectorAll<HTMLElement>(
+      '.markdown-body h2, .markdown-body h3',
+    );
     this.tocItems = this.buildToc(headingEls);
     this.setupScrollSpy(headingEls);
 
-    this.el.nativeElement.querySelectorAll<HTMLAnchorElement>('.markdown-body a[href^="#"]').forEach(link => {
-      link.addEventListener('click', event => {
-        event.preventDefault();
-        const id = decodeURIComponent(link.getAttribute('href')!.slice(1));
-        this.scrollToHeading(id);
+    this.el.nativeElement
+      .querySelectorAll<HTMLAnchorElement>('.markdown-body a[href^="#"]')
+      .forEach(link => {
+        link.addEventListener('click', event => {
+          event.preventDefault();
+          const id = decodeURIComponent(link.getAttribute('href')!.slice(1));
+          this.scrollToHeading(id);
+        });
       });
-    });
   }
 
   isExpanded(item: TocItem): boolean {
@@ -140,7 +144,9 @@ export class MarkdownDocComponent implements AfterViewInit, OnDestroy {
         if (!visible.length) {
           return;
         }
-        const topMost = visible.reduce((a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b));
+        const topMost = visible.reduce((a, b) =>
+          a.boundingClientRect.top < b.boundingClientRect.top ? a : b,
+        );
         this.activeId = (topMost.target as HTMLElement).id;
       },
       {

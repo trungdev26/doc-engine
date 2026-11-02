@@ -53,7 +53,11 @@
   </div>
 
   <div class="cluster-demo__workspace">
-    <div class="cluster-demo__graph" #graphContainer aria-label="Mô phỏng Client, Load Balancer và các App Node">
+    <div
+      class="cluster-demo__graph"
+      #graphContainer
+      aria-label="Mô phỏng Client, Load Balancer và các App Node"
+    >
       <div class="cluster-demo__empty" *ngIf="!activeNodeCount">
         Không còn node sống. Phục hồi node để tiếp tục route request.
       </div>

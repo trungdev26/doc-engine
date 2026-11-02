@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Elasticsearch cluster với primary shard và replica shard</title>
+  <desc id="desc">Một coordinating node nhận search request, gửi truy vấn song song tới shard zero trên node A và replica của shard one trên node B, rồi merge top results trước khi trả về client.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#faf5ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#0f172a" flood-opacity=".10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="675" rx="28" fill="url(#background)"/>
+  <text x="60" y="66" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Một search request chạy song song trên nhiều shard</text>
+  <text x="60" y="100" font-family="Arial, sans-serif" font-size="17" fill="#64748b">Coordinating node fan-out query, mỗi shard trả top result cục bộ, sau đó kết quả được merge</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="55" y="164" width="178" height="92" rx="18" fill="#ffffff" stroke="#93c5fd" stroke-width="2" filter="url(#shadow)"/>
+    <circle cx="95" cy="202" r="18" fill="#3b82f6"/>
+    <path d="M87 202 h16 M95 194 v16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <text x="160" y="202" text-anchor="middle" font-size="18" font-weight="700" fill="#1e3a8a">Client</text>
+    <text x="144" y="228" text-anchor="middle" font-size="13" fill="#64748b">search “gà cay”</text>
+
+    <rect x="326" y="145" width="258" height="130" rx="20" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2" filter="url(#shadow)"/>
+    <circle cx="379" cy="197" r="26" fill="#8b5cf6"/>
+    <path d="M366 197 h26 M379 184 v26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+    <text x="479" y="190" text-anchor="middle" font-size="18" font-weight="700" fill="#4c1d95">Coordinating</text>
+    <text x="479" y="214" text-anchor="middle" font-size="18" font-weight="700" fill="#4c1d95">node</text>
+    <text x="455" y="247" text-anchor="middle" font-size="13" fill="#64748b">fan-out · merge · reduce</text>
+  </g>
+
+  <path d="M233 210 H312" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="272" y="196" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">request</text>
+
+  <rect x="668" y="132" width="477" height="468" rx="24" fill="#ffffff" stroke="#cbd5e1" filter="url(#shadow)"/>
+  <text x="698" y="174" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#64748b">CLUSTER: MON-AN-SEARCH</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="704" y="205" width="405" height="150" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="704" y="205" width="92" height="150" rx="18" fill="#e0f2fe"/>
+    <text x="750" y="267" text-anchor="middle" font-size="18" font-weight="700" fill="#075985">Node</text>
+    <text x="750" y="292" text-anchor="middle" font-size="18" font-weight="700" fill="#075985">A</text>
+
+    <rect x="828" y="235" width="112" height="88" rx="15" fill="#ffedd5" stroke="#fb923c" stroke-width="2"/>
+    <text x="884" y="271" text-anchor="middle" font-size="17" font-weight="700" fill="#9a3412">P0</text>
+    <text x="884" y="298" text-anchor="middle" font-size="12" fill="#c2410c">primary</text>
+    <rect x="966" y="235" width="112" height="88" rx="15" fill="#ede9fe" stroke="#a78bfa" stroke-width="2"/>
+    <text x="1022" y="271" text-anchor="middle" font-size="17" font-weight="700" fill="#5b21b6">R1</text>
+    <text x="1022" y="298" text-anchor="middle" font-size="12" fill="#6d28d9">replica</text>
+
+    <rect x="704" y="391" width="405" height="150" rx="18" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="704" y="391" width="92" height="150" rx="18" fill="#dcfce7"/>
+    <text x="750" y="453" text-anchor="middle" font-size="18" font-weight="700" fill="#166534">Node</text>
+    <text x="750" y="478" text-anchor="middle" font-size="18" font-weight="700" fill="#166534">B</text>
+
+    <rect x="828" y="421" width="112" height="88" rx="15" fill="#ede9fe" stroke="#a78bfa" stroke-width="2"/>
+    <text x="884" y="457" text-anchor="middle" font-size="17" font-weight="700" fill="#5b21b6">R0</text>
+    <text x="884" y="484" text-anchor="middle" font-size="12" fill="#6d28d9">replica</text>
+    <rect x="966" y="421" width="112" height="88" rx="15" fill="#ffedd5" stroke="#fb923c" stroke-width="2"/>
+    <text x="1022" y="457" text-anchor="middle" font-size="17" font-weight="700" fill="#9a3412">P1</text>
+    <text x="1022" y="484" text-anchor="middle" font-size="12" fill="#c2410c">primary</text>
+  </g>
+
+  <path d="M584 198 C625 198 634 279 814 279" fill="none" stroke="#8b5cf6" stroke-width="3" marker-end="url(#arrowPurple)"/>
+  <path d="M584 222 C625 222 634 465 814 465" fill="none" stroke="#8b5cf6" stroke-width="3" marker-end="url(#arrowPurple)"/>
+  <text x="621" y="191" font-family="Arial, sans-serif" font-size="12" fill="#7c3aed">query shard 0</text>
+  <text x="608" y="343" font-family="Arial, sans-serif" font-size="12" fill="#7c3aed">query shard 1</text>
+
+  <path d="M814 306 C630 306 628 392 504 392" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+  <path d="M814 492 C630 492 628 416 504 416" fill="none" stroke="#64748b" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrow)"/>
+  <rect x="326" y="360" width="258" height="92" rx="18" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
+  <circle cx="370" cy="406" r="21" fill="#10b981"/>
+  <path d="M360 406 l7 7 13 -15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="474" y="399" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#065f46">Merge top results</text>
+  <text x="474" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#047857">sort theo _score</text>
+
+  <path d="M326 406 C235 406 216 294 146 277" fill="none" stroke="#10b981" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="224" y="356" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#047857">response</text>
+
+  <g font-family="Arial, sans-serif" font-size="13">
+    <circle cx="81" cy="620" r="8" fill="#fb923c"/>
+    <text x="98" y="625" fill="#475569">P = primary shard</text>
+    <circle cx="253" cy="620" r="8" fill="#a78bfa"/>
+    <text x="270" y="625" fill="#475569">R = replica shard</text>
+    <text x="1110" y="625" text-anchor="end" font-weight="700" fill="#475569">Replica phải nằm trên node khác mới tăng availability</text>
+  </g>
+</svg>

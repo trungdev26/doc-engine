@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Luồng đồng bộ search index từ MySQL sang Elasticsearch</title>
+  <desc id="desc">Food API ghi món ăn và outbox trong một transaction MySQL. Search Indexer đọc sự kiện, tạo search document rồi cập nhật Elasticsearch. Search API chỉ đọc Elasticsearch để phục vụ truy vấn tìm kiếm.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#f0fdfa"/>
+    </linearGradient>
+    <linearGradient id="elastic" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset=".55" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0f172a" flood-opacity=".11"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="675" rx="28" fill="url(#background)"/>
+  <text x="60" y="66" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#0f172a">Search index là read model có thể xây dựng lại</text>
+  <text x="60" y="100" font-family="Arial, sans-serif" font-size="17" fill="#64748b">Luồng ghi bảo vệ business data; luồng tìm kiếm chấp nhận eventual consistency</text>
+
+  <rect x="55" y="140" width="1090" height="330" rx="24" fill="#ffffff" stroke="#cbd5e1" filter="url(#shadow)"/>
+  <text x="82" y="176" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#64748b">LUỒNG GHI VÀ ĐỒNG BỘ</text>
+
+  <g font-family="Arial, sans-serif">
+    <rect x="82" y="225" width="176" height="116" rx="18" fill="#eff6ff" stroke="#93c5fd" stroke-width="2"/>
+    <circle cx="120" cy="267" r="20" fill="#3b82f6"/>
+    <path d="M112 267 h16 M120 259 v16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <text x="170" y="270" text-anchor="middle" font-size="18" font-weight="700" fill="#1e3a8a">Food API</text>
+    <text x="170" y="301" text-anchor="middle" font-size="14" fill="#475569">Cập nhật món ăn</text>
+
+    <rect x="344" y="207" width="235" height="152" rx="18" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+    <ellipse cx="390" cy="248" rx="25" ry="10" fill="#22c55e"/>
+    <path d="M365 248 v34 c0 6 11 10 25 10 s25-4 25-10 v-34" fill="#bbf7d0" stroke="#16a34a" stroke-width="2"/>
+    <ellipse cx="390" cy="282" rx="25" ry="10" fill="#86efac" stroke="#16a34a" stroke-width="2"/>
+    <text x="477" y="245" text-anchor="middle" font-size="18" font-weight="700" fill="#14532d">MySQL</text>
+    <text x="477" y="273" text-anchor="middle" font-size="14" fill="#475569">MonAn + Outbox</text>
+    <rect x="373" y="311" width="178" height="28" rx="8" fill="#dcfce7"/>
+    <text x="462" y="330" text-anchor="middle" font-size="13" font-weight="700" fill="#166534">một transaction</text>
+
+    <rect x="664" y="225" width="202" height="116" rx="18" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="2"/>
+    <circle cx="706" cy="267" r="21" fill="#8b5cf6"/>
+    <path d="M697 267 h18 M706 258 v18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <text x="776" y="263" text-anchor="middle" font-size="18" font-weight="700" fill="#4c1d95">Search</text>
+    <text x="776" y="286" text-anchor="middle" font-size="18" font-weight="700" fill="#4c1d95">Indexer</text>
+    <text x="765" y="316" text-anchor="middle" font-size="13" fill="#475569">retry + idempotency</text>
+
+    <rect x="952" y="207" width="165" height="152" rx="18" fill="#fff7ed" stroke="#fdba74" stroke-width="2"/>
+    <circle cx="1035" cy="253" r="26" fill="url(#elastic)"/>
+    <path d="M1021 254 c0-13 11-22 24-18 c13 4 17 22 7 31 c-9 9-25 5-31-3" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+    <text x="1035" y="306" text-anchor="middle" font-size="17" font-weight="700" fill="#9a3412">Elasticsearch</text>
+    <text x="1035" y="332" text-anchor="middle" font-size="13" fill="#475569">search index</text>
+  </g>
+
+  <path d="M258 283 H330" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="294" y="269" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">commit</text>
+  <path d="M579 283 H650" stroke="#64748b" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+  <text x="615" y="269" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#64748b">event</text>
+  <path d="M866 283 H938" stroke="#f97316" stroke-width="3" marker-end="url(#arrowOrange)"/>
+  <text x="902" y="269" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#c2410c">index</text>
+
+  <rect x="55" y="505" width="1090" height="115" rx="22" fill="#0f172a"/>
+  <g font-family="Arial, sans-serif">
+    <rect x="86" y="532" width="180" height="62" rx="15" fill="#1e293b" stroke="#475569"/>
+    <text x="176" y="558" text-anchor="middle" font-size="16" font-weight="700" fill="#f8fafc">Client</text>
+    <text x="176" y="580" text-anchor="middle" font-size="13" fill="#94a3b8">“gà cay”</text>
+    <path d="M266 563 H420" stroke="#94a3b8" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="343" y="550" text-anchor="middle" font-size="12" fill="#94a3b8">search request</text>
+
+    <rect x="434" y="532" width="200" height="62" rx="15" fill="#1e3a8a" stroke="#60a5fa"/>
+    <text x="534" y="558" text-anchor="middle" font-size="16" font-weight="700" fill="#eff6ff">Search API</text>
+    <text x="534" y="580" text-anchor="middle" font-size="13" fill="#bfdbfe">không đọc MySQL</text>
+    <path d="M634 563 H806" stroke="#f97316" stroke-width="3" marker-end="url(#arrowOrange)"/>
+    <text x="720" y="550" text-anchor="middle" font-size="12" fill="#fdba74">Query DSL</text>
+
+    <rect x="820" y="532" width="294" height="62" rx="15" fill="#431407" stroke="#fb923c"/>
+    <text x="967" y="558" text-anchor="middle" font-size="16" font-weight="700" fill="#fff7ed">Elasticsearch</text>
+    <text x="967" y="580" text-anchor="middle" font-size="13" fill="#fed7aa">read model cho tìm kiếm</text>
+  </g>
+
+  <rect x="361" y="386" width="478" height="48" rx="24" fill="#ecfdf5" stroke="#6ee7b7"/>
+  <circle cx="391" cy="410" r="13" fill="#10b981"/>
+  <path d="M385 410 l4 4 8 -9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="614" y="416" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#065f46">MySQL là source of truth · Elasticsearch có thể rebuild</text>
+</svg>

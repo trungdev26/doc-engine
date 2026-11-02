@@ -19,6 +19,7 @@ import {
   MemoryDictionaryStore,
   PgDictionaryStore,
 } from './dictionary/dictionary.store';
+import { HealthController } from './health.controller';
 import { LearningController } from './learning/learning.controller';
 import { LearningService } from './learning/learning.service';
 import { ReviewController } from './review/review.controller';
@@ -35,6 +36,7 @@ import { Store } from './store/store';
     AdminContentController,
     AuthController,
     DictionaryController,
+    HealthController,
   ],
   providers: [
     {

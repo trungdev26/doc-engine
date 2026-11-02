@@ -1,0 +1,17 @@
+name: keep api awake
+
+# Render free tắt web service sau khoảng 15 phút không có request. Gọi /api/health định kỳ
+# để process không bị tắt. Lịch chạy từ GitHub chứ không phải từ Render, vì process đã tắt
+# thì không thể tự đánh thức chính nó.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: ping health endpoint
+        run: curl --fail --silent --show-error --retry 3 --retry-delay 5 --retry-all-errors https://doc-engine-service.onrender.com/api/health

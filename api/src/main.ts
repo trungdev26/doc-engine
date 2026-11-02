@@ -4,7 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { configureApp } from './setup';
 
-/** Nạp api/.env nếu có (DATABASE_URL, PORT...). Biến đã đặt sẵn trong môi trường được ưu tiên. */
+/** Nạp .env của service nếu có (DATABASE_URL, PORT...). Biến đã đặt sẵn trong môi trường được ưu tiên. */
 function loadEnvFile(): void {
   try {
     process.loadEnvFile();

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "base-angular": {
+    "doc-engine-web": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -23,7 +23,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/base-angular",
+            "outputPath": "dist/doc-engine-web",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -93,10 +93,10 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "base-angular:build:production"
+              "buildTarget": "doc-engine-web:build:production"
             },
             "development": {
-              "buildTarget": "base-angular:build:development"
+              "buildTarget": "doc-engine-web:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -104,7 +104,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "base-angular:build"
+            "buildTarget": "doc-engine-web:build"
           }
         },
         "test": {

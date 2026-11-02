@@ -36,6 +36,14 @@ class LoginDto {
 
 const isSecure = (): boolean => process.env.COOKIE_SECURE === 'true';
 
+/** Cookie đăng nhập. HTTPS thì SameSite=None để trình duyệt gửi kèm khi web và API khác domain. */
+const sessionCookie = () => ({
+  httpOnly: true,
+  sameSite: isSecure() ? ('none' as const) : ('lax' as const),
+  secure: isSecure(),
+  path: '/',
+});
+
 @Controller('auth')
 export class AuthController {
   private readonly limiter = new LoginLimiter();
@@ -65,11 +73,8 @@ export class AuthController {
 
     const token = signSession({ sub: user.id, username: user.username, role: user.role });
     response.cookie(SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: isSecure(),
+      ...sessionCookie(),
       maxAge: SESSION_TTL_SECONDS * 1000,
-      path: '/',
     });
     return { username: user.username, role: user.role, token };
   }
@@ -77,7 +82,7 @@ export class AuthController {
   @Post('logout')
   @HttpCode(204)
   logout(@Res({ passthrough: true }) response: Response): void {
-    response.clearCookie(SESSION_COOKIE, { path: '/' });
+    response.clearCookie(SESSION_COOKIE, sessionCookie());
   }
 
   /** Cho giao diện biết đã đăng nhập chưa; trả 401 nếu chưa. */

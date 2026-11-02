@@ -1,4 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { apiUrl } from './api-config';
 import { Injectable, computed, signal } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 
@@ -27,7 +28,7 @@ export class AuthService {
 
   /** Hỏi máy chủ xem đã đăng nhập chưa. Gọi nhiều lần vẫn chỉ gửi một request. */
   restore(): Observable<void> {
-    this.restoring ??= this.http.get<AuthUser>('/api/auth/me').pipe(
+    this.restoring ??= this.http.get<AuthUser>(apiUrl('/api/auth/me')).pipe(
       tap(user => this.state.set(user)),
       map(() => undefined),
       catchError(() => {
@@ -42,12 +43,12 @@ export class AuthService {
 
   login(username: string, password: string): Observable<AuthUser> {
     return this.http
-      .post<AuthUser>('/api/auth/login', { username, password })
+      .post<AuthUser>(apiUrl('/api/auth/login'), { username, password })
       .pipe(tap(user => this.state.set({ username: user.username, role: user.role })));
   }
 
   logout(): Observable<void> {
-    return this.http.post<void>('/api/auth/logout', {}).pipe(
+    return this.http.post<void>(apiUrl('/api/auth/logout'), {}).pipe(
       catchError(() => of(undefined)),
       tap(() => this.state.set(null)),
     );

@@ -131,6 +131,7 @@ import { VideoLessonComponent } from './features/english/video-lesson.component'
 import { VideoLibraryComponent } from './features/english/video-library.component';
 import { DialogueLessonComponent } from './features/english/dialogue-lesson.component';
 import { SpeakingRouterComponent } from './features/english/speaking-router.component';
+import { credentialsInterceptor } from './core/api-config';
 import { authInterceptor } from './core/auth.interceptor';
 import {
   LearningProfileStore,
@@ -274,7 +275,7 @@ registerLocaleData(en);
     { provide: NZ_I18N, useValue: en_US },
     { provide: LearningProfileStore, useClass: LocalStorageLearningProfileStore },
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([credentialsInterceptor, authInterceptor])),
   ],
   bootstrap: [AppComponent],
 })

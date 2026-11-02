@@ -26,7 +26,8 @@ async function bootstrap(): Promise<void> {
   }
   configureApp(app);
   // Dev: FE chạy ở cổng khác nên cần CORS; môi trường thật nên giới hạn origin.
-  app.enableCors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true });
+  // credentials: cookie đăng nhập đi kèm request khi web và API khác domain.
+  app.enableCors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true, credentials: true });
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
   console.log(`API listening on http://localhost:${port}/api`);
